@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.doc-repo/
+*.log
+.env*
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+coverage/
+.coding-agent/

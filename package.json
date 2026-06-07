@@ -1,0 +1,53 @@
+{
+  "name": "doc-repo",
+  "version": "0.1.0-alpha.0",
+  "description": "Generate a static documentation site from repository Markdown files.",
+  "license": "MIT",
+  "author": "Ryuta1005",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ryuta1005/doc-repo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ryuta1005/doc-repo/issues"
+  },
+  "homepage": "https://github.com/Ryuta1005/doc-repo#readme",
+  "type": "module",
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "bin": {
+    "doc-repo": "dist/cli/index.js"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/cli/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.tests.json",
+    "test": "vitest run --coverage",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "fast-glob": "^3.3.3",
+    "fs-extra": "^11.3.5",
+    "markdown-it": "^14.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/jsdom": "^28.0.3",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^25.9.2",
+    "@vitest/coverage-v8": "^4.1.8",
+    "jsdom": "^29.1.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
