@@ -2,8 +2,19 @@
   "name": "doc-repo",
   "version": "0.1.0-alpha.0",
   "description": "Generate a static documentation site from repository Markdown files.",
+  "keywords": [
+    "markdown",
+    "documentation",
+    "static-site",
+    "cli",
+    "repository",
+    "docs"
+  ],
   "license": "MIT",
-  "author": "Ryuta1005",
+  "author": {
+    "name": "Ryuta Otsuka",
+    "url": "https://github.com/Ryuta1005"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ryuta1005/doc-repo.git"
