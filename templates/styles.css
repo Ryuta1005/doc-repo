@@ -1,0 +1,157 @@
+:root {
+  --bg: #f4f7f2;
+  --panel: #ffffff;
+  --line: #d8dfd2;
+  --ink: #1f2a1f;
+  --muted: #5a6758;
+  --accent: #2f6f4f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: linear-gradient(135deg, #f4f7f2 0%, #edf3ea 100%);
+  color: var(--ink);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  border-right: 1px solid var(--line);
+  padding: 20px;
+  background: var(--panel);
+}
+
+.sidebar h1 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.sidebar h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar a {
+  color: var(--accent);
+  text-decoration: none;
+  display: block;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.sidebar a.selected {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.sidebar summary {
+  cursor: pointer;
+  color: var(--ink);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.sidebar summary:hover {
+  color: var(--accent);
+}
+
+.sidebar ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.sidebar ul ul {
+  padding-left: 1.15rem;
+}
+
+.sidebar details > ul {
+  padding-left: 1.15rem;
+}
+
+.sidebar li {
+  margin: 0.2rem 0;
+}
+
+.content {
+  padding: 24px;
+}
+
+.content article {
+  max-width: 1120px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.content article img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 8px;
+  border: 1px solid #dbe3d6;
+}
+
+.content article blockquote {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: #f3f7f2;
+  color: #324233;
+}
+
+.content article blockquote p {
+  margin: 0.25rem 0;
+}
+
+.content article pre {
+  margin: 1rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #2d3a31;
+  background: #1f2823;
+}
+
+.content article pre code {
+  color: #e9f2ec;
+  background: transparent;
+  padding: 0;
+}
+
+.content article :not(pre) > code {
+  background: #edf2ed;
+  border: 1px solid #d8e1d8;
+  border-radius: 6px;
+  padding: 0.12rem 0.35rem;
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+}
