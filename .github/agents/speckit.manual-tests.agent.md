@@ -12,7 +12,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-Goal: Create or update manual test documents under `specs/<feature>/checklists/manual-tests/` for human-executable verification.
+Goal: Create or update manual test documents under `specs/<feature>/manual-tests/` for human-executable verification.
 
 Important: This is an optional helper workflow. It must not be treated as a required step before `/speckit.tasks` or `/speckit.implement`.
 
@@ -25,11 +25,11 @@ Important: This is an optional helper workflow. It must not be treated as a requ
    - Optional if present: `plan.md`, `tasks.md`, `quickstart.md`, `contracts/`
 
 3. Ensure output directory exists:
-   - `FEATURE_DIR/checklists/manual-tests/`
+   - `FEATURE_DIR/manual-tests/`
 
 4. Create or update these files:
-   - `FEATURE_DIR/checklists/manual-tests/test-analize.md`
-   - `FEATURE_DIR/checklists/manual-tests/test-case.md`
+   - `FEATURE_DIR/manual-tests/test-analize.md`
+   - `FEATURE_DIR/manual-tests/test-case.md`
 
 5. Content rules:
    - Derive coverage from requirements, acceptance criteria, and success criteria.
