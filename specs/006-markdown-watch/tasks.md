@@ -17,9 +17,9 @@
 
 **Purpose**: 監視機能導入の初期準備と依存関係追加
 
-- [ ] T001 chokidar 依存を追加し lockfile を更新する in package.json and package-lock.json
-- [ ] T002 監視/再生成/SSE の共通型を定義する in src/shared/types.ts
-- [ ] T003 [P] 監視・再生成・通知用のログメッセージ定数を追加する in src/shared/logger.ts
+- [x] T001 chokidar 依存を追加し lockfile を更新する in package.json and package-lock.json
+- [x] T002 監視/再生成/SSE の共通型を定義する in src/shared/types.ts
+- [x] T003 [P] 監視・再生成・通知用のログメッセージ定数を追加する in src/shared/logger.ts
 
 ---
 
@@ -29,13 +29,13 @@
 
 **⚠️ CRITICAL**: このフェーズ完了まで US1/US2/US3 の実装に着手しない
 
-- [ ] T004 SSE 接続管理（追加/削除/一括通知）を実装する in src/core/serve/sseConnectionRegistry.ts
-- [ ] T005 監視対象判定（rootDir/include/exclude + `.doc-repo`/`.git`/`node_modules` 除外）を実装する in src/core/serve/watchTargetFilter.ts
-- [ ] T006 300ms debounce と pending 再実行制御を持つ再生成コーディネータを実装する in src/core/serve/refreshCoordinator.ts
-- [ ] T007 chokidar 監視開始・停止をラップする監視ランナーを実装する in src/core/serve/startMarkdownWatcher.ts
-- [ ] T008 `/events` SSE エンドポイントを静的サーバーへ統合する in src/core/serve/startStaticServer.ts
-- [ ] T009 serve 実行時に監視ランナーと再生成コーディネータを起動接続する in src/core/serve/runServe.ts
-- [ ] T010 `SIGINT`/`SIGTERM` 共通シャットダウン（watcher→SSE→HTTP順、多重実行防止）を実装する in src/core/serve/runServe.ts
+- [x] T004 SSE 接続管理（追加/削除/一括通知）を実装する in src/core/serve/sseConnectionRegistry.ts
+- [x] T005 監視対象判定（rootDir/include/exclude + `.doc-repo`/`.git`/`node_modules` 除外）を実装する in src/core/serve/watchTargetFilter.ts
+- [x] T006 300ms debounce と pending 再実行制御を持つ再生成コーディネータを実装する in src/core/serve/refreshCoordinator.ts
+- [x] T007 chokidar 監視開始・停止をラップする監視ランナーを実装する in src/core/serve/startMarkdownWatcher.ts
+- [x] T008 `/events` SSE エンドポイントを静的サーバーへ統合する in src/core/serve/startStaticServer.ts
+- [x] T009 serve 実行時に監視ランナーと再生成コーディネータを起動接続する in src/core/serve/runServe.ts
+- [x] T010 `SIGINT`/`SIGTERM` 共通シャットダウン（watcher→SSE→HTTP順、多重実行防止）を実装する in src/core/serve/runServe.ts
 
 **Checkpoint**: 監視・再生成・SSE・安全停止の土台が完成
 
@@ -49,12 +49,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] `change` イベントを再生成トリガーとして接続する in src/core/serve/startMarkdownWatcher.ts
-- [ ] T012 [US1] 再生成成功時のみ SSE `reload` を配信する処理を実装する in src/core/serve/refreshCoordinator.ts
-- [ ] T013 [US1] 再生成失敗時は reload 未送信でエラーを stderr 出力する処理を実装する in src/core/serve/refreshCoordinator.ts
-- [ ] T014 [US1] 監視開始・変更検知・再生成開始/完了ログを整備する in src/core/serve/runServe.ts
-- [ ] T015 [US1] ブラウザ側 EventSource 受信で `reload` 時のみ再読み込みする処理を追加する in templates/app.js
-- [ ] T016 [US1] serve 起動時に監視状態が分かる表示文言を調整する in src/cli/formatResultMessage.ts
+- [x] T011 [US1] `change` イベントを再生成トリガーとして接続する in src/core/serve/startMarkdownWatcher.ts
+- [x] T012 [US1] 再生成成功時のみ SSE `reload` を配信する処理を実装する in src/core/serve/refreshCoordinator.ts
+- [x] T013 [US1] 再生成失敗時は reload 未送信でエラーを stderr 出力する処理を実装する in src/core/serve/refreshCoordinator.ts
+- [x] T014 [US1] 監視開始・変更検知・再生成開始/完了ログを整備する in src/core/serve/runServe.ts
+- [x] T015 [US1] ブラウザ側 EventSource 受信で `reload` 時のみ再読み込みする処理を追加する in templates/app.js
+- [x] T016 [US1] serve 起動時に監視状態が分かる表示文言を調整する in src/cli/formatResultMessage.ts
 
 **Checkpoint**: US1 単体で「保存→自動反映」が成立
 
@@ -68,11 +68,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] `add`/`unlink` イベントを再生成トリガーへ追加する in src/core/serve/startMarkdownWatcher.ts
-- [ ] T018 [US2] リネームを `unlink` + `add` として扱うイベント処理を明確化する in src/core/serve/startMarkdownWatcher.ts
-- [ ] T019 [US2] 監視フィルタに include/exclude と既定除外の優先順を反映する in src/core/serve/watchTargetFilter.ts
-- [ ] T020 [US2] add/unlink 後の再生成でサイト整合を保つ呼び出し順を調整する in src/core/serve/refreshCoordinator.ts
-- [ ] T021 [US2] add/unlink 検知ログ（対象パスとイベント種別）を追加する in src/core/serve/runServe.ts
+- [x] T017 [US2] `add`/`unlink` イベントを再生成トリガーへ追加する in src/core/serve/startMarkdownWatcher.ts
+- [x] T018 [US2] リネームを `unlink` + `add` として扱うイベント処理を明確化する in src/core/serve/startMarkdownWatcher.ts
+- [x] T019 [US2] 監視フィルタに include/exclude と既定除外の優先順を反映する in src/core/serve/watchTargetFilter.ts
+- [x] T020 [US2] add/unlink 後の再生成でサイト整合を保つ呼び出し順を調整する in src/core/serve/refreshCoordinator.ts
+- [x] T021 [US2] add/unlink 検知ログ（対象パスとイベント種別）を追加する in src/core/serve/runServe.ts
 
 **Checkpoint**: US2 単体で「追加・削除追従」が成立
 
@@ -86,11 +86,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] WatchStatusMessage コード体系に沿ったログ出力ヘルパーを実装する in src/core/serve/watchStatusReporter.ts
-- [ ] T023 [US3] `CHANGE_DETECTED`/`REGEN_STARTED`/`REGEN_SUCCEEDED`/`REGEN_FAILED` の出力を統一する in src/core/serve/refreshCoordinator.ts
-- [ ] T024 [US3] pending 再実行発生時の状態表示を追加する in src/core/serve/refreshCoordinator.ts
-- [ ] T025 [US3] シャットダウン開始・完了・エラーの出力を統一する in src/core/serve/runServe.ts
-- [ ] T026 [US3] CLI 表示メッセージを watch 運用向けに更新する in src/cli/formatResultMessage.ts
+- [x] T022 [US3] WatchStatusMessage コード体系に沿ったログ出力ヘルパーを実装する in src/core/serve/watchStatusReporter.ts
+- [x] T023 [US3] `CHANGE_DETECTED`/`REGEN_STARTED`/`REGEN_SUCCEEDED`/`REGEN_FAILED` の出力を統一する in src/core/serve/refreshCoordinator.ts
+- [x] T024 [US3] pending 再実行発生時の状態表示を追加する in src/core/serve/refreshCoordinator.ts
+- [x] T025 [US3] シャットダウン開始・完了・エラーの出力を統一する in src/core/serve/runServe.ts
+- [x] T026 [US3] CLI 表示メッセージを watch 運用向けに更新する in src/cli/formatResultMessage.ts
 
 **Checkpoint**: US3 単体で「進行状況が分かる表示」が成立
 
@@ -100,12 +100,12 @@
 
 **Purpose**: 全ストーリー横断の仕上げと回帰確認
 
-- [ ] T027 [P] 監視・SSE・シャットダウンの unit test を追加する in src/core/serve/startMarkdownWatcher.test.ts
-- [ ] T028 [P] debounce/pending 制御の unit test を追加する in src/core/serve/refreshCoordinator.test.ts
-- [ ] T029 [P] SSE 接続管理の unit test を追加する in src/core/serve/sseConnectionRegistry.test.ts
-- [ ] T030 serve 統合挙動（成功時 reload、失敗時 no reload、終了順序）を検証する in src/core/serve/runServe.test.ts
-- [ ] T031 quickstart 手順で手動検証し結果を反映する in specs/006-markdown-watch/quickstart.md
-- [ ] T032 006 の受け入れ条件とのトレーサビリティを最終確認する in specs/006-markdown-watch/spec.md
+- [x] T027 [P] 監視・SSE・シャットダウンの unit test を追加する in src/core/serve/startMarkdownWatcher.test.ts
+- [x] T028 [P] debounce/pending 制御の unit test を追加する in src/core/serve/refreshCoordinator.test.ts
+- [x] T029 [P] SSE 接続管理の unit test を追加する in src/core/serve/sseConnectionRegistry.test.ts
+- [x] T030 serve 統合挙動（成功時 reload、失敗時 no reload、終了順序）を検証する in src/core/serve/runServe.test.ts
+- [x] T031 quickstart 手順で手動検証し結果を反映する in specs/006-markdown-watch/quickstart.md
+- [x] T032 006 の受け入れ条件とのトレーサビリティを最終確認する in specs/006-markdown-watch/spec.md
 
 ---
 

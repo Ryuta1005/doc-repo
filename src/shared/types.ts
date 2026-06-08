@@ -60,6 +60,8 @@ export interface ServeConfiguration {
   portSource: ServePortSource;
   rootDir: string;
   outputDir: string;
+  includePatterns: string[];
+  excludePatterns: string[];
 }
 
 export type ServeStep = "initial-generate" | "start-server" | "start-watch";
@@ -92,4 +94,21 @@ export interface ServeSession {
   exitCode: number;
   steps: ServeStepResult[];
   failures: ServeFailure[];
+}
+
+export type WatchEventType = "add" | "change" | "unlink";
+
+export interface WatchEvent {
+  eventType: WatchEventType;
+  absolutePath: string;
+}
+
+export interface WatchHandle {
+  close: () => Promise<void>;
+}
+
+export interface SseReloadPayload {
+  type: "reload";
+  reason: "regenerate-succeeded";
+  occurredAt: string;
 }

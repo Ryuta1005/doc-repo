@@ -27,6 +27,8 @@ describe("resolveServeOptions", () => {
 
     expect(result.port).toBe(4500);
     expect(result.portSource).toBe("cli");
+    expect(result.includePatterns).toEqual([]);
+    expect(result.excludePatterns).toEqual([]);
   });
 
   it("設定ファイルに port がある場合、config が採用されること。", async () => {
@@ -37,6 +39,8 @@ describe("resolveServeOptions", () => {
 
     expect(result.port).toBe(4200);
     expect(result.portSource).toBe("config");
+    expect(result.includePatterns).toEqual([]);
+    expect(result.excludePatterns).toEqual([]);
   });
 
   it("CLI と設定ファイルの両方に指定がない場合、default=4000 になること。", async () => {
@@ -46,6 +50,8 @@ describe("resolveServeOptions", () => {
 
     expect(result.port).toBe(4000);
     expect(result.portSource).toBe("default");
+    expect(result.includePatterns).toEqual([]);
+    expect(result.excludePatterns).toEqual([]);
   });
 
   it("port が非整数の場合、invalid-port で失敗すること。", async () => {
@@ -63,5 +69,18 @@ describe("resolveServeOptions", () => {
     await expect(resolveServeOptions({ cwd: root, cliPort: 70000 })).rejects.toMatchObject({
       code: "INVALID_PORT",
     });
+  });
+
+  it("include/exclude が設定されている場合、配列として返すこと。", async () => {
+    const root = await makeTempDir();
+    await fs.outputJson(path.join(root, "doc-repo.config.json"), {
+      include: ["docs/"],
+      exclude: ["docs/private/"],
+    });
+
+    const result = await resolveServeOptions({ cwd: root });
+
+    expect(result.includePatterns).toEqual(["docs/"]);
+    expect(result.excludePatterns).toEqual(["docs/private/"]);
   });
 });

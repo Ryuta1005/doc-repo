@@ -53,8 +53,11 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
       const config = await resolveServeOptions({ cwd, cliPort: options?.port });
       const result = await runServe({
         cwd,
+        rootDir: config.rootDir,
         outputDir: config.outputDir,
         port: config.port,
+        includePatterns: config.includePatterns,
+        excludePatterns: config.excludePatterns,
       });
       const message = formatResultMessage(result);
 

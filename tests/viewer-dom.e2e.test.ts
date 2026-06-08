@@ -34,8 +34,11 @@ describe("multi-page static output E2E", () => {
     expect(await fs.pathExists(path.join(outDir, "docs", "first.html"))).toBe(true);
     expect(await fs.pathExists(path.join(outDir, "docs", "second.html"))).toBe(true);
     expect(await fs.pathExists(path.join(outDir, "styles.css"))).toBe(true);
-    expect(await fs.pathExists(path.join(outDir, "app.js"))).toBe(false);
+    expect(await fs.pathExists(path.join(outDir, "app.js"))).toBe(true);
     expect(await fs.pathExists(path.join(outDir, "content.json"))).toBe(false);
+
+    const firstHtml = await fs.readFile(path.join(outDir, "docs", "first.html"), "utf8");
+    expect(firstHtml).toContain('src="../app.js"');
   });
 
   it("本文内の Markdown リンクが、実在する相対 .html へ解決され、その先のファイルが存在すること。", async () => {

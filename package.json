@@ -45,6 +45,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",

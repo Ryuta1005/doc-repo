@@ -28,6 +28,7 @@ doc-repo serve [options]
 9. 再生成失敗時は SSE `reload` を送らず、標準エラーへ理由を表示する。
 10. SSE 接続は開始時に登録、切断時に削除する。再接続は EventSource 標準挙動に任せる。
 11. `SIGINT`/`SIGTERM` 時は watcher → 全 SSE 接続 → HTTP サーバーの順に非同期クリーンアップし、完了後に自然終了する。
+12. `file://` で生成物を直接開いた場合、クライアントは SSE 接続を開始しない（閲覧のみ継続）。
 
 ## SSE Endpoint Contract
 

@@ -4,6 +4,7 @@ const generateSiteMock = vi.fn();
 const runServeMock = vi.fn();
 const formatResultMessageMock = vi.fn();
 const resolveExitCodeMock = vi.fn();
+const resolveServeOptionsMock = vi.fn();
 
 vi.mock("../core/site/generateSite.js", () => ({
   generateSite: generateSiteMock,
@@ -21,6 +22,10 @@ vi.mock("./exitCode.js", () => ({
   resolveExitCode: resolveExitCodeMock,
 }));
 
+vi.mock("./serve/resolveServeOptions.js", () => ({
+  resolveServeOptions: resolveServeOptionsMock,
+}));
+
 describe("index.ts", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -28,7 +33,16 @@ describe("index.ts", () => {
     runServeMock.mockReset();
     formatResultMessageMock.mockReset();
     resolveExitCodeMock.mockReset();
+    resolveServeOptionsMock.mockReset();
     process.exitCode = 0;
+    resolveServeOptionsMock.mockResolvedValue({
+      port: 4000,
+      rootDir: "/tmp/repo",
+      outputDir: "/tmp/repo/.doc-repo",
+      includePatterns: [],
+      excludePatterns: [],
+      portSource: "default",
+    });
   });
 
   it("generateSite が success の場合、標準出力にメッセージを出して終了コード 0 を設定すること。", async () => {
@@ -82,7 +96,14 @@ describe("index.ts", () => {
     const { run } = await import("./index.js");
     await run(["node", "doc-repo", "serve"], "/tmp/repo");
 
-    expect(runServeMock).toHaveBeenCalled();
+    expect(runServeMock).toHaveBeenCalledWith({
+      cwd: "/tmp/repo",
+      rootDir: "/tmp/repo",
+      outputDir: "/tmp/repo/.doc-repo",
+      port: 4000,
+      includePatterns: [],
+      excludePatterns: [],
+    });
     expect(logSpy).toHaveBeenCalledWith("serve ok");
     expect(errSpy).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(0);
@@ -102,7 +123,14 @@ describe("index.ts", () => {
     const { run } = await import("./index.js");
     await run(["node", "doc-repo", "serve"], "/tmp/repo");
 
-    expect(runServeMock).toHaveBeenCalled();
+    expect(runServeMock).toHaveBeenCalledWith({
+      cwd: "/tmp/repo",
+      rootDir: "/tmp/repo",
+      outputDir: "/tmp/repo/.doc-repo",
+      port: 4000,
+      includePatterns: [],
+      excludePatterns: [],
+    });
     expect(errSpy).toHaveBeenCalledWith("serve ng");
     expect(logSpy).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);

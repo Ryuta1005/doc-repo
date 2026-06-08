@@ -4,10 +4,16 @@ import fs from "fs-extra";
 
 import { createServeError } from "../../shared/errors.js";
 
+interface SseHooks {
+  onSseConnect: (response: http.ServerResponse) => { connectionId: string; onClose?: () => void };
+  onSseDisconnect: (connectionId: string) => void;
+}
+
 interface StartStaticServerInput {
   outputDir: string;
   port: number;
   host?: string;
+  sseHooks?: SseHooks;
 }
 
 interface StartStaticServerResult {
@@ -53,6 +59,28 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
 
   const server = http.createServer(async (req, res) => {
     try {
+      if (req.url?.startsWith("/events")) {
+        if (!input.sseHooks) {
+          res.statusCode = 404;
+          res.end("Not Found");
+          return;
+        }
+
+        res.writeHead(200, {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        });
+        res.write(": connected\n\n");
+
+        const connection = input.sseHooks.onSseConnect(res);
+        req.on("close", () => {
+          input.sseHooks?.onSseDisconnect(connection.connectionId);
+          connection.onClose?.();
+        });
+        return;
+      }
+
       const requested = req.url?.split("?")[0] ?? "/";
       const safePath = decodeURIComponent(requested);
       const normalized = safePath === "/" ? "/index.html" : safePath;

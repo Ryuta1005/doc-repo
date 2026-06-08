@@ -82,3 +82,25 @@ node dist/cli/index.js serve
 
 - クリーンアップは多重実行されない
 - 正常停止後、終了コード 0
+
+## 7. file:// 閲覧時の互換性を確認
+
+1. `npm run build` を実行し `.doc-repo` を生成する。
+2. `.doc-repo/README.html` を `file://` で直接開く。
+3. 表示が崩れず閲覧できることを確認する。
+
+期待結果:
+
+- `file://` では SSE 接続を試行しない
+- 静的閲覧（build 成果物）は維持される
+
+## Manual Verification Log (2026-06-09)
+
+- Typecheck: `npm run typecheck` passed
+- Automated tests: serve/watch related test suite passed
+- Verified scenarios:
+  - change/add/unlink detection triggers regenerate flow
+  - reload event is dispatched only on regenerate success
+  - regenerate failure does not dispatch reload
+  - shutdown sequence runs watcher -> SSE -> HTTP
+  - shutdown re-entry is prevented

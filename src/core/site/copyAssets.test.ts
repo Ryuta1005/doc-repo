@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 describe("copyAssets.ts", () => {
-  it("templates 配下の styles.css を staging にコピーできること。", async () => {
+  it("templates 配下の assets を staging にコピーできること。", async () => {
     const root = await makeTempDir();
     const templatesDir = path.join(root, "templates");
     const stagingDir = path.join(root, "staging");
@@ -26,9 +26,11 @@ describe("copyAssets.ts", () => {
     await fs.ensureDir(templatesDir);
     await fs.ensureDir(stagingDir);
     await fs.writeFile(path.join(templatesDir, "styles.css"), "body { color: black; }", "utf8");
+    await fs.writeFile(path.join(templatesDir, "app.js"), "console.log('ok');", "utf8");
 
     await copyAssets(templatesDir, stagingDir);
 
     expect(await fs.readFile(path.join(stagingDir, "styles.css"), "utf8")).toContain("color");
+    expect(await fs.readFile(path.join(stagingDir, "app.js"), "utf8")).toContain("ok");
   });
 });

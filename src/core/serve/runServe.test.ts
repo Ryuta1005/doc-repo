@@ -26,21 +26,19 @@ describe("runServe.ts", () => {
       };
     });
 
-    const startWatch = vi.fn(async () => {
-      callOrder.push("start-watch");
-    });
-
     const { runServe } = await import("./runServe.js");
     const session = await runServe({
+      rootDir: "/repo",
       generate,
       startServer,
-      startWatch,
+      outputDir: "/repo/.doc-repo",
       port: 4000,
     });
 
-    expect(callOrder).toEqual(["generate", "start-server", "start-watch"]);
+    expect(callOrder).toEqual(["generate", "start-server"]);
     expect(session.status).toBe("watching");
     expect(session.publicUrl).toBe("http://localhost:4000");
+    await new Promise((resolve) => setImmediate(resolve));
   });
 
   it("初回生成に失敗した場合、start-server を呼ばずに failed になること。", async () => {
@@ -58,18 +56,16 @@ describe("runServe.ts", () => {
       }),
     );
     const startServer = vi.fn();
-    const startWatch = vi.fn();
-
     const { runServe } = await import("./runServe.js");
     const session = await runServe({
+      rootDir: "/repo",
       generate,
       startServer,
-      startWatch,
+      outputDir: "/repo/.doc-repo",
       port: 4000,
     });
 
     expect(startServer).not.toHaveBeenCalled();
-    expect(startWatch).not.toHaveBeenCalled();
     expect(session.status).toBe("failed");
     expect(session.exitCode).toBe(1);
   });
@@ -93,9 +89,9 @@ describe("runServe.ts", () => {
 
     const { runServe } = await import("./runServe.js");
     const session = await runServe({
+      rootDir: "/repo",
       generate,
       startServer,
-      startWatch: async () => undefined,
       outputDir: "/repo/.doc-repo",
     });
 
@@ -125,9 +121,9 @@ describe("runServe.ts", () => {
 
     const { runServe } = await import("./runServe.js");
     const session = await runServe({
+      rootDir: "/repo",
       generate,
       startServer,
-      startWatch: async () => undefined,
       outputDir: "/repo/.doc-repo",
       registerSignalHandler: (signal, handler) => {
         handlers.set(signal, handler);
@@ -141,5 +137,35 @@ describe("runServe.ts", () => {
 
     expect(close).toHaveBeenCalledTimes(1);
     expect(session.status).toBe("stopped");
+  });
+
+  it("start-server 失敗時、guidance を含んだ failed セッションを返すこと。", async () => {
+    const generate = vi.fn(
+      async (): Promise<GenerationResult> => ({
+        status: "success",
+        exitCode: 0,
+        outputDir: "/repo/.doc-repo",
+        targetPath: "/repo",
+        markdownFileCount: 1,
+        message: "ok",
+        warnings: [],
+      }),
+    );
+
+    const startServer = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    const { runServe } = await import("./runServe.js");
+    const session = await runServe({
+      rootDir: "/repo",
+      generate,
+      startServer,
+      outputDir: "/repo/.doc-repo",
+    });
+
+    expect(session.status).toBe("failed");
+    expect(session.exitCode).toBe(1);
+    expect(session.failures[0]?.type).toBe("unknown");
   });
 });

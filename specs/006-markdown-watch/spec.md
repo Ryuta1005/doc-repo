@@ -60,6 +60,7 @@
 - 再生成中に別の変更を検知した場合、現在の再生成完了後に最新状態でもう 1 回再生成される。同時実行は行わない
 - `.md` 以外の保存では、不要な再生成が発生しない
 - 再生成が失敗した場合、SSE `reload` イベントを送信せずブラウザは現在表示を維持する。失敗理由は標準出力に表示する
+- `file://` で静的生成物を直接開いた場合、SSE 接続を試行せず閲覧機能を維持する
 
 ## Requirements _(mandatory)_
 
@@ -71,12 +72,13 @@
 - **FR-004**: システムは `.md` ファイルの削除（`unlink` イベント）を検知しなければならない。リネームは `unlink` + `add` の組み合わせとして扱う
 - **FR-005**: システムは最後の変更検知から 300ms 経過後に再生成を 1 回実行しなければならない（debounce）。再生成中に新たな変更を検知した場合は破棄せず、現在の再生成完了後に最新状態で再度 1 回再生成しなければならない。同時に複数の再生成処理は実行しない
 - **FR-006**: システムは再生成が**正常完了した場合にのみ**、SSE（Server-Sent Events）の `reload` イベントをブラウザへ送信し、最新内容を反映しなければならない。再生成が失敗した場合は `reload` イベントを送信せず、ブラウザを更新しない
-- **FR-011**: システムは SSE 接続確立時に接続リストへ追加し、クライアント切断検知時に接続リストから削除しなければならない。自動再接続はブラウザ標準の `EventSource` に任せ、定期 ping は実装しない
-- **FR-012**: システムは `SIGINT` / `SIGTERM` 受信時に、chokidar watcher → 全 SSE 接続 → HTTP サーバーの順に非同期クリーンアップを実行し、完了後に自然終了（終了コード 0）しなければならない。クリーンアップの多重実行は防止し、クリーンアップ中のエラーは標準エラー出力へ表示する
 - **FR-007**: システムは監視、再生成、更新完了の進行状況を標準出力で分かるように表示しなければならない
 - **FR-008**: システムは自動更新対象を Markdown（`*.md`）に限定し、`.doc-repo`・`.git`・`node_modules` ならびに include/exclude 設定で除外されたパスへの保存で不要な再生成を行わないようにしなければならない
 - **FR-009**: システムは変更発生時に、一覧表示と本文表示が同じ最新状態を示すようにしなければならない
 - **FR-010**: システムは監視処理が継続中であることを利用者が把握できる状態にしなければならない
+- **FR-011**: システムは SSE 接続確立時に接続リストへ追加し、クライアント切断検知時に接続リストから削除しなければならない。自動再接続はブラウザ標準の `EventSource` に任せ、定期 ping は実装しない
+- **FR-012**: システムは `SIGINT` / `SIGTERM` 受信時に、chokidar watcher → 全 SSE 接続 → HTTP サーバーの順に非同期クリーンアップを実行し、完了後に自然終了（終了コード 0）しなければならない。クリーンアップの多重実行は防止し、クリーンアップ中のエラーは標準エラー出力へ表示する
+- **FR-013**: システムは `file://` プロトコルでページが開かれた場合、クライアント側で SSE 接続を開始せず、静的 HTML 閲覧を継続できなければならない
 
 ### Key Entities _(include if feature involves data)_
 
@@ -112,3 +114,25 @@
 - この機能はローカル閲覧の利便性向上が対象であり、外部共有や認証は対象外とする
 - 変更監視の詳細な対象範囲は、既存のドキュメント生成結果ではなく入力 Markdown を基準にする
 - 設定ファイルによる対象範囲の最終的な制御は Story 007 で扱う
+
+## Implementation Traceability
+
+### FR Mapping
+
+- FR-001/002/003/004: `src/core/serve/startMarkdownWatcher.ts`, `src/core/serve/watchTargetFilter.ts`
+- FR-005: `src/core/serve/refreshCoordinator.ts`
+- FR-006: `src/core/serve/refreshCoordinator.ts`, `src/core/serve/sseConnectionRegistry.ts`, `templates/app.js`
+- FR-007/010: `src/core/serve/watchStatusReporter.ts`, `src/core/serve/runServe.ts`, `src/cli/formatResultMessage.ts`
+- FR-008: `src/core/serve/watchTargetFilter.ts`, `src/cli/serve/resolveServeOptions.ts`
+- FR-009: `src/core/serve/runServe.ts` (regenerate via `generateSite` on watch events)
+- FR-011: `src/core/serve/startStaticServer.ts`, `src/core/serve/sseConnectionRegistry.ts`
+- FR-012: `src/core/serve/runServe.ts`
+- FR-013: `templates/app.js`
+
+### SC Mapping
+
+- SC-001: debounce + pending control in `src/core/serve/refreshCoordinator.ts`
+- SC-002: add/change/unlink detection in `src/core/serve/startMarkdownWatcher.ts`
+- SC-003: watch status logging in `src/core/serve/watchStatusReporter.ts`
+- SC-004: continuous regenerate/reload flow in `src/core/serve/runServe.ts` + `templates/app.js`
+- SC-005: non-markdown and excluded-path filtering in `src/core/serve/watchTargetFilter.ts`
