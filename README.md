@@ -23,6 +23,8 @@ doc-repo addresses this by generating a two-pane viewer (left tree / right conte
 - Preserves directory structure in tree navigation
 - Works without a local server (`index.html` can be opened directly)
 - Supports local server mode (`doc-repo serve`) with initial generation
+- Watches Markdown files and auto-regenerates on save while `serve` is running
+- Reloads the browser automatically via SSE when regeneration succeeds
 - Supports directory-scoped generation (`scopePath`)
 - Supports `--open` to launch the generated page automatically
 
@@ -64,18 +66,21 @@ doc-repo [scopePath] [--open]
 doc-repo serve [--port <number>]
 ```
 
-| Argument / Option | Description                                                            | Default        |
-| ----------------- | ---------------------------------------------------------------------- | -------------- |
-| `scopePath`       | Directory to generate from (path relative to Git root)                 | Whole Git root |
-| `--open`          | Open `.doc-repo/index.html` with your default browser after generation | `false`        |
-| `serve`           | Run initial generation and start local static server                   | -              |
-| `--port`          | Port for `serve` (CLI > config > default)                              | `4000`         |
+| Argument / Option | Description                                                              | Default        |
+| ----------------- | ------------------------------------------------------------------------ | -------------- |
+| `scopePath`       | Directory to generate from (path relative to Git root)                   | Whole Git root |
+| `--open`          | Open `.doc-repo/index.html` with your default browser after generation   | `false`        |
+| `serve`           | Run initial generation, start local static server, and watch for changes | -              |
+| `--port`          | Port for `serve` (CLI > config > default)                                | `4000`         |
 
 ### Serve Responsibilities
 
-- `doc-repo serve` orchestrates: initial generation -> server start -> watch start hook
+- `doc-repo serve` orchestrates: initial generation → server start → file watch start
+- Watches `.md` files and re-generates on change, add, or unlink
+- After successful regeneration, sends a reload event to all connected browsers via SSE
 - The HTTP server is delivery-only and does not run generation by itself
 - If initial generation fails, server startup is skipped and command exits with code `1`
+- On exit (Ctrl+C / SIGTERM), stops in order: watcher → SSE connections → HTTP server
 
 ### Target Root vs Collection Scope
 
@@ -90,6 +95,7 @@ doc-repo generates a multi-page static site under `.doc-repo`, mirroring your Ma
 .doc-repo/
 ├── index.html        # redirects to the home page (README if present)
 ├── styles.css
+├── app.js            # browser-side auto-reload (SSE client)
 ├── README.html
 └── docs/
     └── guide/
@@ -115,7 +121,6 @@ Reliability behavior:
 
 ## Current Limitations
 
-- File watching (`watch`) is not supported yet
 - Browser-based Markdown editing is not supported yet
 - Detailed include/exclude rules are not supported yet
 
