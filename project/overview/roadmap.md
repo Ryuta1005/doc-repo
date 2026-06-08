@@ -6,7 +6,7 @@
 
 最初に静的 HTML 生成の価値を成立させ、その後にローカルサーバーや編集体験を拡張する。
 
-## Phase 1: MVP
+## Phase 1: MVP(Done)
 
 目的: リポジトリ配下の Markdown をブラウザで読めるようにする
 
@@ -24,10 +24,11 @@
 
 - ローカルサーバー起動
 - 変更監視とホットリロード
-- 出力先ディレクトリの指定
-- 設定ファイル導入
-- include/exclude 指定
-- テーマや表示オプションの基本カスタマイズ
+- 設定ファイル導入（`doc-repo.config.json`）
+  - 設定ファイルが見つかればそのディレクトリをルートとして使用
+  - 見つからなければ `.git` を上位に向かって探すフォールバック
+  - rootDir指定
+  - include/exclude 指定
 
 ## Phase 3: 編集体験
 
@@ -48,6 +49,6 @@
 
 ## 進行管理ドキュメント
 
-- Backlog: ../project/backlog/index.md
-- Story Map: ../project/story-map.md
-- Workflow: ../project/issue-workflow.md
+- Backlog: ../planning/backlog/index.md
+- Story Map: ../planning/story-map.md
+- Workflow: ../issue-workflow.md

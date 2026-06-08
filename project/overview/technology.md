@@ -88,6 +88,207 @@ MVP 段階から、CLI の信頼性を担保するために単体テストを継
 - カバレッジは CI で計測し、HTML レポート（`index.html`）で確認できる状態を維持する
 - 重要な不具合を修正する際は、再発防止の単体テストを先に追加または同時に追加する
 
+## Phase をまたぐ設計境界（重要）
+
+Phase 3 で編集体験を入れる際、設計を雑にすると Phase 1・2 の実装をかなり作り直すことになる。これを避けるための原則を以下にまとめる。
+
+### 懸念
+
+Phase 1 の静的 HTML 生成ロジックと、将来の UI（React 等）やサーバー（Hono 等）を強く結びつけると壊れやすい。特に次のような密結合は危険。
+
+```text
+Markdown を読む
+→ HTML 文字列を作る
+→ 完成済み index.html へ直接埋め込む
+```
+
+この作りのまま React 化すると、Phase 3 で編集状態を持たせる際に HTML 生成方式・ページ遷移方式・ファイル取得方式・プレビュー方式をまとめて変えることになりやすい。
+
+### 解決方針: フレームワーク非依存の core 層を中心に置く
+
+中心に置くべきは React でも Hono でもなく、Markdown を扱う core 層。
+
+```text
+core
+├── Markdown ファイルを収集する
+├── ツリー構造を作る
+├── Markdown を HTML へ変換する
+├── 設定を解決する
+└── ファイルパスを安全に扱う
+```
+
+この core を各 Phase から利用する。
+
+```text
+Phase 1  core → 静的 HTML 生成
+Phase 2  core → Hono で配信 / Chokidar で再実行 / 閲覧 UI
+Phase 3  core → Hono API で読み書き / 編集・プレビュー UI
+```
+
+core は React や Hono を知らない。依存方向は常に外側から core への一方向にする。
+
+```text
+client   ─┐
+server   ─┼→ core
+commands ─┘
+
+core → React や Hono を知らない
+```
+
+### core はフレームワーク非依存のデータを返す
+
+core は React コンポーネントや Hono の Context を返さず、JSON 相当のデータを返す。
+
+```ts
+// core が返すデータ構造（現時点の例示）
+type DocumentSite = {
+  tree: DocumentNode[];
+  documents: Record<string, DocumentContent>;
+};
+
+type DocumentContent = {
+  path: string;
+  title: string;
+  markdown: string;
+  html: string;
+};
+```
+
+注意: この型定義は現時点の例示であり、Phase 2/3 で載容量や API 設計を再検討する可能性があります（例: tree と文書を納める粗粒度 API / 本文の遅延読み込み等）。
+
+このデータを、静的ジェネレーター / 閲覧 UI / Hono API のどれからでも利用できるようにする。
+
+### Phase 1 の静的出力（build）は残す
+
+Phase 3 で UI フレームワークを入れても、Phase 1 の静的生成の価値は捨てない。コマンドを役割で分ける。
+
+```bash
+doc-repo build   # 静的 HTML を生成（Phase 1 の機能を維持）
+doc-repo serve   # ローカルサーバー + 変更監視（Phase 2）
+doc-repo edit    # 編集 API と編集 UI を有効化（Phase 3）
+```
+
+`serve --edit` のようにオプションで切り替える手もあるが、将来の責務を考えるとコマンドを分ける方が明確。
+
+### なお残すもの / 作り直すもの
+
+```text
+残せるもの（core 側）
+- Markdown 探索
+- include/exclude
+- rootDir 解決
+- Markdown 変換
+- ツリー生成
+- 出力先管理
+- CLI の基本構造
+
+作り直しやすいもの（UI 側）
+- 左ツリーの描画
+- 右本文の描画
+- ページ切り替え
+- ホットリロード処理
+```
+
+### Phase 1 の静的出力（build）は残す
+
+Phase 3 で UI フレームワークを入れても、Phase 1 の静的生成の価値は捨てない。コマンドを役割で分ける。
+
+```bash
+doc-repo build   # 静的 HTML を生成（Phase 1 の機能を維持）
+doc-repo serve   # ローカルサーバー + 変更監視（Phase 2）
+```
+
+Phase 3 での CLI 仕様（`serve` と `edit` を分ける vs `serve --editable` など）は、Phase 3 開始時の Spike とともに確定させる。
+
+### 結論
+
+React + Hono を採用すること自体より、**Phase 2 で責務の境界をきちんと作れるか**が重要。
+
+- core をフレームワーク非依存にする
+- `build` を残す
+- React は UI だけ
+- **Hono は HTTP リクエスト・レスポンス請け負い**のみ。実際のファイル読み書きや内容検証などの処理を、Hono ルートへ直接埋め込まず、application/core 層から呼び出す設計にする
+- Chokidar は監視だけ
+
+これを守れば、Phase 3 は全面改修ではなく拡張になる。
+
+## Phase 別 パッケージ追加方針（仮）
+
+以下は現時点での見通しであり、実装開始前に Spike や設計レビューで再確認する。
+
+### 判断の前提: Hono と React は独立して決める
+
+core をフレームワーク非依存に保てていれば、UI（React 等）の導入時期は core の作り直しに影響しない。壊れるのは UI 層だけで、それは元々 Phase 3 で作り直す前提の部分である。したがって「React を遅らせると壊す」という前提は成り立たない。
+
+このため、次の 2 つの判断を分離する。
+
+- **サーバー境界（Hono）**: Phase 2 のローカル配信と Phase 3 のファイル操作を同じ境界で扱えるため、Phase 2 から導入してよい。Hono を使う理由は「React に必要だから」ではなく、配信とファイル操作を一貫した境界に置けるため。
+- **UI フレームワーク（React）**: Phase 2 の利用者価値（serve / 自動反映 / 設定解決 / include・exclude）は主に Hono・Chokidar・core の責務であり、React では増えない。Phase 3 開始時の Spike で導入可否を判断する。
+
+### Phase 2: 利便性向上
+
+| パッケージ   | 必要度     | 用途                                                                                          |
+| ------------ | ---------- | --------------------------------------------------------------------------------------------- |
+| **chokidar** | ⭐⭐⭐⭐⭐ | Markdown ファイルの変更監視（cross-platform で信頼性が高く、自前実装は割に合わない）          |
+| **Hono**     | ⭐⭐⭐⭐   | ローカル HTTP サーバー（静的配信 + ドキュメント取得 API + SSE）。Phase 3 でそのまま拡張できる |
+| **React**    | ⭐⭐       | Phase 2 では原則導入しない。現在の HTML/CSS/Vanilla JS UI を維持する                          |
+
+Phase 2 の最小 API は次の程度で足りる。場合によっては静的サイト再生成 + SSE 通知だけで成立し、`/api/documents` すら最初は不要。
+
+```http
+GET /api/documents   # 必要なら
+GET /api/events       # SSE（reload 通知）
+```
+
+ホットリロードの流れ:
+
+```text
+Markdown 変更
+→ Chokidar が検知
+→ 静的サイト再生成
+→ SSE で reload 通知
+→ ブラウザ更新
+```
+
+重要: Phase 3 で交換する可能性が高い Vanilla JS UI に機能を盛りすぎない。Phase 2 はサーバー境界と core の確立に集中する。
+
+### Phase 3: 編集体験
+
+| パッケージ       | 必要度     | 用途                                                                                                                                       |
+| ---------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Hono**         | ⭐⭐⭐⭐⭐ | Phase 2 のサーバーを拡張。HTTP 境界と読み書き API を担当し、実際のファイル操作・検証ロジックは application 層を経由                        |
+| **CodeMirror 6** | ⭐⭐⭐⭐⭐ | ブラウザ上の Markdown エディタ。自前実装は現実的でない。React 専用ではなく Vanilla JS でも利用可能                                         |
+| **React**        | ⭐⭐⭐⭐   | 編集状態（選択中ファイル・編集内容・保存状態・未保存警告・競合・エラー表示）が増えるため必要度は高い。ただし HTTP サーバーほど必須ではない |
+
+Phase 3 で増える API（例）:
+
+```http
+GET /api/documents/:path
+PUT /api/documents/:path
+```
+
+Hono のルートはリクエスト解析と HTTP レスポンス返却に専念し、パストラバーサル拒否・ファイルバージョン突合・実際のファイル保存は application/core 層で実装する構造にする。
+
+Phase 3 開始時に短い技術検証を行い、次のような選択肢を比較する。
+
+- React + CodeMirror 6
+- Vanilla JS + CodeMirror 6
+- その他の軽量 UI フレームワーク
+
+### 必要度サマリ
+
+| 技術                      |    Phase 2 |               Phase 3 |
+| ------------------------- | ---------: | --------------------: |
+| Hono などの HTTP サーバー |   ⭐⭐⭐⭐ |            ⭐⭐⭐⭐⭐ |
+| Chokidar                  | ⭐⭐⭐⭐⭐ |            ⭐⭐⭐⭐⭐ |
+| React                     |       ⭐⭐ |              ⭐⭐⭐⭐ |
+| CodeMirror 6              |          ☆ |            ⭐⭐⭐⭐⭐ |
+| CSS（素）                 | ⭐⭐⭐⭐⭐ |               ⭐⭐⭐☆ |
+| Tailwind CSS              |       ⭐⭐ |               ⭐⭐⭐☆ |
+| shadcn/ui                 |          ☆ | React 採用時に⭐⭐⭐☆ |
+
+この方針は「一気に多機能化しない」「将来機能のために過度に複雑化しない」というロードマップの方針、および YAGNI に最も整合する。
+
 ## npm パッケージとしての方針
 
 npm パッケージを初めて作る前提では、まず CLI として価値を成立させるのがよい。
