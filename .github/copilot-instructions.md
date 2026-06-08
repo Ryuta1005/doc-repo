@@ -92,6 +92,7 @@ MVP は次の 3 つの Spec に分けて進める。
 ## Active Technologies
 - TypeScript (Node.js >= 20) + commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証） (005-local-server-serve)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo`） (005-local-server-serve)
+- TypeScript (Node.js >= 20) + commander, fs-extra, fast-glob, markdown-it, chokidar（新規）, Node.js `http`/`node:net` (006-markdown-watch)
 
 - TypeScript (Node.js LTS 想定) + commander (CLI引数), fast-glob (Markdown探索), markdown-it (Markdown→HTML), fs-extra (ファイル操作) (002-one-command-generate)
 - ファイルシステム（入力Markdownと出力 `.doc-repo`） (002-one-command-generate)
