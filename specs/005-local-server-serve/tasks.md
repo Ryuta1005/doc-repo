@@ -23,11 +23,11 @@
 
 **⚠️ CRITICAL**: この Phase 完了前に US1/US2/US3 実装へ進まない
 
-- [ ] T004 設定解決結果の型を src/shared/types.ts に追加する（ServeConfiguration, ServeSession, ServeStepResult, ServeFailure）
-- [ ] T005 [P] serve 失敗種別と利用者向けメッセージ変換を src/shared/errors.ts に追加する（invalid-port, port-conflict, initial-generate-failed, missing-output）
-- [ ] T006 doc-repo.config.json と CLI 引数の統合解決関数を src/cli/serve/resolveServeOptions.ts に作成する
-- [ ] T007 [P] resolveServeOptions の単体テストを src/cli/serve/resolveServeOptions.test.ts に追加する（CLI > config > default、port 検証）
-- [ ] T008 serve 実行で利用する終了コードマッピングを src/cli/exitCode.ts と src/cli/exitCode.test.ts に拡張する
+- [x] T004 設定解決結果の型を src/shared/types.ts に追加する（ServeConfiguration, ServeSession, ServeStepResult, ServeFailure）
+- [x] T005 [P] serve 失敗種別と利用者向けメッセージ変換を src/shared/errors.ts に追加する（invalid-port, port-conflict, initial-generate-failed, missing-output）
+- [x] T006 doc-repo.config.json と CLI 引数の統合解決関数を src/cli/serve/resolveServeOptions.ts に作成する
+- [x] T007 [P] resolveServeOptions の単体テストを src/cli/serve/resolveServeOptions.test.ts に追加する（CLI > config > default、port 検証）
+- [x] T008 serve 実行で利用する終了コードマッピングを src/cli/exitCode.ts と src/cli/exitCode.test.ts に拡張する
 
 **Checkpoint**: 設定優先順位と異常分類の基盤が整い、各ストーリーの実装に着手可能
 
@@ -41,17 +41,17 @@
 
 ### Tests for User Story 1 (Write first and fail)
 
-- [ ] T009 [P] [US1] orchestration 順序の失敗テストを src/core/serve/runServe.test.ts に追加する（generate -> start-server -> start-watch）
-- [ ] T010 [P] [US1] 初回生成失敗時に start-server を呼ばない失敗テストを src/core/serve/runServe.test.ts に追加する
-- [ ] T011 [P] [US1] serve コマンドの契約テストを src/cli/index.test.ts に追加する（成功時 URL 出力、失敗時 stderr/exitCode=1）
+- [x] T009 [P] [US1] orchestration 順序の失敗テストを src/core/serve/runServe.test.ts に追加する（generate -> start-server -> start-watch）
+- [x] T010 [P] [US1] 初回生成失敗時に start-server を呼ばない失敗テストを src/core/serve/runServe.test.ts に追加する
+- [x] T011 [P] [US1] serve コマンドの契約テストを src/cli/index.test.ts に追加する（成功時 URL 出力、失敗時 stderr/exitCode=1）
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] serve オーケストレーション本体を src/core/serve/runServe.ts に実装する（初回生成、配信開始、監視開始フック）
-- [ ] T013 [US1] HTTP 配信専用サーバーを src/core/serve/startStaticServer.ts に実装する（生成処理を含めない）
-- [ ] T014 [US1] CLI へ serve サブコマンドを追加し runServe を接続するため src/cli/index.ts を更新する
-- [ ] T015 [US1] 起動メッセージ整形を src/cli/formatResultMessage.ts と src/cli/formatResultMessage.test.ts に追加する（generate success / serve URL / watch started）
-- [ ] T016 [US1] 初回生成失敗時の利用者向けエラー文言と終了制御を src/core/serve/runServe.ts と src/cli/index.ts に反映する
+- [x] T012 [US1] serve オーケストレーション本体を src/core/serve/runServe.ts に実装する（初回生成、配信開始、監視開始フック）
+- [x] T013 [US1] HTTP 配信専用サーバーを src/core/serve/startStaticServer.ts に実装する（生成処理を含めない）
+- [x] T014 [US1] CLI へ serve サブコマンドを追加し runServe を接続するため src/cli/index.ts を更新する
+- [x] T015 [US1] 起動メッセージ整形を src/cli/formatResultMessage.ts と src/cli/formatResultMessage.test.ts に追加する（generate success / serve URL / watch started）
+- [x] T016 [US1] 初回生成失敗時の利用者向けエラー文言と終了制御を src/core/serve/runServe.ts と src/cli/index.ts に反映する
 
 **Checkpoint**: US1 単独でワンコマンド起動と fail-fast が成立
 
@@ -65,15 +65,15 @@
 
 ### Tests for User Story 2 (Write first and fail)
 
-- [ ] T017 [P] [US2] ポート解決優先順位の統合テストを src/cli/serve/resolveServeOptions.test.ts に追加する（CLI 優先）
-- [ ] T018 [P] [US2] port 未指定時の default 4000 と URL 表示のテストを src/core/serve/runServe.test.ts に追加する
-- [ ] T019 [P] [US2] 設定ファイル port 適用の CLI 実行テストを tests/npm-run-dev.test.ts に追加する
+- [x] T017 [P] [US2] ポート解決優先順位の統合テストを src/cli/serve/resolveServeOptions.test.ts に追加する（CLI 優先）
+- [x] T018 [P] [US2] port 未指定時の default 4000 と URL 表示のテストを src/core/serve/runServe.test.ts に追加する
+- [x] T019 [P] [US2] 設定ファイル port 適用の CLI 実行テストを tests/npm-run-dev.test.ts に追加する
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] serve コマンドへ --port オプションを追加し解決値を runServe へ渡すため src/cli/index.ts を更新する
-- [ ] T021 [US2] 解決済みポートを startStaticServer に連携するため src/core/serve/runServe.ts と src/core/serve/startStaticServer.ts を更新する
-- [ ] T022 [US2] 無効 port（非整数・範囲外）を起動前に失敗させるため src/cli/serve/resolveServeOptions.ts と src/shared/errors.ts を更新する
+- [x] T020 [US2] serve コマンドへ --port オプションを追加し解決値を runServe へ渡すため src/cli/index.ts を更新する
+- [x] T021 [US2] 解決済みポートを startStaticServer に連携するため src/core/serve/runServe.ts と src/core/serve/startStaticServer.ts を更新する
+- [x] T022 [US2] 無効 port（非整数・範囲外）を起動前に失敗させるため src/cli/serve/resolveServeOptions.ts と src/shared/errors.ts を更新する
 
 **Checkpoint**: US2 単独でポート優先順位と入力検証が成立
 
@@ -87,15 +87,15 @@
 
 ### Tests for User Story 3 (Write first and fail)
 
-- [ ] T023 [P] [US3] 停止操作でサーバー close が呼ばれる失敗テストを src/core/serve/startStaticServer.test.ts に追加する
-- [ ] T024 [P] [US3] ポート競合時の失敗テストを src/core/serve/startStaticServer.test.ts に追加する（EADDRINUSE -> port-conflict）
-- [ ] T025 [P] [US3] 競合時の CLI 出力と終了コード確認テストを src/cli/index.test.ts に追加する
+- [x] T023 [P] [US3] 停止操作でサーバー close が呼ばれる失敗テストを src/core/serve/startStaticServer.test.ts に追加する
+- [x] T024 [P] [US3] ポート競合時の失敗テストを src/core/serve/startStaticServer.test.ts に追加する（EADDRINUSE -> port-conflict）
+- [x] T025 [P] [US3] 競合時の CLI 出力と終了コード確認テストを src/cli/index.test.ts に追加する
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] SIGINT/SIGTERM 受信時の安全停止処理を src/core/serve/runServe.ts に実装する（close 完了待ち）
-- [ ] T027 [US3] ポート競合を利用者向けメッセージへ変換する処理を src/core/serve/startStaticServer.ts と src/shared/errors.ts に実装する
-- [ ] T028 [US3] サーバー停止後にセッション終了状態を反映するため src/shared/types.ts と src/core/serve/runServe.ts を更新する
+- [x] T026 [US3] SIGINT/SIGTERM 受信時の安全停止処理を src/core/serve/runServe.ts に実装する（close 完了待ち）
+- [x] T027 [US3] ポート競合を利用者向けメッセージへ変換する処理を src/core/serve/startStaticServer.ts と src/shared/errors.ts に実装する
+- [x] T028 [US3] サーバー停止後にセッション終了状態を反映するため src/shared/types.ts と src/core/serve/runServe.ts を更新する
 
 **Checkpoint**: US3 単独で安全停止と原因特定可能な異常終了が成立
 
@@ -105,10 +105,10 @@
 
 **Purpose**: ストーリー横断の整合性確認とドキュメント更新
 
-- [ ] T029 [P] quickstart の手順を実装結果へ同期するため specs/005-local-server-serve/quickstart.md を更新する
-- [ ] T030 [P] 契約との差分を解消するため specs/005-local-server-serve/contracts/cli-contract.md を更新する
-- [ ] T031 serve の利用説明と制約（サーバーは配信専任）を README.ja.md と README.md に追記する
-- [ ] T032 全テスト実行コマンドと手動検証結果を specs/005-local-server-serve/tasks.md の末尾ログ欄に記録する
+- [x] T029 [P] quickstart の手順を実装結果へ同期するため specs/005-local-server-serve/quickstart.md を更新する
+- [x] T030 [P] 契約との差分を解消するため specs/005-local-server-serve/contracts/cli-contract.md を更新する
+- [x] T031 serve の利用説明と制約（サーバーは配信専任）を README.ja.md と README.md に追記する
+- [x] T032 全テスト実行コマンドと手動検証結果を specs/005-local-server-serve/tasks.md の末尾ログ欄に記録する
 
 ---
 
@@ -194,3 +194,7 @@
 ## Validation Log
 
 - 実装時にここへ実行コマンドと結果を追記する
+- `npm run test -- src/cli/index.test.ts src/cli/formatResultMessage.test.ts src/cli/exitCode.test.ts src/cli/serve/resolveServeOptions.test.ts src/core/serve/runServe.test.ts src/core/serve/startStaticServer.test.ts` -> PASS
+- `npm run test -- src/core/serve/runServe.test.ts src/cli/serve/resolveServeOptions.test.ts tests/npm-run-dev.test.ts` -> PASS
+- `npm run test -- src/core/serve/startStaticServer.test.ts src/core/serve/runServe.test.ts src/cli/index.test.ts` -> PASS
+- 手動検証: 未実施（manual-tests の手順書を作成済み）

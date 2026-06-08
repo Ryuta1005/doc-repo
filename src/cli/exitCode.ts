@@ -1,5 +1,3 @@
-import type { GenerationResult } from "../shared/types.js";
-
-export const resolveExitCode = (result: GenerationResult): number => {
+export const resolveExitCode = (result: { exitCode: number }): number => {
   return result.exitCode;
 };

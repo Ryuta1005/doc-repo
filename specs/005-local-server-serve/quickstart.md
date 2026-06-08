@@ -53,16 +53,12 @@ node dist/cli/index.js serve --port 4500
 
 ## 4. 初回生成失敗の確認
 
-存在しない `rootDir` を指定し、初回生成を失敗させる。
+テンプレートを一時退避し、初回生成を失敗させる。
 
 ```bash
-cat > doc-repo.config.json <<'JSON'
-{
-  "rootDir": "./not-found-dir"
-}
-JSON
-
+mv templates templates.__bak__
 node dist/cli/index.js serve
+mv templates.__bak__ templates
 ```
 
 期待結果:

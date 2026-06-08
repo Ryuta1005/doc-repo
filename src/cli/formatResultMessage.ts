@@ -1,6 +1,6 @@
-import type { GenerationResult } from "../shared/types.js";
+import type { GenerationResult, ServeSession } from "../shared/types.js";
 
-export const formatResultMessage = (result: GenerationResult): string => {
+const formatGenerationMessage = (result: GenerationResult): string => {
   const lines = [result.message, `生成対象: ${result.targetPath}`, `出力先: ${result.outputDir}`];
 
   if (result.warnings.length > 0) {
@@ -20,4 +20,41 @@ export const formatResultMessage = (result: GenerationResult): string => {
   }
 
   return lines.join("\n");
+};
+
+const formatServeMessage = (result: ServeSession): string => {
+  const lines: string[] = [];
+
+  const generationStep = result.steps.find((x) => x.step === "initial-generate");
+  if (generationStep?.status === "success") {
+    lines.push("[doc-repo] generate: success");
+  }
+
+  if (result.publicUrl) {
+    lines.push(`[doc-repo] serve: listening on ${result.publicUrl}`);
+  }
+
+  if (result.status === "watching") {
+    lines.push("[doc-repo] watch: started");
+  }
+
+  if (result.status === "failed") {
+    const failure = result.failures[0];
+    if (failure) {
+      lines.push(`[doc-repo] error: ${failure.message}`);
+      if (failure.hint) {
+        lines.push(`対処: ${failure.hint}`);
+      }
+    }
+  }
+
+  return lines.join("\n");
+};
+
+export const formatResultMessage = (result: GenerationResult | ServeSession): string => {
+  if ("targetPath" in result) {
+    return formatGenerationMessage(result);
+  }
+
+  return formatServeMessage(result);
 };

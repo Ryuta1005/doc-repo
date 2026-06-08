@@ -15,6 +15,16 @@ doc-repo serve [options]
 - `--port <number>`: 待受ポートを指定する。
 - `--help`: ヘルプを表示する。
 
+## Usage Examples
+
+```bash
+doc-repo serve
+```
+
+```bash
+doc-repo serve --port 4500
+```
+
 ## Configuration Resolution
 
 `port` の解決優先順位:
@@ -55,11 +65,11 @@ doc-repo serve [options]
 出力例:
 
 ```text
-[doc-repo] error: initial generation failed: <reason>
+[doc-repo] error: INITIAL_GENERATE_FAILED: <reason>
 ```
 
 ```text
-[doc-repo] error: port 4000 is already in use
+[doc-repo] error: PORT_CONFLICT: port 4000 は既に使用されています。
 ```
 
 ## Exit Codes
