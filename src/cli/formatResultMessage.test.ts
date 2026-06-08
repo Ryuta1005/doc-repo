@@ -56,6 +56,7 @@ describe("formatResultMessage.ts", () => {
     expect(text).toContain("[doc-repo] generate: success");
     expect(text).toContain("[doc-repo] serve: listening on http://localhost:4000");
     expect(text).toContain("[doc-repo] watch: started");
+    expect(text).toContain("[doc-repo] watch: auto-reload enabled (SSE)");
   });
 
   it("serve failure の場合、error と対処を返すこと。", () => {

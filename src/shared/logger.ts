@@ -6,6 +6,17 @@ export interface Logger {
   error: (message: string) => void;
 }
 
+export const WATCH_STATUS_CODES = {
+  WATCH_STARTED: "WATCH_STARTED",
+  CHANGE_DETECTED: "CHANGE_DETECTED",
+  REGEN_STARTED: "REGEN_STARTED",
+  REGEN_PENDING: "REGEN_PENDING",
+  REGEN_SUCCEEDED: "REGEN_SUCCEEDED",
+  REGEN_FAILED: "REGEN_FAILED",
+  SHUTDOWN_STARTED: "SHUTDOWN_STARTED",
+  SHUTDOWN_COMPLETED: "SHUTDOWN_COMPLETED",
+} as const;
+
 export const createLogger = (): Logger => {
   const log = (level: LogLevel, message: string): void => {
     const prefix = `[doc-repo:${level}]`;

@@ -12,6 +12,8 @@ interface ResolveServeOptionsInput {
 
 interface ServeConfigFile {
   port?: unknown;
+  include?: unknown;
+  exclude?: unknown;
 }
 
 const findConfigPath = async (startDir: string): Promise<string | undefined> => {
@@ -40,18 +42,40 @@ const validatePort = (value: unknown): number => {
   return value;
 };
 
-const readConfigPort = async (cwd: string): Promise<number | undefined> => {
+const validatePathPatterns = (value: unknown, fieldName: "include" | "exclude"): string[] => {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value) || value.some((x) => typeof x !== "string")) {
+    throw createServeError("unknown", `${fieldName} は文字列配列で指定してください。`);
+  }
+
+  return value;
+};
+
+const readConfigFile = async (
+  cwd: string,
+): Promise<{ port?: number; includePatterns: string[]; excludePatterns: string[] }> => {
   const configPath = await findConfigPath(cwd);
   if (!configPath) {
-    return undefined;
+    return { includePatterns: [], excludePatterns: [] };
   }
 
   const config = (await fs.readJson(configPath)) as ServeConfigFile;
+
+  const includePatterns = validatePathPatterns(config.include, "include");
+  const excludePatterns = validatePathPatterns(config.exclude, "exclude");
+
   if (config.port === undefined) {
-    return undefined;
+    return { includePatterns, excludePatterns };
   }
 
-  return validatePort(config.port);
+  return {
+    port: validatePort(config.port),
+    includePatterns,
+    excludePatterns,
+  };
 };
 
 export const resolveServeOptions = async (input: ResolveServeOptionsInput): Promise<ServeConfiguration> => {
@@ -59,22 +83,28 @@ export const resolveServeOptions = async (input: ResolveServeOptionsInput): Prom
   const rootDir = detected.detectedRoot;
   const outputDir = path.join(rootDir, ".doc-repo");
 
+  const configFile = await readConfigFile(input.cwd);
+
   if (input.cliPort !== undefined) {
     return {
       port: validatePort(input.cliPort),
       portSource: "cli",
       rootDir,
       outputDir,
+      includePatterns: configFile.includePatterns,
+      excludePatterns: configFile.excludePatterns,
     };
   }
 
-  const configPort = await readConfigPort(input.cwd);
+  const configPort = configFile.port;
   if (configPort !== undefined) {
     return {
       port: configPort,
       portSource: "config",
       rootDir,
       outputDir,
+      includePatterns: configFile.includePatterns,
+      excludePatterns: configFile.excludePatterns,
     };
   }
 
@@ -83,5 +113,7 @@ export const resolveServeOptions = async (input: ResolveServeOptionsInput): Prom
     portSource: "default",
     rootDir,
     outputDir,
+    includePatterns: configFile.includePatterns,
+    excludePatterns: configFile.excludePatterns,
   };
 };

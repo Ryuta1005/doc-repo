@@ -71,6 +71,14 @@ MVP は次の 3 つの Spec に分けて進める。
 - 不明点は質問で解消する。質問は選択式を優先する
   - 例: A/B/C 形式
 
+## 手動テストケースの取り扱い
+
+`specs/*/manual-tests/test-case.md` の「実測」欄は **人間が実施後に記録するフィールド** である。
+
+- `判定:` / `実行結果:` / `補足:` に値を入れてはいけない（空欄のまま出力すること）
+- `Pass` / `Fail` / `Blocked` を AI が決定・記入することは厳禁
+- テストケースを新規作成・更新する場合も、実測欄は必ず空欄にする
+
 ## Done の定義
 
 次をすべて満たしたら完了とする。
@@ -90,8 +98,10 @@ MVP は次の 3 つの Spec に分けて進める。
 必要になったら、ロードマップの Phase 2 以降として扱う。
 
 ## Active Technologies
+
 - TypeScript (Node.js >= 20) + commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証） (005-local-server-serve)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo`） (005-local-server-serve)
+- TypeScript (Node.js >= 20) + commander, fs-extra, fast-glob, markdown-it, chokidar（新規）, Node.js `http`/`node:net` (006-markdown-watch)
 
 - TypeScript (Node.js LTS 想定) + commander (CLI引数), fast-glob (Markdown探索), markdown-it (Markdown→HTML), fs-extra (ファイル操作) (002-one-command-generate)
 - ファイルシステム（入力Markdownと出力 `.doc-repo`） (002-one-command-generate)
