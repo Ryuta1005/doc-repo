@@ -29,6 +29,7 @@
   - 見つからなければ `.git` を上位に向かって探すフォールバック
   - rootDir指定
   - include/exclude 指定
+- 設定ファイルの雛形生成コマンド（`doc-repo init`）
 
 ## Phase 3: 編集体験
 
