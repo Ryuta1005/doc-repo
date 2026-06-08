@@ -52,3 +52,44 @@ export interface GenerationResult {
   errorReason?: string;
   hint?: string;
 }
+
+export type ServePortSource = "cli" | "config" | "default";
+
+export interface ServeConfiguration {
+  port: number;
+  portSource: ServePortSource;
+  rootDir: string;
+  outputDir: string;
+}
+
+export type ServeStep = "initial-generate" | "start-server" | "start-watch";
+
+export interface ServeStepResult {
+  step: ServeStep;
+  status: "success" | "failure" | "skipped";
+  message: string;
+  durationMs: number;
+}
+
+export type ServeFailureType =
+  | "invalid-port"
+  | "port-conflict"
+  | "initial-generate-failed"
+  | "missing-output"
+  | "unknown";
+
+export interface ServeFailure {
+  type: ServeFailureType;
+  message: string;
+  field?: string;
+  hint?: string;
+  exitCode: 1;
+}
+
+export interface ServeSession {
+  status: "initializing" | "generating" | "serving" | "watching" | "stopped" | "failed";
+  publicUrl?: string;
+  exitCode: number;
+  steps: ServeStepResult[];
+  failures: ServeFailure[];
+}

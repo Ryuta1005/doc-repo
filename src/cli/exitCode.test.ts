@@ -32,4 +32,15 @@ describe("exitCode.ts", () => {
 
     expect(result).toBe(1);
   });
+
+  it("ServeSession 形式の exitCode が 1 の場合、1 が返却されること。", () => {
+    const result = resolveExitCode({
+      exitCode: 1,
+      status: "failed",
+      steps: [],
+      failures: [],
+    });
+
+    expect(result).toBe(1);
+  });
 });

@@ -22,6 +22,7 @@ doc-repo addresses this by generating a two-pane viewer (left tree / right conte
 - Recursively discovers `.md` files in your repository
 - Preserves directory structure in tree navigation
 - Works without a local server (`index.html` can be opened directly)
+- Supports local server mode (`doc-repo serve`) with initial generation
 - Supports directory-scoped generation (`scopePath`)
 - Supports `--open` to launch the generated page automatically
 
@@ -60,12 +61,21 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo serve [--port <number>]
 ```
 
 | Argument / Option | Description                                                            | Default        |
 | ----------------- | ---------------------------------------------------------------------- | -------------- |
 | `scopePath`       | Directory to generate from (path relative to Git root)                 | Whole Git root |
 | `--open`          | Open `.doc-repo/index.html` with your default browser after generation | `false`        |
+| `serve`           | Run initial generation and start local static server                   | -              |
+| `--port`          | Port for `serve` (CLI > config > default)                              | `4000`         |
+
+### Serve Responsibilities
+
+- `doc-repo serve` orchestrates: initial generation -> server start -> watch start hook
+- The HTTP server is delivery-only and does not run generation by itself
+- If initial generation fails, server startup is skipped and command exits with code `1`
 
 ### Target Root vs Collection Scope
 
@@ -105,7 +115,6 @@ Reliability behavior:
 
 ## Current Limitations
 
-- Local server mode (`serve`) is not supported yet
 - File watching (`watch`) is not supported yet
 - Browser-based Markdown editing is not supported yet
 - Detailed include/exclude rules are not supported yet
