@@ -181,6 +181,7 @@ For contributors:
 npm install
 npm run dev
 npm run dev -- specs
+npm run build
 ```
 
 Build and run compiled CLI:

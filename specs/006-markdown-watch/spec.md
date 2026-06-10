@@ -1,8 +1,8 @@
 # Feature Specification: 変更監視と自動更新
 
-**Feature Branch**: `006-markdown-watch`  
-**Created**: 2026-06-08  
-**Status**: Draft  
+**Feature Branch**: `006-markdown-watch`
+**Created**: 2026-06-08
+**Status**: Draft
 **Input**: User description: "生成者はMarkdownの変更を監視してサイトを自動更新できる。なぜなら毎回コマンドを再実行せずに最新の内容をブラウザで確認したいから。"
 
 ## User Scenarios & Testing _(mandatory)_

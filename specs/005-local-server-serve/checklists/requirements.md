@@ -1,7 +1,7 @@
 # Specification Quality Checklist: ローカルサーバー起動
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-06-08  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-06-08
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality

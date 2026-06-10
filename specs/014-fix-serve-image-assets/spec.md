@@ -1,8 +1,8 @@
 # Feature Specification: serve時の相対画像表示不具合修正
 
-**Feature Branch**: `014-fix-serve-image-assets`  
-**Created**: 2026-06-11  
-**Status**: Draft  
+**Feature Branch**: `014-fix-serve-image-assets`
+**Created**: 2026-06-11
+**Status**: Draft
 **Input**: User description: "project/planning/backlog/004\_日常利用しやすいツールにする/014_ISSUE_serve時にREADME画像が表示されない.md"
 
 ## User Scenarios & Testing _(mandatory)_

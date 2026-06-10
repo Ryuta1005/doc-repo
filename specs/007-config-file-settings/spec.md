@@ -1,8 +1,8 @@
 # Feature Specification: 設定ファイルによる動作設定
 
-**Feature Branch**: `007-config-file-settings`  
-**Created**: 2026-06-09  
-**Status**: Draft  
+**Feature Branch**: `007-config-file-settings`
+**Created**: 2026-06-09
+**Status**: Draft
 **Input**: User description: "project/planning/backlog/004*日常利用しやすいツールにする/007*生成者は設定ファイルで動作を設定できる.md"
 
 ## 実装状況（既存基盤）

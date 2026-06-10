@@ -11,14 +11,14 @@
 
 ## Technical Context
 
-**Language/Version**: TypeScript (Node.js >= 20)  
-**Primary Dependencies**: `markdown-it`（Markdown変換）、`fs-extra`（ファイル操作）、Node.js `path`  
-**Storage**: ファイルシステム（`.doc-repo` 配下へ生成HTMLと参照画像を出力）  
-**Testing**: Vitest（`*.test.ts`）、必要に応じて既存 e2e テスト  
-**Target Platform**: CLI / local static server（macOS / Linux / Windows）  
-**Project Type**: CLI tool  
-**Performance Goals**: Markdown から参照される小規模画像コピーのみ。通常利用で体感遅延を増やさない  
-**Constraints**: `serve` は `.doc-repo` 外を直接配信しない。新規依存は追加しない  
+**Language/Version**: TypeScript (Node.js >= 20)
+**Primary Dependencies**: `markdown-it`（Markdown変換）、`fs-extra`（ファイル操作）、Node.js `path`
+**Storage**: ファイルシステム（`.doc-repo` 配下へ生成HTMLと参照画像を出力）
+**Testing**: Vitest（`*.test.ts`）、必要に応じて既存 e2e テスト
+**Target Platform**: CLI / local static server（macOS / Linux / Windows）
+**Project Type**: CLI tool
+**Performance Goals**: Markdown から参照される小規模画像コピーのみ。通常利用で体感遅延を増やさない
+**Constraints**: `serve` は `.doc-repo` 外を直接配信しない。新規依存は追加しない
 **Scale/Scope**: Markdown 画像記法 `![...](...)` の相対画像の生成時コピーとURL変換
 
 ## Constitution Check

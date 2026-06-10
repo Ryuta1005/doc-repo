@@ -17,14 +17,14 @@
   the iteration process.
 -->
 
-**Language/Version**: TypeScript (Node.js >= 20)  
-**Primary Dependencies**: commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証）  
-**Storage**: ファイルシステム（入力 Markdown / 出力 `.doc-repo`）  
-**Testing**: Vitest（ユニット）, CLI 実行テスト（既存 `tests/*.test.ts` 拡張）  
+**Language/Version**: TypeScript (Node.js >= 20)
+**Primary Dependencies**: commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証）
+**Storage**: ファイルシステム（入力 Markdown / 出力 `.doc-repo`）
+**Testing**: Vitest（ユニット）, CLI 実行テスト（既存 `tests/*.test.ts` 拡張）
 **Target Platform**: macOS/Linux/Windows 上の Node.js 実行環境
-**Project Type**: npm CLI パッケージ（ローカルサーバー機能付き）  
-**Performance Goals**: `doc-repo serve` 実行から URL 表示まで通常ケースで 10 秒以内  
-**Constraints**: サーバー層は配信専任、生成失敗時は起動禁止、設定優先順位は CLI > 設定ファイル > デフォルト  
+**Project Type**: npm CLI パッケージ（ローカルサーバー機能付き）
+**Performance Goals**: `doc-repo serve` 実行から URL 表示まで通常ケースで 10 秒以内
+**Constraints**: サーバー層は配信専任、生成失敗時は起動禁止、設定優先順位は CLI > 設定ファイル > デフォルト
 **Scale/Scope**: Story 005 範囲に限定（監視の詳細仕様とホットリロード詳細は Story 006 で確定）
 
 ## Constitution Check

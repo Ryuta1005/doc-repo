@@ -1,8 +1,8 @@
 # Feature Specification: 設定ファイル雛形の生成（doc-repo init）
 
-**Feature Branch**: `008-config-file-init`  
-**Created**: 2026-06-10  
-**Status**: Draft  
+**Feature Branch**: `008-config-file-init`
+**Created**: 2026-06-10
+**Status**: Draft
 **Input**: User description: "project/planning/backlog/004*日常利用しやすいツールにする/008*生成者は設定ファイルの雛形を生成できる.md"
 
 ## User Scenarios & Testing _(mandatory)_

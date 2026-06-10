@@ -9,14 +9,14 @@
 
 ## Technical Context
 
-**Language/Version**: TypeScript (Node.js >= 20)  
-**Primary Dependencies**: commander, fs-extra, fast-glob, markdown-it, chokidar（新規）, Node.js `http`/`node:net`  
-**Storage**: ファイルシステム（入力 Markdown / 出力 `.doc-repo`）  
-**Testing**: Vitest（unit/integration）, CLI 実行テスト（既存 `tests/*.test.ts` 拡張）  
+**Language/Version**: TypeScript (Node.js >= 20)
+**Primary Dependencies**: commander, fs-extra, fast-glob, markdown-it, chokidar（新規）, Node.js `http`/`node:net`
+**Storage**: ファイルシステム（入力 Markdown / 出力 `.doc-repo`）
+**Testing**: Vitest（unit/integration）, CLI 実行テスト（既存 `tests/*.test.ts` 拡張）
 **Target Platform**: macOS/Linux/Windows 上の Node.js 実行環境
-**Project Type**: npm CLI パッケージ（ローカルサーバー＋監視）  
-**Performance Goals**: Markdown 保存から最新表示まで 5 秒以内（SC-001）  
-**Constraints**: `*.md` のみ監視、`.doc-repo`/`.git`/`node_modules` と include/exclude 除外、再生成同時実行禁止、成功時のみ reload 通知  
+**Project Type**: npm CLI パッケージ（ローカルサーバー＋監視）
+**Performance Goals**: Markdown 保存から最新表示まで 5 秒以内（SC-001）
+**Constraints**: `*.md` のみ監視、`.doc-repo`/`.git`/`node_modules` と include/exclude 除外、再生成同時実行禁止、成功時のみ reload 通知
 **Scale/Scope**: Story 006 範囲（watch + auto refresh + status 表示）。編集機能や高度設定 UI は対象外
 
 ## Constitution Check

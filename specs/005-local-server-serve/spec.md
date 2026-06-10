@@ -1,8 +1,8 @@
 # Feature Specification: ローカルサーバー起動
 
-**Feature Branch**: `005-local-server-serve`  
-**Created**: 2026-06-08  
-**Status**: Draft  
+**Feature Branch**: `005-local-server-serve`
+**Created**: 2026-06-08
+**Status**: Draft
 **Input**: User description: "project/planning/backlog/004*日常利用しやすいツールにする/005*生成者はローカルサーバーでドキュメントサイトを起動できる.md"
 
 ## Clarifications
