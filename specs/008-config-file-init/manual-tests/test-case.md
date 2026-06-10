@@ -2,10 +2,10 @@
 
 ## 事前確認
 
-- [ ] `npm install` 実行済み
-- [ ] `npm run build` 実行済み
-- [ ] `node dist/cli/index.js --help` が実行できる
-- [ ] 検証用ディレクトリを新規作成できる
+- [x] `npm install` 実行済み
+- [x] `npm run build` 実行済み
+- [x] `node dist/cli/index.js --help` が実行できる
+- [x] 検証用ディレクトリを新規作成できる
 
 ## テスト環境情報
 

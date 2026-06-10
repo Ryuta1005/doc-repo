@@ -93,6 +93,8 @@ export const generateSite = async (context: GenerationContext): Promise<Generati
       usedFallback = detected.usedFallback;
     }
 
+    outputDir = path.join(rootDir, ".doc-repo");
+
     const stagingDir = path.join(path.resolve(context.cwd), `.doc-repo.__staging__.${Date.now()}`);
     targetPath = resolveRequestedTargetPath(rootDir, context.scopePath);
     const targetDir = await resolveTargetDir(rootDir, context.scopePath);
@@ -118,7 +120,8 @@ export const generateSite = async (context: GenerationContext): Promise<Generati
 
     const bundle = await buildSiteBundle(markdownFiles);
     await renderPages(templatesDir, stagingDir, bundle);
-    await copyAssets(templatesDir, stagingDir);
+    // 変換結果に含まれる参照画像情報を使って画像アセットを配置する。
+    await copyAssets(templatesDir, stagingDir, rootDir, bundle.referencedImages);
 
     await atomicPublish(stagingDir, outputDir);
 

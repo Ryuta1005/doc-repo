@@ -53,7 +53,7 @@ export const resolveRuntimeConfig = async (input: ResolveRuntimeConfigInput): Pr
     rootSource = detected.usedFallback ? "cwd-fallback" : "git-root";
   }
 
-  const outputDir = path.join(input.cwd, ".doc-repo");
+  const outputDir = path.join(rootDir, ".doc-repo");
 
   // --- port resolution ---
   let port: number;

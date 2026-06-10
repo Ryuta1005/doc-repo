@@ -75,22 +75,12 @@
 
 ### Edge Cases
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
 - 生成物が未作成の状態で serve を実行した場合、初回生成を先に行ってから配信を開始できるか
 - 初回生成が失敗した場合、サーバー起動を抑止し、原因を識別できるメッセージを表示できるか
 - 指定された `port` が範囲外、または整数でない場合、起動前に入力不正として検出できるか
 - ブラウザを自動で開かない環境でも、表示された URL だけで手動アクセスできるか
 
 ## Requirements _(mandatory)_
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
 
 ### Functional Requirements
 
@@ -115,11 +105,6 @@
 
 ## Success Criteria _(mandatory)_
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
 - **SC-001**: 生成者は初回実行時に、`doc-repo serve` 実行から URL 確認までを 10 秒以内に完了できる
@@ -129,12 +114,6 @@
 - **SC-005**: 初回生成失敗ケースで、サーバー未起動のまま終了コード `1` で終了する割合が 100% である
 
 ## Assumptions
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
 
 - 生成者はコマンドを実行できるローカル環境とブラウザを利用できる
 - 本機能はローカル閲覧の成立を対象とし、外部公開・認証・アクセス制御は対象外とする

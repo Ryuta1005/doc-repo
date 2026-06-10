@@ -9,15 +9,15 @@
 
 以下はすでに `serve` コマンド向けに実装済みである。本 Story ではこれを壊さず、`rootDir` の追加と通常生成（`doc-repo [scopePath]`）への適用を完成させることが主目的。
 
-| 機能                                             | 実装状況    | 備考                       |
-| ------------------------------------------------ | ----------- | -------------------------- |
-| 設定ファイル探索（`findConfigPath`）             | 済（serve） | 上位ディレクトリを再帰探索 |
-| JSON読み込み・`include`/`exclude` バリデーション | 済（serve） | `resolveServeOptions.ts`   |
-| `port` 読み込みとバリデーション（1〜65535）      | 済（serve） | `validatePort`             |
-| `watchTargetFilter`（watch 対象フィルタ）        | 済（serve） | `include`/`exclude` を反映 |
-| `rootDir` の設定ファイルからの読み込み           | **未実装**  | 本 Story の主対象          |
+| 機能                                                   | 実装状況    | 備考                       |
+| ------------------------------------------------------ | ----------- | -------------------------- |
+| 設定ファイル探索（`findConfigPath`）                   | 済（serve） | 上位ディレクトリを再帰探索 |
+| JSON読み込み・`include`/`exclude` バリデーション       | 済（serve） | `resolveServeOptions.ts`   |
+| `port` 読み込みとバリデーション（1〜65535）            | 済（serve） | `validatePort`             |
+| `watchTargetFilter`（watch 対象フィルタ）              | 済（serve） | `include`/`exclude` を反映 |
+| `rootDir` の設定ファイルからの読み込み                 | **未実装**  | 本 Story の主対象          |
 | 通常生成（`doc-repo [scopePath]`）への設定ファイル反映 | **未実装**  | 本 Story の主対象          |
-| `scanMarkdown` への `include`/`exclude` 渡し     | **未実装**  | 本 Story の主対象          |
+| `scanMarkdown` への `include`/`exclude` 渡し           | **未実装**  | 本 Story の主対象          |
 
 ## 用語定義
 
@@ -126,7 +126,6 @@
 - **FR-011**: 通常生成と `serve` は同じ設定解決結果（rootDir, include, exclude, port）を使用しなければならない
 - **FR-012**: `serve` のファイル監視範囲も、解決された `rootDir`・`include`・`exclude` に従わなければならない（既存の `watchTargetFilter` への接続を確認・維持）
 - **FR-013**: `exclude` は `include` より優先されなければならない。両方に一致したファイルは収集対象外とする
-- **FR-014**: `include` が省略された場合は `**/*.md` を収集対象とし、`include: []`（空配列）が明示されている場合は収集対象ゼロとして扱わなければならない
 - **FR-014**: `include` が省略された場合および `include: []`（空配列）が明示されている場合は、いずれも `**/*.md` を収集対象として扱わなければならない
 - **FR-015**: 設定ファイルに未知のフィールドが含まれている場合は、警告なしで無視しなければならない
 - **FR-016**: 設定ファイルが存在しない場合でも、オプションなしのコマンド実行を従来通りサポートしなければならない
@@ -163,7 +162,6 @@
 
 - Q: 用語（configDir / rootDir）の扱い → A: `rootDir` のみを仕様の主要概念とする。設定ファイルの場所は実装内部の一時情報として扱い、仕様上は `rootDir` の決定フローに統合する
 - Q: 利用者指定の `exclude` はデフォルト除外を置き換えるか、追加するか → A: 常時追加。既定除外（`node_modules/**`, `.git/**`, `.doc-repo/**`）は利用者が解除できない（FR-017）
-- Q: `include: []`（空配列）の意味 → A: 収集対象ゼロ。省略（未指定）とは区別する（FR-014）
 - Q: `include: []`（空配列）の意味 → A: 省略（未指定）と同一扱いとし、全 `**/*.md` が対象になる。空配列では収集対象ゼロにはならない（FR-014）
 - Q: `rootDir` のバリデーション条件 → A: 存在すること かつ ディレクトリであること（FR-009）
 - Q: outputDir の位置 → A: 解決済み `rootDir/.doc-repo` 固定。設定変更は本 Story の対象外（FR-018）

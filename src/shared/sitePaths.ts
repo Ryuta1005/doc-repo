@@ -36,3 +36,10 @@ export const docHref = (currentRelativePath: string, targetId: string): string =
 // リポジトリ相対の資産パス（画像・添付など）を、現在ページからの相対パスへ変換する。
 export const assetHref = (currentRelativePath: string, pathFromRoot: string, suffix: string): string =>
   `${repoRootPrefix(currentRelativePath)}${encodePath(pathFromRoot)}${suffix}`;
+
+// T004: 生成画像 URL ヘルパー
+// `.doc-repo/assets/<リポジトリ相対パス>` にコピーされた参照画像を指す相対 URL を返す。
+// 例: currentRelativePath="docs/guide/page.md", repoRelativeImagePath="docs/assets/screenshot.png"
+//     → "../../assets/docs/assets/screenshot.png"
+export const generatedAssetHref = (currentRelativePath: string, repoRelativeImagePath: string): string =>
+  `${siteRootPrefix(currentRelativePath)}assets/${encodePath(repoRelativeImagePath)}`;

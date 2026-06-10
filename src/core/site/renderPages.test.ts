@@ -42,6 +42,7 @@ describe("renderPages.ts", () => {
         { id: "README", title: "README", relativePath: "README.md", html: "<p>top</p>" },
         { id: "docs/guide/page", title: "Guide", relativePath: "docs/guide/page.md", html: "<p>guide</p>" },
       ],
+      referencedImages: [],
       tree: [
         { type: "file", name: "README.md", id: "README" },
         {
@@ -78,6 +79,7 @@ describe("renderPages.ts", () => {
         { id: "README", title: "README", relativePath: "README.md", html: "<p>top</p>" },
         { id: "docs/guide/page", title: "Guide", relativePath: "docs/guide/page.md", html: "<p>guide</p>" },
       ],
+      referencedImages: [],
       tree: [
         { type: "file", name: "README.md", id: "README" },
         { type: "file", name: "page.md", id: "docs/guide/page" },
@@ -101,6 +103,7 @@ describe("renderPages.ts", () => {
 
     await renderPages(templatesDir, stagingDir, {
       pages: [{ id: "README", title: "README", relativePath: "README.md", html: "<p>top</p>" }],
+      referencedImages: [],
       tree: [{ type: "file", name: "README.md", id: "README" }],
     });
 
@@ -115,7 +118,7 @@ describe("renderPages.ts", () => {
     const stagingDir = path.join(root, "staging");
     await writeTemplate(templatesDir);
 
-    await renderPages(templatesDir, stagingDir, { pages: [], tree: [] });
+    await renderPages(templatesDir, stagingDir, { pages: [], referencedImages: [], tree: [] });
 
     const index = await fs.readFile(path.join(stagingDir, "index.html"), "utf8");
     expect(index).toContain("No Markdown files found.");

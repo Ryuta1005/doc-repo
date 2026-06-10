@@ -26,9 +26,21 @@ export interface TreeFileNode {
 
 export type TreeNode = TreeDirNode | TreeFileNode;
 
+// T005: 参照画像メタデータ型
+// Markdown から参照された画像ファイルのメタデータ。
+// リポジトリ相対パスで一意に特定され、実在ファイルの確認後に `.doc-repo/assets/` へコピーされる。
+export interface ReferencedImage {
+  /** リポジトリ相対パス。例: "docs/assets/screenshot.png" */
+  repoRelativePath: string;
+  /** 生成時の絶対パス（ファイル実在確認用）。null は未検証状態を示す。 */
+  absolutePath?: string;
+}
+
 export interface SiteBundle {
   pages: SitePage[];
   tree: TreeNode[];
+  // T005: 参照画像一覧（リポジトリ相対パスで重複排除）
+  referencedImages: ReferencedImage[];
 }
 
 export interface RootDetectionResult {

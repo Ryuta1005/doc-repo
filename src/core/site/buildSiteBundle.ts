@@ -53,6 +53,8 @@ const addFileToTree = (root: MutableDir, relativePath: string, id: string): void
 export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle> => {
   const pages = [] as SiteBundle["pages"];
   const root = createDir("root");
+  // 参照画像一覧を集約して重複を排除する。
+  const allReferencedImages = new Map<string, SiteBundle["referencedImages"][number]>();
 
   // 実在する全ページのID集合を先に構築し、リンク解決の唯一の正とする。
   const knownIds = new Set(files.map((file) => file.relativePath.replace(/\.md$/i, "")));
@@ -74,7 +76,7 @@ export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle
 
   for (const file of files) {
     const id = file.relativePath.replace(/\.md$/i, "");
-    let converted: { title: string; html: string };
+    let converted: { title: string; html: string; referencedImages: string[] };
 
     try {
       const source = await fs.readFile(file.absolutePath, "utf8");
@@ -86,6 +88,10 @@ export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle
         "MARKDOWN_READ_OR_CONVERT_FAILED",
         `対象ファイルを確認してください: ${file.relativePath}`,
       );
+    }
+
+    for (const repoRelativePath of converted.referencedImages) {
+      allReferencedImages.set(repoRelativePath, { repoRelativePath });
     }
 
     pages.push({
@@ -101,5 +107,6 @@ export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle
   return {
     pages,
     tree: finalize(root),
+    referencedImages: Array.from(allReferencedImages.values()),
   };
 };
