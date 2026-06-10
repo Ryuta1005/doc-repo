@@ -10,7 +10,7 @@
 **Decision**: `4000` を使用する
 
 **Rationale**:
-`src/shared/config/resolveRuntimeConfig.ts` に `const DEFAULT_PORT = 4000;` が定義されており、既存コマンド（`generate` / `serve`）はこの値を使用している。スペックの `3000` は誤記と判断し、コードベースとの一貫性を優先して `4000` を採用する。スペックは本 research の決定に基づき更新する。
+`src/shared/config/resolveRuntimeConfig.ts` に `const DEFAULT_PORT = 4000;` が定義されており、既存の通常生成 / `serve` はこの値を使用している。スペックの `3000` は誤記と判断し、コードベースとの一貫性を優先して `4000` を採用する。スペックは本 research の決定に基づき更新する。
 
 **Alternatives considered**:
 
@@ -57,7 +57,7 @@ interface InitResult {
 ```
 
 **Rationale**:
-`generate` の `GenerationResult` は init には過剰。シンプルな3状態（生成 / スキップ / 失敗）で CLI 側の分岐を明快にする。`configPath` を返すことで CLI がパスを表示できる。
+通常生成の `GenerationResult` は init には過剰。シンプルな3状態（生成 / スキップ / 失敗）で CLI 側の分岐を明快にする。`configPath` を返すことで CLI がパスを表示できる。
 
 **Alternatives considered**:
 

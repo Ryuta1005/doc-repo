@@ -63,6 +63,7 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo init
 doc-repo serve [--port <number>]
 ```
 
@@ -70,6 +71,7 @@ doc-repo serve [--port <number>]
 | ----------------- | -------------------------------------------------------- | -------------- |
 | `scopePath`       | 生成対象ディレクトリ（Git ルート基準の相対パス）         | Git ルート全体 |
 | `--open`          | 生成後に `.doc-repo/index.html` を既定ブラウザで開く     | `false`        |
+| `init`            | カレントディレクトリに `doc-repo.config.json` 雛形を生成 | -              |
 | `serve`           | 初回生成後にローカル静的サーバーを起動し、変更を監視する | -              |
 | `--port`          | `serve` の待受ポート（CLI > 設定 > 既定）                | `4000`         |
 

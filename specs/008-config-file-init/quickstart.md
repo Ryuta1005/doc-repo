@@ -45,7 +45,7 @@ doc-repo init
 ### 3. サイトを生成する
 
 ```bash
-doc-repo generate
+doc-repo
 ```
 
 ## エラーケース
@@ -61,5 +61,5 @@ doc-repo generate
 
 ## 関連コマンド
 
-- `doc-repo generate` — Markdown からサイトを生成する
+- `doc-repo` — Markdown からサイトを生成する
 - `doc-repo serve` — ローカルサーバーでサイトを起動する

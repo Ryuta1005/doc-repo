@@ -7,7 +7,7 @@
 
 ## Summary
 
-`doc-repo.config.json` の探索・読込・検証を `serve` 専用実装から共通設定解決へ切り出し、`generate` と `serve` の両方で同一の `rootDir` / `include` / `exclude` / `port` を使う。`rootDir` は設定ファイル相対で解決し、`include: []` と既定除外マージ、`rootDir/.doc-repo` 出力、`watch` 範囲の一致を保証する。
+`doc-repo.config.json` の探索・読込・検証を `serve` 専用実装から共通設定解決へ切り出し、通常生成と `serve` の両方で同一の `rootDir` / `include` / `exclude` / `port` を使う。`rootDir` は設定ファイル相対で解決し、`include: []` と既定除外マージ、`rootDir/.doc-repo` 出力、`watch` 範囲の一致を保証する。
 
 ## Technical Context
 
@@ -17,9 +17,9 @@
 **Testing**: Vitest（unit/integration）, CLI 実行テスト（既存 `tests/*.test.ts` と `src/**/*.test.ts` 拡張）  
 **Target Platform**: macOS/Linux/Windows 上の Node.js 実行環境
 **Project Type**: npm CLI パッケージ（静的サイト生成 + ローカルサーバー）  
-**Performance Goals**: `generate` と `serve` の設定解決結果が一致し、既存 Story 005/006 の体感性能を劣化させない  
+**Performance Goals**: 通常生成と `serve` の設定解決結果が一致し、既存 Story 005/006 の体感性能を劣化させない  
 **Constraints**: `rootDir` は存在するディレクトリ、既定除外は解除不可、CLI 優先順位は現状 `--port` のみ、後方互換を維持  
-**Scale/Scope**: Story 007 範囲（設定解決の共通化と generate/serve/watch への反映）。`doc-repo init` や新規 CLI オプションは対象外
+**Scale/Scope**: Story 007 範囲（設定解決の共通化と通常生成/serve/watch への反映）。`doc-repo init` や新規 CLI オプションは対象外
 
 ## Constitution Check
 

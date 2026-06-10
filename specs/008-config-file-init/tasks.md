@@ -7,8 +7,8 @@
 
 **Purpose**: `init` 機能を実装するための最小構成を用意する
 
-- [ ] T001 `init` 機能用モジュールを新規作成する in src/core/init/createConfigFile.ts
-- [ ] T002 `init` コマンド受け口を追加するための CLI 構造を更新する in src/cli/index.ts
+- [x] T001 `init` 機能用モジュールを新規作成する in src/core/init/createConfigFile.ts
+- [x] T002 `init` コマンド受け口を追加するための CLI 構造を更新する in src/cli/index.ts
 
 ---
 
@@ -18,9 +18,9 @@
 
 **⚠️ CRITICAL**: このフェーズ完了までユーザーストーリー実装に着手しない
 
-- [ ] T003 `InitResult` 型を追加して `init` の結果契約を定義する in src/shared/types.ts
-- [ ] T004 生成する `doc-repo.config.json` のデフォルト値（`rootDir/include/exclude/port=4000`）を実装する in src/core/init/createConfigFile.ts
-- [ ] T005 `createConfigFile` を CLI から呼び出せるように import・呼び出し配線を整える in src/cli/index.ts
+- [x] T003 `InitResult` 型を追加して `init` の結果契約を定義する in src/shared/types.ts
+- [x] T004 生成する `doc-repo.config.json` のデフォルト値（`rootDir/include/exclude/port=4000`）を実装する in src/core/init/createConfigFile.ts
+- [x] T005 `createConfigFile` を CLI から呼び出せるように import・呼び出し配線を整える in src/cli/index.ts
 
 **Checkpoint**: Foundation ready - 各ユーザーストーリー実装を開始可能
 
@@ -34,10 +34,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] `doc-repo.config.json` 非存在時にファイルを書き込んで `created` を返す処理を実装する in src/core/init/createConfigFile.ts
-- [ ] T007 [US1] `init` サブコマンドを追加して成功時メッセージを標準出力へ表示する in src/cli/index.ts
-- [ ] T008 [P] [US1] 生成される設定値の説明を更新する in docs/config.md
-- [ ] T009 [P] [US1] 生成される設定値の説明を更新する（日本語） in docs/config.ja.md
+- [x] T006 [US1] `doc-repo.config.json` 非存在時にファイルを書き込んで `created` を返す処理を実装する in src/core/init/createConfigFile.ts
+- [x] T007 [US1] `init` サブコマンドを追加して成功時メッセージを標準出力へ表示する in src/cli/index.ts
+- [x] T008 [P] [US1] 生成される設定値の説明を更新する in docs/config.md
+- [x] T009 [P] [US1] 生成される設定値の説明を更新する（日本語） in docs/config.ja.md
 
 **Checkpoint**: User Story 1 が単独で動作し、MVP価値を提供できる
 
@@ -51,9 +51,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] `doc-repo.config.json` 存在時に `already-exists` を返して書き込みをスキップする処理を実装する in src/core/init/createConfigFile.ts
-- [ ] T011 [US2] `already-exists` 時の標準出力メッセージと終了コード `0` を実装する in src/cli/index.ts
-- [ ] T012 [P] [US2] 既存ファイルスキップ時の契約を反映する in specs/008-config-file-init/contracts/cli-init.md
+- [x] T010 [US2] `doc-repo.config.json` 存在時に `already-exists` を返して書き込みをスキップする処理を実装する in src/core/init/createConfigFile.ts
+- [x] T011 [US2] `already-exists` 時の標準出力メッセージと終了コード `0` を実装する in src/cli/index.ts
+- [x] T012 [P] [US2] 既存ファイルスキップ時の契約を反映する in specs/008-config-file-init/contracts/cli-init.md
 
 **Checkpoint**: User Story 2 が単独で動作し、既存設定保護が保証される
 
@@ -67,9 +67,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] 書き込み失敗を捕捉して `failure` と `errorReason` を返す処理を実装する in src/core/init/createConfigFile.ts
-- [ ] T014 [US3] `failure` 時に標準エラー出力へ理由を表示し終了コード `1` を設定する in src/cli/index.ts
-- [ ] T015 [P] [US3] エラー出力仕様を反映する in specs/008-config-file-init/contracts/cli-init.md
+- [x] T013 [US3] 書き込み失敗を捕捉して `failure` と `errorReason` を返す処理を実装する in src/core/init/createConfigFile.ts
+- [x] T014 [US3] `failure` 時に標準エラー出力へ理由を表示し終了コード `1` を設定する in src/cli/index.ts
+- [x] T015 [P] [US3] エラー出力仕様を反映する in specs/008-config-file-init/contracts/cli-init.md
 
 **Checkpoint**: User Story 3 が単独で動作し、失敗時の診断可能性が担保される
 
@@ -79,9 +79,9 @@
 
 **Purpose**: 全ストーリー横断の仕上げとドキュメント整合
 
-- [ ] T016 [P] `init` コマンドの利用例を追加する in README.md
-- [ ] T017 [P] `init` コマンドの利用例を追加する（日本語） in README.ja.md
-- [ ] T018 `init` の手順と出力例を最終整合する in specs/008-config-file-init/quickstart.md
+- [x] T016 [P] `init` コマンドの利用例を追加する in README.md
+- [x] T017 [P] `init` コマンドの利用例を追加する（日本語） in README.ja.md
+- [x] T018 `init` の手順と出力例を最終整合する in specs/008-config-file-init/quickstart.md
 
 ---
 

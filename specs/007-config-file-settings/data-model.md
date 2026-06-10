@@ -53,7 +53,7 @@
 - Validation Rules:
   - `outputDir` は常にコマンド実行ディレクトリ（cwd）直下の `.doc-repo`
   - `portSource=cli` の場合は CLI 指定値が最終値
-  - `generate` と `serve` の両方で同一形の設定を使う
+  - 通常生成と `serve` の両方で同一形の設定を使う
 
 ## Entity: ConfigValidationFailure
 

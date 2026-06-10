@@ -59,6 +59,12 @@ export interface GenerationResult {
   hint?: string;
 }
 
+export interface InitResult {
+  status: "created" | "already-exists" | "failure";
+  configPath: string;
+  errorReason?: string;
+}
+
 export type ServePortSource = "cli" | "config" | "default";
 
 export type RootSource = "config-rootDir" | "config-directory" | "git-root" | "cwd-fallback";

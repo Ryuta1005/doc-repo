@@ -34,5 +34,5 @@
 - 既存実装済み部分（設定ファイル探索・JSON読み込み・port・include/exclude バリデーション・watchTargetFilter）を spec 冒頭に明記済み
 - `rootDir` を唯一の主要概念として定義し、設定ファイルの場所は `rootDir` 決定フローの説明に統合済み
 - `exclude` > `include` の優先規則を FR-013 に明記済み
-- `generate` と `serve` の設定共有（SC-002）を要件化済み
+- 通常生成と `serve` の設定共有（SC-002）を要件化済み
 - すべての項目がパス。`/speckit.plan` へ進める状態です。

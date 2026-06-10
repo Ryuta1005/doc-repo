@@ -63,6 +63,7 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo init
 doc-repo serve [--port <number>]
 ```
 
@@ -70,6 +71,7 @@ doc-repo serve [--port <number>]
 | ----------------- | ------------------------------------------------------------------------ | -------------- |
 | `scopePath`       | Directory to generate from (path relative to Git root)                   | Whole Git root |
 | `--open`          | Open `.doc-repo/index.html` with your default browser after generation   | `false`        |
+| `init`            | Generate `doc-repo.config.json` template in current directory            | -              |
 | `serve`           | Run initial generation, start local static server, and watch for changes | -              |
 | `--port`          | Port for `serve` (CLI > config > default)                                | `4000`         |
 
