@@ -3,9 +3,9 @@
 **Feature Branch**: `008-config-file-init`  
 **Created**: 2026-06-10  
 **Status**: Draft  
-**Input**: User description: "project/planning/backlog/004_日常利用しやすいツールにする/008_生成者は設定ファイルの雛形を生成できる.md"
+**Input**: User description: "project/planning/backlog/004*日常利用しやすいツールにする/008*生成者は設定ファイルの雛形を生成できる.md"
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - 新規プロジェクトで設定ファイルを生成する (Priority: P1)
 
@@ -56,7 +56,7 @@
 - カレントディレクトリへの書き込み権限がない場合 → エラーメッセージを表示し、終了コード `1` で終了する
 - 生成先ディレクトリが存在しない場合（通常は起こらないが）→ エラーメッセージを表示し、終了コード `1` で終了する
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -70,9 +70,9 @@
 
 ### Key Entities
 
-- **設定ファイル（doc-repo.config.json）**: プロジェクト設定を保持するJSONファイル。キー: `rootDir`（デフォルト: `"."`）、`include`（デフォルト: `["**/*.md"]`）、`exclude`（デフォルト: `[]`）、`port`（デフォルト: `3000`）
+- **設定ファイル（doc-repo.config.json）**: プロジェクト設定を保持するJSONファイル。キー: `rootDir`（デフォルト: `"."`）、`include`（デフォルト: `["**/*.md"]`）、`exclude`（デフォルト: `[]`）、`port`（デフォルト: `4000`）
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
