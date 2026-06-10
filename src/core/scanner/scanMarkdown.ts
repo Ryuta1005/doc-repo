@@ -3,7 +3,7 @@ import fg from "fast-glob";
 
 import type { MarkdownFile } from "../../shared/types.js";
 
-const DEFAULT_IGNORE = ["node_modules/**", ".git/**", ".doc-repo/**", "dist/**"];
+const DEFAULT_IGNORE = ["node_modules/**", ".git/**", ".doc-repo/**"];
 
 interface ScanMarkdownOptions {
   includePatterns?: string[];

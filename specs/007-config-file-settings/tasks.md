@@ -19,7 +19,7 @@
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: `generate` と `serve` が同じ設定解決結果を使うための共通設定解決・検証基盤を実装する
+**Purpose**: 通常生成と `serve` が同じ設定解決結果を使うための共通設定解決・検証基盤を実装する
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
@@ -35,7 +35,7 @@
 
 ## Phase 3: User Story 1 - `rootDir` を設定ファイルで指定して収集範囲を固定する (Priority: P1) 🎯 MVP
 
-**Goal**: 設定ファイルから `rootDir` を解決し、`generate` と `serve` の両方で同じ収集起点を使えるようにする
+**Goal**: 設定ファイルから `rootDir` を解決し、通常生成と `serve` の両方で同じ収集起点を使えるようにする
 
 **Independent Test**: `doc-repo.config.json` に `{"rootDir":"./docs"}` を置き、`doc-repo` と `doc-repo serve` の両方が `docs/` を起点に動作することを確認する
 
@@ -53,7 +53,7 @@
 
 ## Phase 4: User Story 2 - `include`/`exclude` を設定ファイルで指定して収集対象を絞り込む (Priority: P1)
 
-**Goal**: `include` / `exclude` を `generate`・`serve`・watch で統一し、既定除外を維持しながら対象集合を一致させる
+**Goal**: `include` / `exclude` を通常生成・`serve`・watch で統一し、既定除外を維持しながら対象集合を一致させる
 
 **Independent Test**: `exclude:["drafts/**"]` または `include:["specs/**/*.md"]` を指定し、生成結果と watch 挙動の両方で同じ対象集合になることを確認する
 

@@ -9,19 +9,23 @@
 
 ## なぜ使うのか
 
-リポジトリ内に仕様書・設計メモ・運用ドキュメントが増えると、次の課題が起きやすくなります。
-
-- Markdown ファイルが複数階層に散らばり、全体を追いづらい
-- エディタを開かないと文書の中身を横断閲覧しにくい
-- 非開発者へ「まずどのファイルを見ればよいか」を共有しづらい
-
-`doc-repo` は、これらを「左ツリー / 右本文」の 2 ペイン閲覧にまとめることで、閲覧導線をシンプルにします。
+ビルド済み CLI 実行:
 
 ## 主な特徴
 
 - リポジトリ内の `.md` を再帰的に自動収集
 - ディレクトリ構造を保ったツリーナビゲーション
 - ローカルサーバー不要（`index.html` を直接開ける）
+
+## Markdown 機能と制限
+
+**サポート中**:
+
+- 相対画像（例：`![alt](./docs/assets/image.png)`）: 自動的に `.doc-repo/assets/` へコピーされ、`file://` モードと `serve` モードの両方で表示可能に URL が書き換わります
+
+**今後のリリースで対応予定**:
+
+- Markdown 内の添付ファイル（PDF、CSV、ZIP など通常リンク `[link](./docs/assets/file.pdf)` で参照されるもの）
 - ローカルサーバーモード（`doc-repo serve`）に対応
 - `serve` 実行中は Markdown の変更を監視して自動再生成
 - 再生成成功時に SSE でブラウザを自動リロード
@@ -63,6 +67,7 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo init
 doc-repo serve [--port <number>]
 ```
 
@@ -70,6 +75,7 @@ doc-repo serve [--port <number>]
 | ----------------- | -------------------------------------------------------- | -------------- |
 | `scopePath`       | 生成対象ディレクトリ（Git ルート基準の相対パス）         | Git ルート全体 |
 | `--open`          | 生成後に `.doc-repo/index.html` を既定ブラウザで開く     | `false`        |
+| `init`            | カレントディレクトリに `doc-repo.config.json` 雛形を生成 | -              |
 | `serve`           | 初回生成後にローカル静的サーバーを起動し、変更を監視する | -              |
 | `--port`          | `serve` の待受ポート（CLI > 設定 > 既定）                | `4000`         |
 
@@ -157,7 +163,7 @@ doc-repo serve [--port <number>]
 - `html: false`（Markdown 内の生 HTML は無効）
 - `linkify: true`, `typographer: true`
 - GFM の一部拡張（例: task list、Mermaid、コードハイライト）は未対応
-- 相対画像・相対リンクは現状「入力ファイル配置を維持した再配置」をしていないため、構成によっては期待通りに表示されない場合あり
+- 相対画像は自動的に `.doc-repo/assets/` へコピーされ、静的ファイル開局時と `serve` の両方で表示できるように URL が書き換わります
 
 ## セキュリティ注意
 
@@ -181,18 +187,22 @@ npm run dev
 npm run dev -- specs
 ```
 
-ビルド:
-
-```bash
-npm run build
-```
-
 ビルド済み CLI 実行:
 
 ```bash
 node dist/cli/index.js
 node dist/cli/index.js specs
 ```
+
+## Markdown 機能と制限
+
+**サポート中**:
+
+- 相対画像（例：`![alt](./docs/assets/image.png)`）: 自動的に `.doc-repo/assets/` へコピーされ、`file://` モードと `serve` モードの両方で表示可能に URL が書き換わります
+
+**今後のリリースで対応予定**:
+
+- Markdown 内の添付ファイル（PDF、CSV、ZIP など通常リンク `[link](./docs/assets/file.pdf)` で参照されるもの）
 
 ## Issues / Feedback
 

@@ -6,6 +6,7 @@ const formatResultMessageMock = vi.fn();
 const resolveExitCodeMock = vi.fn();
 const resolveServeOptionsMock = vi.fn();
 const resolveRuntimeConfigMock = vi.fn();
+const createConfigFileMock = vi.fn();
 
 vi.mock("../core/site/generateSite.js", () => ({
   generateSite: generateSiteMock,
@@ -31,6 +32,10 @@ vi.mock("../shared/config/resolveRuntimeConfig.js", () => ({
   resolveRuntimeConfig: resolveRuntimeConfigMock,
 }));
 
+vi.mock("../core/init/createConfigFile.js", () => ({
+  createConfigFile: createConfigFileMock,
+}));
+
 describe("index.ts", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -40,6 +45,7 @@ describe("index.ts", () => {
     resolveExitCodeMock.mockReset();
     resolveServeOptionsMock.mockReset();
     resolveRuntimeConfigMock.mockReset();
+    createConfigFileMock.mockReset();
     process.exitCode = 0;
     resolveRuntimeConfigMock.mockResolvedValue({
       port: 4000,
@@ -58,6 +64,10 @@ describe("index.ts", () => {
       includePatterns: [],
       excludePatterns: [],
       portSource: "default",
+    });
+    createConfigFileMock.mockResolvedValue({
+      status: "created",
+      configPath: "/tmp/repo/doc-repo.config.json",
     });
   });
 
@@ -227,6 +237,69 @@ describe("index.ts", () => {
 
     expect(errSpy).toHaveBeenCalledWith("[doc-repo] error: CONFIG_INVALID_PORT");
     expect(logSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+
+    logSpy.mockRestore();
+    errSpy.mockRestore();
+  });
+
+  it("init で新規作成された場合、標準出力にパスを出して終了コード 0 を設定すること。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    createConfigFileMock.mockResolvedValue({
+      status: "created",
+      configPath: "/tmp/repo/doc-repo.config.json",
+    });
+
+    const { run } = await import("./index.js");
+    await run(["node", "doc-repo", "init"], "/tmp/repo");
+
+    expect(createConfigFileMock).toHaveBeenCalledWith("/tmp/repo");
+    expect(logSpy).toHaveBeenCalledWith("設定ファイルを作成しました: /tmp/repo/doc-repo.config.json");
+    expect(errSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+
+    logSpy.mockRestore();
+    errSpy.mockRestore();
+  });
+
+  it("init で既存ファイルがある場合、標準出力にメッセージを出して終了コード 0 を設定すること。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    createConfigFileMock.mockResolvedValue({
+      status: "already-exists",
+      configPath: "/tmp/repo/doc-repo.config.json",
+    });
+
+    const { run } = await import("./index.js");
+    await run(["node", "doc-repo", "init"], "/tmp/repo");
+
+    expect(logSpy).toHaveBeenCalledWith("設定ファイルは既に存在します: /tmp/repo/doc-repo.config.json");
+    expect(errSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+
+    logSpy.mockRestore();
+    errSpy.mockRestore();
+  });
+
+  it("init で失敗した場合、標準エラーに理由を出して終了コード 1 を設定すること。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    createConfigFileMock.mockResolvedValue({
+      status: "failure",
+      configPath: "/tmp/repo/doc-repo.config.json",
+      errorReason: "EACCES: permission denied",
+    });
+
+    const { run } = await import("./index.js");
+    await run(["node", "doc-repo", "init"], "/tmp/repo");
+
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errSpy).toHaveBeenCalledWith("エラー: 設定ファイルの作成に失敗しました。");
+    expect(errSpy).toHaveBeenCalledWith("理由: EACCES: permission denied");
     expect(process.exitCode).toBe(1);
 
     logSpy.mockRestore();

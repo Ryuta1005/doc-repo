@@ -20,7 +20,7 @@ describe("convertMarkdown.ts", () => {
   it("相対画像パスがページ深さに応じた相対パスへリベースされること。", () => {
     const result = convertMarkdown("![alt](./assets/a.png)", "docs/guide/page.md");
 
-    expect(result.html).toContain('src="../../../docs/guide/assets/a.png"');
+    expect(result.html).toContain('src="../../assets/docs/guide/assets/a.png"');
   });
 
   it("実在ページへの相対リンクは相対 .html リンクへ正規化されること。", () => {
@@ -87,5 +87,68 @@ describe("convertMarkdown.ts", () => {
 
     expect(result.html).toContain('href="https://example.com"');
     expect(result.html).toContain('href="#intro"');
+  });
+
+  // T008: 相対画像参照の URL 変換と除外ルィールのテスト
+  describe("T008: 相対画像 URL 変換と除外ルール", () => {
+    it("相対画像パスがページ深さに応じた相対パスへリベースされること。", () => {
+      const result = convertMarkdown("![screenshot](./assets/screenshot.png)", "docs/guide/page.md");
+
+      expect(result.html).toContain('src="../../assets/docs/guide/assets/screenshot.png"');
+    });
+
+    it("クエリとハッシュ付きの相対画像が .doc-repo/assets 配下を指したまま suffix を維持すること。", () => {
+      const result = convertMarkdown("![screenshot](./assets/screenshot.png?v=1#section)", "docs/guide/page.md");
+
+      expect(result.html).toContain('src="../../assets/docs/guide/assets/screenshot.png?v=1#section"');
+    });
+
+    it("外部 URL 画像（https://）はそのまま維持されること。", () => {
+      const result = convertMarkdown("![external](https://example.com/image.png)", "docs/page.md");
+
+      expect(result.html).toContain('src="https://example.com/image.png"');
+    });
+
+    it("外部 URL 画像（http://）はそのまま維持されること。", () => {
+      const result = convertMarkdown("![external](http://example.com/image.png)", "docs/page.md");
+
+      expect(result.html).toContain('src="http://example.com/image.png"');
+    });
+
+    it("プロトコル相対 URL（//）はそのまま維持されること。", () => {
+      const result = convertMarkdown("![external](//example.com/image.png)", "docs/page.md");
+
+      expect(result.html).toContain('src="//example.com/image.png"');
+    });
+
+    it("ハッシュ参照（#...）はそのまま維持されること。", () => {
+      const result = convertMarkdown("![anchor](#section)", "docs/page.md");
+
+      expect(result.html).toContain('src="#section"');
+    });
+
+    it("リポジトリルート外へ抜ける相対パス（/../）はそのまま維持されること。", () => {
+      const result = convertMarkdown("![escape](/../etc/passwd)", "docs/page.md");
+
+      expect(result.html).toContain('src="/../etc/passwd"');
+    });
+
+    it("相対画像の参照情報が referencedImages に収集されること。", () => {
+      const result = convertMarkdown("![a](./assets/a.png) ![b](../images/b.png)", "docs/guide/page.md");
+
+      expect(result.referencedImages).toEqual(["docs/guide/assets/a.png", "docs/images/b.png"]);
+    });
+
+    it("同一画像を複数回参照しても referencedImages は重複しないこと。", () => {
+      const result = convertMarkdown("![a](./assets/a.png)\n![a2](./assets/a.png)", "docs/guide/page.md");
+
+      expect(result.referencedImages).toEqual(["docs/guide/assets/a.png"]);
+    });
+
+    it("外部 URL とハッシュ参照は referencedImages に含まれないこと。", () => {
+      const result = convertMarkdown("![ext](https://example.com/a.png) ![anchor](#top)", "docs/guide/page.md");
+
+      expect(result.referencedImages).toEqual([]);
+    });
   });
 });

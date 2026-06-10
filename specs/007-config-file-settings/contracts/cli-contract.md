@@ -1,4 +1,4 @@
-# CLI Contract: doc-repo generate / serve with Config File
+# CLI Contract: doc-repo / serve with Config File
 
 ## Scope
 
@@ -20,7 +20,7 @@ doc-repo serve [--port <number>]
 5. 設定ファイルがない場合のみ `.git` を探索し、最初に見つかったディレクトリを `rootDir` とする。
 6. `.git` も見つからない場合は `cwd` を `rootDir` とする。
 
-## Generate Contract
+## Default Generation Contract
 
 1. `doc-repo [scopePath]` は解決済み `rootDir` を基準に Markdown を収集する。
 2. `include` が省略された場合、収集対象は `**/*.md`。
@@ -32,10 +32,10 @@ doc-repo serve [--port <number>]
 
 ## Serve Contract
 
-1. `doc-repo serve` は `generate` と同じ設定解決結果を使う。
+1. `doc-repo serve` は通常生成と同じ設定解決結果を使う。
 2. `--port` が指定された場合、設定ファイルの `port` より優先される。
 3. `port` 未指定時は設定ファイル値、さらに未指定なら 4000 を使う。
-4. watch 対象は `generate` の収集条件と一致しなければならない。
+4. watch 対象は通常生成の収集条件と一致しなければならない。
 
 ## Failure Contract
 

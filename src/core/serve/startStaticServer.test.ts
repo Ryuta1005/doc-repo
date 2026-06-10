@@ -111,4 +111,50 @@ describe("startStaticServer.ts", () => {
     await started.close();
     await fs.remove(tempRoot);
   });
+
+  // T011: 生成サイト経由で参照画像が HTTP 200 になることを確認
+  describe("T011: 参照画像の HTTP 200 確認（実装予定）", () => {
+    it("生成サイト経由で参照画像が HTTP 200 を返す（T016 統合テストで確認）。", async () => {
+      const tempRoot = await fs.mkdtemp(path.join(process.cwd(), "tests/.tmp/start-server-images-"));
+      await fs.outputFile(path.join(tempRoot, "assets", "docs", "screenshot.png"), Buffer.from("PNG_BINARY"));
+
+      const freePort = await new Promise<number>((resolve, reject) => {
+        const server = net.createServer();
+        server.listen(0, () => {
+          const address = server.address();
+          if (!address || typeof address === "string") {
+            reject(new Error("failed to resolve free port"));
+            return;
+          }
+          const { port } = address;
+          server.close((error) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            resolve(port);
+          });
+        });
+      });
+
+      const { startStaticServer } = await import("./startStaticServer.js");
+      const started = await startStaticServer({ outputDir: tempRoot, port: freePort });
+
+      try {
+        const statusCode = await new Promise<number>((resolve, reject) => {
+          const req = http.get(`http://localhost:${freePort}/assets/docs/screenshot.png`, (res) => {
+            const code = res.statusCode ?? 0;
+            res.resume();
+            res.on("end", () => resolve(code));
+          });
+          req.on("error", reject);
+        });
+
+        expect(statusCode).toBe(200);
+      } finally {
+        await started.close();
+        await fs.remove(tempRoot);
+      }
+    });
+  });
 });

@@ -99,6 +99,8 @@ MVP は次の 3 つの Spec に分けて進める。
 
 ## Active Technologies
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo` / `doc-repo.config.json`） (007-config-file-settings)
+- TypeScript (Node.js >= 20) + `commander`（CLI引数）、`fs-extra`（ファイル操作） (008-config-file-init)
+- ファイルシステム（`doc-repo.config.json` をカレントディレクトリに生成） (008-config-file-init)
 
 - TypeScript (Node.js >= 20) + commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証） (005-local-server-serve)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo`） (005-local-server-serve)

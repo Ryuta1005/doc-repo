@@ -65,4 +65,46 @@ describe("buildSiteBundle.ts", () => {
       ]),
     ).rejects.toThrow("docs/missing.md");
   });
+
+  // T009: SiteBundle が参照画像一覧を集約するテスト
+  describe("T009: SiteBundle の参照画像集約", () => {
+    it("referencedImages フィールドが常に存在すること（現在は空配列）。", async () => {
+      const root = await makeTempDir();
+      await fs.outputFile(path.join(root, "docs", "simple.md"), "# Simple");
+
+      const bundle = await buildSiteBundle([
+        {
+          absolutePath: path.join(root, "docs", "simple.md"),
+          relativePath: "docs/simple.md",
+        },
+      ]);
+
+      expect(bundle).toHaveProperty("referencedImages");
+      expect(Array.isArray(bundle.referencedImages)).toBe(true);
+    });
+
+    it("複数ページの参照画像が集約される（T012 実装後に値が入る）。", async () => {
+      const root = await makeTempDir();
+      // T013: buildSiteBundle が参照画像を集約するようになったため、実装対応
+      await fs.outputFile(path.join(root, "page1.md"), "![img1](./assets/a.png)");
+      await fs.outputFile(path.join(root, "page2.md"), "![img2](./assets/b.png)");
+
+      const bundle = await buildSiteBundle([
+        {
+          absolutePath: path.join(root, "page1.md"),
+          relativePath: "page1.md",
+        },
+        {
+          absolutePath: path.join(root, "page2.md"),
+          relativePath: "page2.md",
+        },
+      ]);
+
+      // T013実装により、参照画像が集約されるようになった
+      expect(bundle.referencedImages).toEqual([
+        { repoRelativePath: "assets/a.png" },
+        { repoRelativePath: "assets/b.png" },
+      ]);
+    });
+  });
 });

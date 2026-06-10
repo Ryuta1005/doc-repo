@@ -39,7 +39,7 @@ describe("scanMarkdown.ts", () => {
 
     const result = await scanMarkdown(root);
 
-    expect(result.map((x) => x.relativePath)).toEqual(["docs/ok.md"]);
+    expect(result.map((x) => x.relativePath)).toEqual(["dist/skip.md", "docs/ok.md"]);
   });
 
   it("scanDir を指定した場合、rootDir からの相対パスで返却されること。", async () => {

@@ -9,7 +9,7 @@ Story 007 の受け入れ条件と `spec.md` の FR/SC を、人間の操作で 
 - `doc-repo.config.json` の探索と適用
 - `rootDir` の決定（設定ファイル相対 / 省略 / `.git` fallback / `cwd` fallback）
 - `include` / `exclude` による収集対象制御
-- `generate` と `serve` の設定解決結果一致
+- 通常生成と `serve` の設定解決結果一致
 - `serve` の監視範囲と生成範囲の一致
 - `exclude` 優先規則と既定除外マージ
 - 不正設定時のフィールド特定付きエラーメッセージ
@@ -37,7 +37,7 @@ Story 007 の受け入れ条件と `spec.md` の FR/SC を、人間の操作で 
 
 3. 収集対象一致観点
 
-- `generate` と `serve` で同じ対象集合になること
+- 通常生成と `serve` で同じ対象集合になること
 - watch 対象が生成対象とずれないこと
 
 4. include/exclude ルール観点
@@ -75,8 +75,8 @@ Story 007 の受け入れ条件と `spec.md` の FR/SC を、人間の操作で 
 | MT-701       | rootDir 相対解決と生成適用             | FR-006, FR-007, FR-018         | SC-001, SC-002 |
 | MT-702       | rootDir 省略時の決定                   | FR-008, FR-011                 | SC-001, SC-004 |
 | MT-703       | 設定なし `.git` / `cwd` fallback       | FR-002, FR-016                 | SC-004         |
-| MT-704       | include/exclude の generate 適用       | FR-010, FR-013, FR-014, FR-017 | SC-002, SC-003 |
-| MT-705       | serve watch 範囲と generate 範囲の一致 | FR-011, FR-012, FR-013, FR-017 | SC-002, SC-003 |
+| MT-704       | include/exclude の通常生成適用         | FR-010, FR-013, FR-014, FR-017 | SC-002, SC-003 |
+| MT-705       | serve watch 範囲と通常生成範囲の一致   | FR-011, FR-012, FR-013, FR-017 | SC-002, SC-003 |
 | MT-706       | `include: []` の挙動                   | FR-014                         | SC-003         |
 | MT-707       | `--port` 優先                          | FR-003                         | SC-005         |
 | MT-708       | JSON 構文エラー                        | FR-001, FR-015                 | SC-005         |

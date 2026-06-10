@@ -64,7 +64,7 @@ node dist/cli/index.js serve
 
 期待結果:
 
-- `generate` と同じ対象集合で初回生成される
+- 通常生成と同じ対象集合で初回生成される
 - watch も同じ `rootDir` / `include` / `exclude` に従う
 
 ## 4. CLI port 優先を確認
@@ -104,7 +104,7 @@ node dist/cli/index.js
 
 ## Manual Verification Targets
 
-- 設定ファイルあり/なしで `generate` と `serve` の対象集合が一致する
+- 設定ファイルあり/なしで通常生成と `serve` の対象集合が一致する
 - `include: []` が空サイト生成になる
 - `include: []` が全 `**/*.md` 収集になる（`include` 未指定と同一）
 - `exclude` が既定除外へ追加される

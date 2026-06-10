@@ -2,11 +2,11 @@
 
 ## Decision 1: 設定解決は `serve` 専用関数から共通 resolver へ寄せる
 
-- Decision: `findConfigPath`、JSON 読み込み、`rootDir` / `include` / `exclude` / `port` の検証を `generate` と `serve` が共有する設定解決ロジックにまとめる。
+- Decision: `findConfigPath`、JSON 読み込み、`rootDir` / `include` / `exclude` / `port` の検証を通常生成と `serve` が共有する設定解決ロジックにまとめる。
 - Rationale: 既存実装は `resolveServeOptions.ts` に閉じており、`generateSite` が別経路で `detectRoot` を呼ぶため挙動が分岐している。共通 resolver に寄せることで Story 007 の中心要件である「同一設定解決結果の共有」を保証しやすい。
 - Alternatives considered:
-  - `generate` 側だけに設定読み込みを追加: 重複実装になり、Story 005/006 の挙動と将来差分が出やすい。
-  - `serve` 側にだけ変換レイヤーを追加: `generate` が置き去りになり要件未達。
+  - 通常生成側だけに設定読み込みを追加: 重複実装になり、Story 005/006 の挙動と将来差分が出やすい。
+  - `serve` 側にだけ変換レイヤーを追加: 通常生成が置き去りになり要件未達。
 
 ## Decision 2: `rootDir` は設定ファイル相対で解決し、設定なし時だけ `.git` フォールバックする
 
@@ -28,7 +28,7 @@
 ## Decision 4: 出力先は `rootDir/.doc-repo` に固定する
 
 - Decision: Story 007 の範囲では outputDir は設定可能にせず、常に解決済み `rootDir` 配下の `.doc-repo` を使う。
-- Rationale: spec の Clarification と一致し、設定対象を増やしすぎずに実装を閉じられる。`generate` と `serve` の両方で出力先が一意になる。
+- Rationale: spec の Clarification と一致し、設定対象を増やしすぎずに実装を閉じられる。通常生成と `serve` の両方で出力先が一意になる。
 - Alternatives considered:
   - 設定ファイル配置ディレクトリ基準の出力: 現 spec と不一致。
   - outputDir を追加設定化: Story 007 のスコープ外で、別 Story 相当の設計判断になる。

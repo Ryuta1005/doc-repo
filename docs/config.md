@@ -7,6 +7,27 @@ This document explains how `doc-repo.config.json` works.
 - File name: `doc-repo.config.json`
 - Search behavior: the CLI searches from current working directory upward and uses the first file it finds.
 
+## Initialize Template
+
+Run `doc-repo init` to create a configuration template in the current working directory:
+
+```bash
+doc-repo init
+```
+
+Generated template:
+
+```json
+{
+  "rootDir": ".",
+  "include": ["**/*.md"],
+  "exclude": [],
+  "port": 4000
+}
+```
+
+If `doc-repo.config.json` already exists, the command does not overwrite it.
+
 ## Supported Fields
 
 ```json

@@ -63,6 +63,7 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo init
 doc-repo serve [--port <number>]
 ```
 
@@ -70,6 +71,7 @@ doc-repo serve [--port <number>]
 | ----------------- | ------------------------------------------------------------------------ | -------------- |
 | `scopePath`       | Directory to generate from (path relative to Git root)                   | Whole Git root |
 | `--open`          | Open `.doc-repo/index.html` with your default browser after generation   | `false`        |
+| `init`            | Generate `doc-repo.config.json` template in current directory            | -              |
 | `serve`           | Run initial generation, start local static server, and watch for changes | -              |
 | `--port`          | Port for `serve` (CLI > config > default)                                | `4000`         |
 
@@ -157,7 +159,7 @@ Reliability behavior:
 - `html: false` (raw HTML in Markdown is disabled)
 - `linkify: true`, `typographer: true`
 - Some GFM extensions (task lists, Mermaid, code highlighting) are not yet supported
-- Relative images/links may not render as expected in some repository layouts because assets are not currently rewritten/rebased
+- Relative images are automatically copied to `.doc-repo/assets/` and rewritten to work both in static files and via `serve`
 
 ## Security Notes
 
@@ -181,18 +183,22 @@ npm run dev
 npm run dev -- specs
 ```
 
-Build:
-
-```bash
-npm run build
-```
-
-Run compiled CLI:
+Build and run compiled CLI:
 
 ```bash
 node dist/cli/index.js
 node dist/cli/index.js specs
 ```
+
+## Markdown Features & Constraints
+
+**Supported**:
+
+- Relative images (e.g., `![alt](./docs/assets/image.png)`): automatically copied to `.doc-repo/assets/` and rewritten to work in both `file://` mode and `serve` mode
+
+**Not yet supported (planned for future releases)**:
+
+- Attachments in Markdown (PDF, CSV, ZIP, etc. referenced via normal links like `[link](./docs/assets/file.pdf)`)
 
 ## Issues / Feedback
 

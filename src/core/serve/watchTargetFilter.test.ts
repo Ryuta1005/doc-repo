@@ -34,6 +34,12 @@ describe("createWatchTargetFilter", () => {
     expect(filter.isTargetPath("/repo/.doc-repo/index.html")).toBe(false);
   });
 
+  it("dist 配下の Markdown は既定で対象になること。", () => {
+    const filter = createWatchTargetFilter({ rootDir: "/repo" });
+
+    expect(filter.isTargetPath("/repo/dist/notes.md")).toBe(true);
+  });
+
   it("rootDir 外のパスは対象外になること。", () => {
     const filter = createWatchTargetFilter({ rootDir: "/repo" });
 

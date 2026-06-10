@@ -5,12 +5,13 @@ import { Command } from "commander";
 
 import { generateSite } from "../core/site/generateSite.js";
 import { runServe } from "../core/serve/runServe.js";
+import { createConfigFile } from "../core/init/createConfigFile.js";
 import { formatResultMessage } from "./formatResultMessage.js";
 import { resolveExitCode } from "./exitCode.js";
 import { resolveServeOptions } from "./serve/resolveServeOptions.js";
 import { resolveRuntimeConfig } from "../shared/config/resolveRuntimeConfig.js";
 import { AppError, toUserGuidance, toServeUserGuidance } from "../shared/errors.js";
-import type { GenerationResult, ServeSession } from "../shared/types.js";
+import type { GenerationResult, ServeSession, InitResult } from "../shared/types.js";
 
 const openFile = (filePath: string): void => {
   if (process.platform === "win32") {
@@ -69,6 +70,31 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
       }
 
       process.exitCode = resolveExitCode(result);
+    });
+
+  program
+    .command("init")
+    .description("doc-repo.config.json の雛形を生成する")
+    .action(async () => {
+      const result: InitResult = await createConfigFile(cwd);
+
+      if (result.status === "created") {
+        console.log(`設定ファイルを作成しました: ${result.configPath}`);
+        process.exitCode = 0;
+        return;
+      }
+
+      if (result.status === "already-exists") {
+        console.log(`設定ファイルは既に存在します: ${result.configPath}`);
+        process.exitCode = 0;
+        return;
+      }
+
+      console.error("エラー: 設定ファイルの作成に失敗しました。");
+      if (result.errorReason) {
+        console.error(`理由: ${result.errorReason}`);
+      }
+      process.exitCode = 1;
     });
 
   program
