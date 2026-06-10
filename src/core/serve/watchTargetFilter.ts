@@ -1,4 +1,5 @@
 import path from "node:path";
+import micromatch from "micromatch";
 
 interface WatchTargetFilterInput {
   rootDir: string;
@@ -9,9 +10,6 @@ interface WatchTargetFilterInput {
 const DEFAULT_EXCLUDE_SEGMENTS = new Set([".doc-repo", ".git", "node_modules"]);
 
 const toPosixPath = (p: string): string => p.split(path.sep).join(path.posix.sep);
-
-const matchesAnyPrefix = (value: string, patterns: string[]): boolean =>
-  patterns.some((pattern) => value.startsWith(pattern));
 
 export const createWatchTargetFilter = (input: WatchTargetFilterInput) => {
   const rootDir = path.resolve(input.rootDir);
@@ -37,11 +35,11 @@ export const createWatchTargetFilter = (input: WatchTargetFilterInput) => {
         return false;
       }
 
-      if (includes.length > 0 && !matchesAnyPrefix(relPosix, includes)) {
+      if (includes.length > 0 && !micromatch.isMatch(relPosix, includes)) {
         return false;
       }
 
-      if (matchesAnyPrefix(relPosix, excludes)) {
+      if (excludes.length > 0 && micromatch.isMatch(relPosix, excludes)) {
         return false;
       }
 

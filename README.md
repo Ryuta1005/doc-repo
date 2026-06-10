@@ -84,8 +84,36 @@ doc-repo serve [--port <number>]
 
 ### Target Root vs Collection Scope
 
-- Target root: Git root (or current directory when Git root is not found)
+- Target root: resolved from `doc-repo.config.json` if present; falls back to Git root, then current directory
 - Collection scope: Directory under target root resolved from `scopePath`
+
+## Configuration File
+
+For full configuration details and validation rules, see [docs/config.md](./docs/config.md).
+
+Create `doc-repo.config.json` in your repository root to configure behavior:
+
+```json
+{
+  "rootDir": "./docs",
+  "include": ["specs/**/*.md"],
+  "exclude": ["drafts/**"],
+  "port": 4000
+}
+```
+
+| Field     | Type       | Default        | Description                                                        |
+| --------- | ---------- | -------------- | ------------------------------------------------------------------ |
+| `rootDir` | `string`   | Git root / cwd | Root directory for Markdown collection (relative to config file)   |
+| `include` | `string[]` | `["**/*.md"]`  | Glob patterns to include. `[]` is treated the same as omitted.     |
+| `exclude` | `string[]` | `[]`           | Additional glob patterns to exclude (merged with default excludes) |
+| `port`    | `number`   | `4000`         | Port for `serve` command (overridden by `--port` CLI option)       |
+
+**Resolution order**: config file (`doc-repo.config.json`) → Git root → current directory.
+
+**Default excludes** (always active): `node_modules/**`, `.git/**`, `.doc-repo/**`
+
+**`exclude` takes precedence over `include`.**
 
 ## Output
 
@@ -122,7 +150,6 @@ Reliability behavior:
 ## Current Limitations
 
 - Browser-based Markdown editing is not supported yet
-- Detailed include/exclude rules are not supported yet
 
 ## Markdown Support (Current)
 

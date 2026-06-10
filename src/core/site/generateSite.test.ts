@@ -96,7 +96,10 @@ describe("generateSite.ts", () => {
     expect(result.status).toBe("success");
     expect(result.markdownFileCount).toBe(0);
     expect(result.warnings).toContain("Markdown ファイルが 0 件でした。空サイトを生成しました。");
-    expect(scanMarkdownMock).toHaveBeenCalledWith(rootDir, path.join(rootDir, "docs"));
+    expect(scanMarkdownMock).toHaveBeenCalledWith(rootDir, path.join(rootDir, "docs"), {
+      includePatterns: undefined,
+      excludePatterns: undefined,
+    });
   });
 
   it("scopePath がルート外を指す場合、failure が返却されること。", async () => {

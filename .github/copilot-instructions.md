@@ -98,6 +98,7 @@ MVP は次の 3 つの Spec に分けて進める。
 必要になったら、ロードマップの Phase 2 以降として扱う。
 
 ## Active Technologies
+- ファイルシステム（入力 Markdown / 出力 `.doc-repo` / `doc-repo.config.json`） (007-config-file-settings)
 
 - TypeScript (Node.js >= 20) + commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証） (005-local-server-serve)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo`） (005-local-server-serve)

@@ -46,7 +46,15 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
   const resolvedPort = input.port ?? 4000;
   const logger = createLogger();
   const reporter = createWatchStatusReporter(logger);
-  const generate = input.generate ?? (async () => await generateSite({ cwd: input.cwd ?? process.cwd() }));
+  const generate =
+    input.generate ??
+    (async () =>
+      await generateSite({
+        cwd: input.cwd ?? process.cwd(),
+        resolvedRootDir: input.rootDir,
+        includePatterns: input.includePatterns,
+        excludePatterns: input.excludePatterns,
+      }));
   const rootDir = input.rootDir ?? input.cwd ?? process.cwd();
   const registerSignalHandler = input.registerSignalHandler ?? ((signal, handler) => process.once(signal, handler));
   const sseRegistry = createSseConnectionRegistry();
