@@ -39,7 +39,7 @@ describe("scanMarkdown.ts", () => {
 
     const result = await scanMarkdown(root);
 
-    expect(result.map((x) => x.relativePath)).toEqual(["docs/ok.md"]);
+    expect(result.map((x) => x.relativePath)).toEqual(["dist/skip.md", "docs/ok.md"]);
   });
 
   it("scanDir を指定した場合、rootDir からの相対パスで返却されること。", async () => {
@@ -52,5 +52,49 @@ describe("scanMarkdown.ts", () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.relativePath).toBe("docs/guide/intro.md");
     expect(result[0]?.absolutePath).toBe(path.join(root, "docs/guide/intro.md"));
+  });
+
+  it("includePatterns を指定した場合、一致するファイルのみ返却されること。", async () => {
+    const root = await makeTempDir();
+    await fs.outputFile(path.join(root, "docs", "guide.md"), "# guide");
+    await fs.outputFile(path.join(root, "drafts", "wip.md"), "# wip");
+    await fs.outputFile(path.join(root, "README.md"), "# root");
+
+    const result = await scanMarkdown(root, root, { includePatterns: ["docs/**"] });
+
+    expect(result.map((x) => x.relativePath)).toEqual(["docs/guide.md"]);
+  });
+
+  it("includePatterns が空配列の場合、**/*.md と同じ動作になること。", async () => {
+    const root = await makeTempDir();
+    await fs.outputFile(path.join(root, "a.md"), "# a");
+    await fs.outputFile(path.join(root, "docs", "b.md"), "# b");
+
+    const result = await scanMarkdown(root, root, { includePatterns: [] });
+
+    expect(result.map((x) => x.relativePath)).toEqual(["a.md", "docs/b.md"]);
+  });
+
+  it("excludePatterns を指定した場合、一致するファイルが除外されること。", async () => {
+    const root = await makeTempDir();
+    await fs.outputFile(path.join(root, "docs", "ok.md"), "# ok");
+    await fs.outputFile(path.join(root, "drafts", "skip.md"), "# skip");
+
+    const result = await scanMarkdown(root, root, { excludePatterns: ["drafts/**"] });
+
+    expect(result.map((x) => x.relativePath)).toEqual(["docs/ok.md"]);
+  });
+
+  it("exclude は include より優先されること。", async () => {
+    const root = await makeTempDir();
+    await fs.outputFile(path.join(root, "docs", "ok.md"), "# ok");
+    await fs.outputFile(path.join(root, "docs", "private", "secret.md"), "# secret");
+
+    const result = await scanMarkdown(root, root, {
+      includePatterns: ["docs/**"],
+      excludePatterns: ["docs/private/**"],
+    });
+
+    expect(result.map((x) => x.relativePath)).toEqual(["docs/ok.md"]);
   });
 });

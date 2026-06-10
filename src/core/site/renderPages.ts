@@ -38,11 +38,13 @@ const renderTree = (nodes: TreeNode[], currentRelativePath: string, currentId: s
 
 const renderPageHtml = (template: string, page: SitePage, tree: TreeNode[]): string => {
   const stylesHref = `${siteRootPrefix(page.relativePath)}styles.css`;
+  const appJsSrc = `${siteRootPrefix(page.relativePath)}app.js`;
   const homeHref = `${siteRootPrefix(page.relativePath)}index.html`;
   const sidebar = renderTree(tree, page.relativePath, page.id);
 
   let html = fill(template, "__TITLE__", escapeHtml(page.title));
   html = fill(html, "__STYLES_HREF__", stylesHref);
+  html = fill(html, "__APP_JS_SRC__", appJsSrc);
   html = fill(html, "__HOME_HREF__", homeHref);
   html = fill(html, "__SIDEBAR__", sidebar);
   html = fill(html, "__ARTICLE__", page.html);

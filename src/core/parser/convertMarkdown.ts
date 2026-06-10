@@ -1,7 +1,7 @@
 import path from "node:path";
 import MarkdownIt from "markdown-it";
 
-import { assetHref, docHref } from "../../shared/sitePaths.js";
+import { assetHref, docHref, generatedAssetHref } from "../../shared/sitePaths.js";
 
 const md = new MarkdownIt({
   html: false,
@@ -51,6 +51,20 @@ const rebaseRepoRelativeUrl = (url: string, relativePath: string): string => {
   return assetHref(relativePath, pathFromRoot, suffix);
 };
 
+const rebaseGeneratedImageUrl = (url: string, relativePath: string): string => {
+  if (!url || EXTERNAL_OR_HASH.test(url)) {
+    return url;
+  }
+
+  const { rawPath, suffix } = splitUrlAndSuffix(url);
+  const pathFromRoot = resolvePathFromRoot(rawPath, relativePath);
+  if (!pathFromRoot) {
+    return url;
+  }
+
+  return `${generatedAssetHref(relativePath, pathFromRoot)}${suffix}`;
+};
+
 // リポジトリルートからの正規化パスを求める。ルート外（../ で抜ける）や空は null。
 const resolvePathFromRoot = (rawPath: string, relativePath: string): string | null => {
   if (!rawPath) {
@@ -73,6 +87,7 @@ interface RenderEnv {
   relativePath?: string;
   knownIds?: Set<string>;
   uniqueBasenames?: Map<string, string>;
+  referencedImages?: Set<string>;
 }
 
 // 既知のページID集合に対してリンク先を解決し、一致したIDだけを返す。
@@ -123,10 +138,20 @@ const resolveDocId = (
 const imageRule = md.renderer.rules.image;
 md.renderer.rules.image = (tokens, idx, options, env, self) => {
   const src = tokens[idx]?.attrGet("src");
-  const { relativePath } = (env ?? {}) as RenderEnv;
+  const { relativePath, referencedImages } = (env ?? {}) as RenderEnv;
 
   if (src && relativePath) {
-    tokens[idx]?.attrSet("src", rebaseRepoRelativeUrl(src, relativePath));
+    const newSrc = rebaseGeneratedImageUrl(src, relativePath);
+    tokens[idx]?.attrSet("src", newSrc);
+
+    // 画像コピー契約用に、HTML の src 変換とは独立して参照画像を収集する。
+    if (!EXTERNAL_OR_HASH.test(src)) {
+      const { rawPath } = splitUrlAndSuffix(src);
+      const pathFromRoot = resolvePathFromRoot(rawPath, relativePath);
+      if (pathFromRoot && referencedImages) {
+        referencedImages.add(pathFromRoot);
+      }
+    }
   }
 
   return imageRule ? imageRule(tokens, idx, options, env, self) : self.renderToken(tokens, idx, options);
@@ -166,9 +191,10 @@ export const convertMarkdown = (
   relativePath: string,
   knownIds: Set<string> = new Set<string>(),
   uniqueBasenames: Map<string, string> = new Map<string, string>(),
-): { title: string; html: string } => {
+): { title: string; html: string; referencedImages: string[] } => {
   const title = findTitle(source, relativePath);
-  const html = md.render(source, { relativePath, knownIds, uniqueBasenames } satisfies RenderEnv);
+  const referencedImages = new Set<string>();
+  const html = md.render(source, { relativePath, knownIds, uniqueBasenames, referencedImages } satisfies RenderEnv);
 
-  return { title, html };
+  return { title, html, referencedImages: Array.from(referencedImages) };
 };

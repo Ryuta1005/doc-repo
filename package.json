@@ -1,6 +1,6 @@
 {
   "name": "doc-repo",
-  "version": "0.1.0-alpha.0",
+  "version": "0.2.0-alpha.0",
   "description": "Generate a static documentation site from repository Markdown files.",
   "keywords": [
     "markdown",
@@ -45,12 +45,15 @@
     "node": ">=20"
   },
   "dependencies": {
+    "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",
-    "markdown-it": "^14.2.0"
+    "markdown-it": "^14.2.0",
+    "micromatch": "^4.0.8"
   },
   "devDependencies": {
+    "@types/micromatch": "^4.0.10",
     "@types/fs-extra": "^11.0.4",
     "@types/jsdom": "^28.0.3",
     "@types/markdown-it": "^14.1.2",

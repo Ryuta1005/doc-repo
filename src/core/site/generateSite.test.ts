@@ -74,7 +74,7 @@ describe("generateSite.ts", () => {
     loggerInfoMock.mockReset();
     loggerErrorMock.mockReset();
 
-    buildSiteBundleMock.mockResolvedValue({ pages: [], tree: [] });
+    buildSiteBundleMock.mockResolvedValue({ pages: [], referencedImages: [], tree: [] });
     renderPagesMock.mockResolvedValue(undefined);
     copyAssetsMock.mockResolvedValue(undefined);
     atomicPublishMock.mockResolvedValue(undefined);
@@ -91,12 +91,21 @@ describe("generateSite.ts", () => {
     pathExistsMock.mockResolvedValue(true);
 
     const { generateSite } = await import("./generateSite.js");
-    const result = await generateSite({ cwd: rootDir, scopePath: "docs" });
+    const result = await generateSite({
+      cwd: "/work",
+      scopePath: "docs",
+      resolvedRootDir: rootDir,
+    });
 
     expect(result.status).toBe("success");
+    expect(result.outputDir).toBe(path.join(rootDir, ".doc-repo"));
     expect(result.markdownFileCount).toBe(0);
     expect(result.warnings).toContain("Markdown ファイルが 0 件でした。空サイトを生成しました。");
-    expect(scanMarkdownMock).toHaveBeenCalledWith(rootDir, path.join(rootDir, "docs"));
+    expect(scanMarkdownMock).toHaveBeenCalledWith(rootDir, path.join(rootDir, "docs"), {
+      includePatterns: undefined,
+      excludePatterns: undefined,
+    });
+    expect(copyAssetsMock).toHaveBeenCalledWith(expect.any(String), expect.any(String), rootDir, []);
   });
 
   it("scopePath がルート外を指す場合、failure が返却されること。", async () => {

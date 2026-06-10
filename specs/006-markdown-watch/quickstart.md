@@ -1,0 +1,106 @@
+# Quickstart: 変更監視と自動更新（Story 006）
+
+## 参照
+
+- 仕様: [spec.md](./spec.md)
+- 実装計画: [plan.md](./plan.md)
+
+## Prerequisites
+
+- Node.js 20 以上
+- 依存インストール済み
+
+```bash
+npm install
+npm run build
+```
+
+## 1. serve を起動して監視開始を確認
+
+```bash
+node dist/cli/index.js serve
+```
+
+期待結果:
+
+- 初回生成成功
+- 配信 URL 表示
+- 監視開始メッセージ表示
+
+## 2. 既存 Markdown 更新で自動反映を確認
+
+1. 既存の `.md` を編集して保存する。
+2. 標準出力で変更検知と再生成開始/完了を確認する。
+3. ブラウザが自動更新されることを確認する。
+
+期待結果:
+
+- 保存後 5 秒以内に最新内容を確認できる
+- 再生成成功時のみ reload が発火する
+
+## 3. add/unlink 反映を確認
+
+1. 新規 `.md` を作成して保存する。
+2. 一覧へ追加されることを確認する。
+3. その `.md` を削除して保存する。
+4. 一覧と本文から消えることを確認する。
+
+期待結果:
+
+- `add`/`unlink` が再生成に反映される
+- 一覧表示と本文表示が一致する
+
+## 4. 連続保存時の debounce と pending を確認
+
+1. 同一ファイルを短時間で連続保存する。
+2. 再生成が同時実行されないことをログで確認する。
+3. 再生成中に追加保存し、完了後に 1 回だけ再生成されることを確認する。
+
+期待結果:
+
+- 最後の変更から 300ms 後に再生成
+- pending 変更は破棄されない
+
+## 5. 失敗時に reload しないことを確認
+
+1. 再生成で失敗する状態を作る（例: 一時的にテンプレートを退避）。
+2. Markdown を保存して再生成失敗を発生させる。
+3. ブラウザが更新されないことを確認する。
+
+期待結果:
+
+- 失敗理由が標準エラーへ出力される
+- ブラウザは最後の正常表示を維持する
+
+## 6. シャットダウン順序を確認
+
+1. `serve` 起動中に Ctrl+C を送る。
+2. watcher、SSE 接続、HTTP サーバーの順に停止ログを確認する。
+3. 再起動できることを確認する。
+
+期待結果:
+
+- クリーンアップは多重実行されない
+- 正常停止後、終了コード 0
+
+## 7. file:// 閲覧時の互換性を確認
+
+1. `npm run build` を実行し `.doc-repo` を生成する。
+2. `.doc-repo/README.html` を `file://` で直接開く。
+3. 表示が崩れず閲覧できることを確認する。
+
+期待結果:
+
+- `file://` では SSE 接続を試行しない
+- 静的閲覧（build 成果物）は維持される
+
+## Manual Verification Log (2026-06-09)
+
+- Typecheck: `npm run typecheck` passed
+- Automated tests: serve/watch related test suite passed
+- Verified scenarios:
+  - change/add/unlink detection triggers regenerate flow
+  - reload event is dispatched only on regenerate success
+  - regenerate failure does not dispatch reload
+  - shutdown sequence runs watcher -> SSE -> HTTP
+  - shutdown re-entry is prevented

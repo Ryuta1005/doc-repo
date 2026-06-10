@@ -22,6 +22,9 @@ doc-repo addresses this by generating a two-pane viewer (left tree / right conte
 - Recursively discovers `.md` files in your repository
 - Preserves directory structure in tree navigation
 - Works without a local server (`index.html` can be opened directly)
+- Supports local server mode (`doc-repo serve`) with initial generation
+- Watches Markdown files and auto-regenerates on save while `serve` is running
+- Reloads the browser automatically via SSE when regeneration succeeds
 - Supports directory-scoped generation (`scopePath`)
 - Supports `--open` to launch the generated page automatically
 
@@ -60,17 +63,59 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo init
+doc-repo serve [--port <number>]
 ```
 
-| Argument / Option | Description                                                            | Default        |
-| ----------------- | ---------------------------------------------------------------------- | -------------- |
-| `scopePath`       | Directory to generate from (path relative to Git root)                 | Whole Git root |
-| `--open`          | Open `.doc-repo/index.html` with your default browser after generation | `false`        |
+| Argument / Option | Description                                                              | Default        |
+| ----------------- | ------------------------------------------------------------------------ | -------------- |
+| `scopePath`       | Directory to generate from (path relative to Git root)                   | Whole Git root |
+| `--open`          | Open `.doc-repo/index.html` with your default browser after generation   | `false`        |
+| `init`            | Generate `doc-repo.config.json` template in current directory            | -              |
+| `serve`           | Run initial generation, start local static server, and watch for changes | -              |
+| `--port`          | Port for `serve` (CLI > config > default)                                | `4000`         |
+
+### Serve Responsibilities
+
+- `doc-repo serve` orchestrates: initial generation → server start → file watch start
+- Watches `.md` files and re-generates on change, add, or unlink
+- After successful regeneration, sends a reload event to all connected browsers via SSE
+- The HTTP server is delivery-only and does not run generation by itself
+- If initial generation fails, server startup is skipped and command exits with code `1`
+- On exit (Ctrl+C / SIGTERM), stops in order: watcher → SSE connections → HTTP server
 
 ### Target Root vs Collection Scope
 
-- Target root: Git root (or current directory when Git root is not found)
+- Target root: resolved from `doc-repo.config.json` if present; falls back to Git root, then current directory
 - Collection scope: Directory under target root resolved from `scopePath`
+
+## Configuration File
+
+For full configuration details and validation rules, see [docs/config.md](./docs/config.md).
+
+Create `doc-repo.config.json` in your repository root to configure behavior:
+
+```json
+{
+  "rootDir": "./docs",
+  "include": ["specs/**/*.md"],
+  "exclude": ["drafts/**"],
+  "port": 4000
+}
+```
+
+| Field     | Type       | Default        | Description                                                        |
+| --------- | ---------- | -------------- | ------------------------------------------------------------------ |
+| `rootDir` | `string`   | Git root / cwd | Root directory for Markdown collection (relative to config file)   |
+| `include` | `string[]` | `["**/*.md"]`  | Glob patterns to include. `[]` is treated the same as omitted.     |
+| `exclude` | `string[]` | `[]`           | Additional glob patterns to exclude (merged with default excludes) |
+| `port`    | `number`   | `4000`         | Port for `serve` command (overridden by `--port` CLI option)       |
+
+**Resolution order**: config file (`doc-repo.config.json`) → Git root → current directory.
+
+**Default excludes** (always active): `node_modules/**`, `.git/**`, `.doc-repo/**`
+
+**`exclude` takes precedence over `include`.**
 
 ## Output
 
@@ -80,6 +125,7 @@ doc-repo generates a multi-page static site under `.doc-repo`, mirroring your Ma
 .doc-repo/
 ├── index.html        # redirects to the home page (README if present)
 ├── styles.css
+├── app.js            # browser-side auto-reload (SSE client)
 ├── README.html
 └── docs/
     └── guide/
@@ -105,10 +151,7 @@ Reliability behavior:
 
 ## Current Limitations
 
-- Local server mode (`serve`) is not supported yet
-- File watching (`watch`) is not supported yet
 - Browser-based Markdown editing is not supported yet
-- Detailed include/exclude rules are not supported yet
 
 ## Markdown Support (Current)
 
@@ -116,7 +159,7 @@ Reliability behavior:
 - `html: false` (raw HTML in Markdown is disabled)
 - `linkify: true`, `typographer: true`
 - Some GFM extensions (task lists, Mermaid, code highlighting) are not yet supported
-- Relative images/links may not render as expected in some repository layouts because assets are not currently rewritten/rebased
+- Relative images are automatically copied to `.doc-repo/assets/` and rewritten to work both in static files and via `serve`
 
 ## Security Notes
 
@@ -138,20 +181,25 @@ For contributors:
 npm install
 npm run dev
 npm run dev -- specs
-```
-
-Build:
-
-```bash
 npm run build
 ```
 
-Run compiled CLI:
+Build and run compiled CLI:
 
 ```bash
 node dist/cli/index.js
 node dist/cli/index.js specs
 ```
+
+## Markdown Features & Constraints
+
+**Supported**:
+
+- Relative images (e.g., `![alt](./docs/assets/image.png)`): automatically copied to `.doc-repo/assets/` and rewritten to work in both `file://` mode and `serve` mode
+
+**Not yet supported (planned for future releases)**:
+
+- Attachments in Markdown (PDF, CSV, ZIP, etc. referenced via normal links like `[link](./docs/assets/file.pdf)`)
 
 ## Issues / Feedback
 

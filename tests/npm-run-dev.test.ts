@@ -45,6 +45,54 @@ const runCommand = async (command: string, args: string[], cwd: string): Promise
   });
 };
 
+const runCommandUntilOutput = async (
+  command: string,
+  args: string[],
+  cwd: string,
+  expectedText: string,
+): Promise<CommandResult> => {
+  return await new Promise((resolve) => {
+    const { VITEST, ...baseEnv } = process.env;
+    const env = { ...baseEnv, FORCE_COLOR: "0" };
+
+    const child = spawn(command, args, {
+      cwd,
+      env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+    let closed = false;
+
+    const finalize = (code: number | null): void => {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      resolve({ code, stdout, stderr });
+    };
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+      if (stdout.includes(expectedText) || stderr.includes(expectedText)) {
+        child.kill("SIGINT");
+      }
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+      if (stdout.includes(expectedText) || stderr.includes(expectedText)) {
+        child.kill("SIGINT");
+      }
+    });
+
+    child.on("close", (code) => {
+      finalize(code);
+    });
+  });
+};
+
 const makeTempDir = async (): Promise<string> => {
   const base = path.join(repoRoot, "tests", ".tmp");
   await fs.ensureDir(base);
@@ -73,22 +121,44 @@ const withOutputBackup = async (testBody: () => Promise<void>): Promise<void> =>
 
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => fs.remove(dir)));
+  await fs.remove(path.join(repoRoot, "doc-repo.config.json.__it_backup__"));
+  await fs.remove(path.join(repoRoot, "doc-repo.config.json"));
 });
+
+const withConfigBackup = async (testBody: () => Promise<void>): Promise<void> => {
+  const configPath = path.join(repoRoot, "doc-repo.config.json");
+  const backupPath = `${configPath}.__it_backup__`;
+
+  if (await fs.pathExists(configPath)) {
+    await fs.move(configPath, backupPath, { overwrite: true });
+  }
+
+  try {
+    await testBody();
+  } finally {
+    await fs.remove(configPath);
+    if (await fs.pathExists(backupPath)) {
+      await fs.move(backupPath, configPath, { overwrite: true });
+    }
+  }
+};
 
 describe("npm run dev", () => {
   describe("正常系", () => {
     it("Markdown が 1 件以上ある場合、exit code 0 で .doc-repo/index.html が生成されること。", async () => {
-      await withOutputBackup(async () => {
-        const fixtureRoot = await makeTempDir();
-        const scopeDir = path.join(fixtureRoot, "with-md");
-        await fs.outputFile(path.join(scopeDir, "guide.md"), "# Guide");
+      await withConfigBackup(async () => {
+        await withOutputBackup(async () => {
+          const fixtureRoot = await makeTempDir();
+          const scopeDir = path.join(fixtureRoot, "with-md");
+          await fs.outputFile(path.join(scopeDir, "guide.md"), "# Guide");
 
-        const relativeScope = path.relative(repoRoot, scopeDir).split(path.sep).join("/");
-        const result = await runCommand("npm", ["run", "dev", "--", relativeScope], repoRoot);
+          const relativeScope = path.relative(repoRoot, scopeDir).split(path.sep).join("/");
+          const result = await runCommand("npm", ["run", "dev", "--", relativeScope], repoRoot);
 
-        expect(result.code).toBe(0);
-        expect(`${result.stdout}\n${result.stderr}`).toContain("ドキュメントサイトの生成に成功しました。");
-        expect(await fs.pathExists(path.join(outputDir, "index.html"))).toBe(true);
+          expect(result.code).toBe(0);
+          expect(`${result.stdout}\n${result.stderr}`).toContain("ドキュメントサイトの生成に成功しました。");
+          expect(await fs.pathExists(path.join(outputDir, "index.html"))).toBe(true);
+        });
       });
     }, 60_000);
   });
@@ -142,6 +212,22 @@ describe("npm run dev", () => {
         expect(result.code).toBe(1);
         expect(result.stderr).toContain("SCOPE_NOT_DIRECTORY");
         expect(result.stderr).toContain(relativeFile);
+      });
+    }, 60_000);
+  });
+
+  describe("serve 設定適用", () => {
+    it("設定ファイルの port が serve 起動 URL に反映されること。", async () => {
+      await withConfigBackup(async () => {
+        await fs.outputJson(path.join(repoRoot, "doc-repo.config.json"), { port: 4200 });
+        const result = await runCommandUntilOutput(
+          "npm",
+          ["run", "dev", "--", "serve"],
+          repoRoot,
+          "http://localhost:4200",
+        );
+
+        expect(`${result.stdout}\n${result.stderr}`).toContain("http://localhost:4200");
       });
     }, 60_000);
   });

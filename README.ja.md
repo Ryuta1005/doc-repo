@@ -22,6 +22,9 @@
 - リポジトリ内の `.md` を再帰的に自動収集
 - ディレクトリ構造を保ったツリーナビゲーション
 - ローカルサーバー不要（`index.html` を直接開ける）
+- ローカルサーバーモード（`doc-repo serve`）に対応
+- `serve` 実行中は Markdown の変更を監視して自動再生成
+- 再生成成功時に SSE でブラウザを自動リロード
 - 対象ディレクトリ指定（`scopePath`）に対応
 - `--open` で生成後にブラウザを自動起動
 
@@ -60,17 +63,59 @@ npx doc-repo docs/project
 
 ```bash
 doc-repo [scopePath] [--open]
+doc-repo init
+doc-repo serve [--port <number>]
 ```
 
-| 引数 / オプション | 説明                                                 | デフォルト     |
-| ----------------- | ---------------------------------------------------- | -------------- |
-| `scopePath`       | 生成対象ディレクトリ（Git ルート基準の相対パス）     | Git ルート全体 |
-| `--open`          | 生成後に `.doc-repo/index.html` を既定ブラウザで開く | `false`        |
+| 引数 / オプション | 説明                                                     | デフォルト     |
+| ----------------- | -------------------------------------------------------- | -------------- |
+| `scopePath`       | 生成対象ディレクトリ（Git ルート基準の相対パス）         | Git ルート全体 |
+| `--open`          | 生成後に `.doc-repo/index.html` を既定ブラウザで開く     | `false`        |
+| `init`            | カレントディレクトリに `doc-repo.config.json` 雛形を生成 | -              |
+| `serve`           | 初回生成後にローカル静的サーバーを起動し、変更を監視する | -              |
+| `--port`          | `serve` の待受ポート（CLI > 設定 > 既定）                | `4000`         |
+
+### serve の責務
+
+- `doc-repo serve` が `初回生成 → サーバー起動 → ファイル監視開始` を順に実行
+- `.md` ファイルの変更・追加・削除を監視し、検知次第再生成する
+- 再生成成功時は SSE で接続中のブラウザへ reload イベントを配信する
+- HTTP サーバーは配信専任で、生成処理は担当しない
+- 初回生成に失敗した場合はサーバーを起動せず、終了コード `1` で終了
+- 終了時（Ctrl+C / SIGTERM）は watcher → SSE 接続 → HTTP サーバーの順で停止する
 
 ### 対象ルートと収集対象の違い
 
-- 対象ルート: Git ルート（見つからない場合はカレント）
+- 対象ルート: `doc-repo.config.json` が存在すればそこから解決、なければ Git ルート、さらになければカレントディレクトリ
 - 収集対象: 対象ルート内で `scopePath` が指すディレクトリ配下
+
+## 設定ファイル
+
+設定項目の詳細とバリデーション仕様は [docs/config.ja.md](./docs/config.ja.md) を参照してください（英語版: [docs/config.md](./docs/config.md)）。
+
+リポジトリルートに `doc-repo.config.json` を置くことで動作を制御できます。
+
+```json
+{
+  "rootDir": "./docs",
+  "include": ["specs/**/*.md"],
+  "exclude": ["drafts/**"],
+  "port": 4000
+}
+```
+
+| フィールド | 型         | デフォルト       | 説明                                                      |
+| ---------- | ---------- | ---------------- | --------------------------------------------------------- |
+| `rootDir`  | `string`   | Git ルート / cwd | Markdown 収集の起点（設定ファイル基準の相対パスで指定）   |
+| `include`  | `string[]` | `["**/*.md"]`    | 収集対象の glob パターン。`[]` は未指定と同じ扱い。       |
+| `exclude`  | `string[]` | `[]`             | 既定除外に追加する glob パターン                          |
+| `port`     | `number`   | `4000`           | `serve` の待受ポート（`--port` CLI オプションで上書き可） |
+
+**解決順序**: 設定ファイル（`doc-repo.config.json`）→ Git ルート → カレントディレクトリ。
+
+**常時除外**（変更不可）: `node_modules/**`, `.git/**`, `.doc-repo/**`
+
+**`exclude` は `include` より優先されます。**
 
 ## 生成結果
 
@@ -80,6 +125,7 @@ doc-repo [scopePath] [--open]
 .doc-repo/
 ├── index.html        # ホーム（README があれば README）へリダイレクト
 ├── styles.css
+├── app.js            # ブラウザ側自動リロード（SSE クライアント）
 ├── README.html
 └── docs/
     └── guide/
@@ -105,10 +151,7 @@ doc-repo [scopePath] [--open]
 
 ## 現在の制限事項
 
-- ローカルサーバー起動（`serve`）は未対応
-- ファイル監視（`watch`）は未対応
 - ブラウザ上での Markdown 編集は未対応
-- include/exclude の詳細設定は未対応
 
 ## Markdown 対応方針（現状）
 
@@ -116,7 +159,7 @@ doc-repo [scopePath] [--open]
 - `html: false`（Markdown 内の生 HTML は無効）
 - `linkify: true`, `typographer: true`
 - GFM の一部拡張（例: task list、Mermaid、コードハイライト）は未対応
-- 相対画像・相対リンクは現状「入力ファイル配置を維持した再配置」をしていないため、構成によっては期待通りに表示されない場合あり
+- 相対画像は自動的に `.doc-repo/assets/` へコピーされ、静的ファイルを直接開いた場合と `serve` の両方で表示できるように URL が書き換わります
 
 ## セキュリティ注意
 
@@ -138,11 +181,6 @@ doc-repo [scopePath] [--open]
 npm install
 npm run dev
 npm run dev -- specs
-```
-
-ビルド:
-
-```bash
 npm run build
 ```
 
@@ -152,6 +190,16 @@ npm run build
 node dist/cli/index.js
 node dist/cli/index.js specs
 ```
+
+## Markdown 機能と制限
+
+**サポート中**:
+
+- 相対画像（例：`![alt](./docs/assets/image.png)`）: 自動的に `.doc-repo/assets/` へコピーされ、`file://` モードと `serve` モードの両方で表示可能に URL が書き換わります
+
+**今後のリリースで対応予定**:
+
+- Markdown 内の添付ファイル（PDF、CSV、ZIP など通常リンク `[link](./docs/assets/file.pdf)` で参照されるもの）
 
 ## Issues / Feedback
 
