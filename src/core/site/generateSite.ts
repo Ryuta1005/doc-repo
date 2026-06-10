@@ -82,19 +82,30 @@ export const generateSite = async (context: GenerationContext): Promise<Generati
   let targetPath = path.resolve(context.cwd);
 
   try {
-    const detected = await detectRoot(context.cwd);
-    const rootDir = detected.detectedRoot;
-    outputDir = path.join(rootDir, ".doc-repo");
-    const stagingDir = path.join(rootDir, `.doc-repo.__staging__.${Date.now()}`);
+    let rootDir: string;
+    let usedFallback = false;
+
+    if (context.resolvedRootDir) {
+      rootDir = context.resolvedRootDir;
+    } else {
+      const detected = await detectRoot(context.cwd);
+      rootDir = detected.detectedRoot;
+      usedFallback = detected.usedFallback;
+    }
+
+    const stagingDir = path.join(path.resolve(context.cwd), `.doc-repo.__staging__.${Date.now()}`);
     targetPath = resolveRequestedTargetPath(rootDir, context.scopePath);
     const targetDir = await resolveTargetDir(rootDir, context.scopePath);
     const templatesDir = await resolveTemplatesDir(context.cwd);
 
-    if (detected.usedFallback) {
+    if (usedFallback) {
       warnings.push("Git ルートが見つからなかったため、カレントディレクトリを対象に処理しました。");
     }
 
-    const markdownFiles = await scanMarkdown(rootDir, targetDir);
+    const markdownFiles = await scanMarkdown(rootDir, targetDir, {
+      includePatterns: context.includePatterns,
+      excludePatterns: context.excludePatterns,
+    });
     if (markdownFiles.length === 0) {
       warnings.push("Markdown ファイルが 0 件でした。空サイトを生成しました。");
     }

@@ -45,11 +45,13 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@types/micromatch": "^4.0.10",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",
-    "markdown-it": "^14.2.0"
+    "markdown-it": "^14.2.0",
+    "micromatch": "^4.0.8"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

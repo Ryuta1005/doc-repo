@@ -39,6 +39,12 @@ export interface RootDetectionResult {
 export interface GenerationContext {
   cwd: string;
   scopePath?: string;
+  /** 設定ファイルから解決済みの設定。指定された場合、cwd ベースの自動検出より優先される。 */
+  resolvedRootDir?: string;
+  /** 設定ファイルから解決済みの include パターン。 */
+  includePatterns?: string[];
+  /** 設定ファイルから解決済みの exclude パターン。 */
+  excludePatterns?: string[];
 }
 
 export interface GenerationResult {
@@ -54,6 +60,19 @@ export interface GenerationResult {
 }
 
 export type ServePortSource = "cli" | "config" | "default";
+
+export type RootSource = "config-rootDir" | "config-directory" | "git-root" | "cwd-fallback";
+
+export interface ResolvedConfig {
+  rootDir: string;
+  outputDir: string;
+  includePatterns: string[];
+  excludePatterns: string[];
+  port: number;
+  portSource: ServePortSource;
+  rootSource: RootSource;
+  configPath: string | null;
+}
 
 export interface ServeConfiguration {
   port: number;

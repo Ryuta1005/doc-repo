@@ -146,17 +146,19 @@ const withConfigBackup = async (testBody: () => Promise<void>): Promise<void> =>
 describe("npm run dev", () => {
   describe("正常系", () => {
     it("Markdown が 1 件以上ある場合、exit code 0 で .doc-repo/index.html が生成されること。", async () => {
-      await withOutputBackup(async () => {
-        const fixtureRoot = await makeTempDir();
-        const scopeDir = path.join(fixtureRoot, "with-md");
-        await fs.outputFile(path.join(scopeDir, "guide.md"), "# Guide");
+      await withConfigBackup(async () => {
+        await withOutputBackup(async () => {
+          const fixtureRoot = await makeTempDir();
+          const scopeDir = path.join(fixtureRoot, "with-md");
+          await fs.outputFile(path.join(scopeDir, "guide.md"), "# Guide");
 
-        const relativeScope = path.relative(repoRoot, scopeDir).split(path.sep).join("/");
-        const result = await runCommand("npm", ["run", "dev", "--", relativeScope], repoRoot);
+          const relativeScope = path.relative(repoRoot, scopeDir).split(path.sep).join("/");
+          const result = await runCommand("npm", ["run", "dev", "--", relativeScope], repoRoot);
 
-        expect(result.code).toBe(0);
-        expect(`${result.stdout}\n${result.stderr}`).toContain("ドキュメントサイトの生成に成功しました。");
-        expect(await fs.pathExists(path.join(outputDir, "index.html"))).toBe(true);
+          expect(result.code).toBe(0);
+          expect(`${result.stdout}\n${result.stderr}`).toContain("ドキュメントサイトの生成に成功しました。");
+          expect(await fs.pathExists(path.join(outputDir, "index.html"))).toBe(true);
+        });
       });
     }, 60_000);
   });

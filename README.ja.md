@@ -84,8 +84,36 @@ doc-repo serve [--port <number>]
 
 ### 対象ルートと収集対象の違い
 
-- 対象ルート: Git ルート（見つからない場合はカレント）
+- 対象ルート: `doc-repo.config.json` が存在すればそこから解決、なければ Git ルート、さらになければカレントディレクトリ
 - 収集対象: 対象ルート内で `scopePath` が指すディレクトリ配下
+
+## 設定ファイル
+
+設定項目の詳細とバリデーション仕様は [docs/config.ja.md](./docs/config.ja.md) を参照してください（英語版: [docs/config.md](./docs/config.md)）。
+
+リポジトリルートに `doc-repo.config.json` を置くことで動作を制御できます。
+
+```json
+{
+  "rootDir": "./docs",
+  "include": ["specs/**/*.md"],
+  "exclude": ["drafts/**"],
+  "port": 4000
+}
+```
+
+| フィールド | 型         | デフォルト       | 説明                                                      |
+| ---------- | ---------- | ---------------- | --------------------------------------------------------- |
+| `rootDir`  | `string`   | Git ルート / cwd | Markdown 収集の起点（設定ファイル基準の相対パスで指定）   |
+| `include`  | `string[]` | `["**/*.md"]`    | 収集対象の glob パターン。`[]` は未指定と同じ扱い。       |
+| `exclude`  | `string[]` | `[]`             | 既定除外に追加する glob パターン                          |
+| `port`     | `number`   | `4000`           | `serve` の待受ポート（`--port` CLI オプションで上書き可） |
+
+**解決順序**: 設定ファイル（`doc-repo.config.json`）→ Git ルート → カレントディレクトリ。
+
+**常時除外**（変更不可）: `node_modules/**`, `.git/**`, `.doc-repo/**`
+
+**`exclude` は `include` より優先されます。**
 
 ## 生成結果
 
@@ -122,7 +150,6 @@ doc-repo serve [--port <number>]
 ## 現在の制限事項
 
 - ブラウザ上での Markdown 編集は未対応
-- include/exclude の詳細設定は未対応
 
 ## Markdown 対応方針（現状）
 

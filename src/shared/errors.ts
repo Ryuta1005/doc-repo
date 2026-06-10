@@ -49,12 +49,34 @@ export const toServeUserGuidance = (
   error: unknown,
 ): { type: ServeFailureCode; reason: string; hint: string; field?: string } => {
   if (error instanceof AppError) {
-    if (error.code === "INVALID_PORT") {
+    if (error.code === "INVALID_PORT" || error.code === "CONFIG_INVALID_PORT") {
       return {
         type: "invalid-port",
         reason: `${error.code}: ${error.message}`,
         hint: error.hint,
         field: "port",
+      };
+    }
+
+    if (error.code === "CONFIG_INVALID_PATTERN") {
+      return {
+        type: "unknown",
+        reason: `${error.code}: ${error.message}`,
+        hint: error.hint,
+        field: "include/exclude",
+      };
+    }
+
+    if (
+      error.code === "CONFIG_INVALID_ROOT_DIR" ||
+      error.code === "CONFIG_ROOT_DIR_NOT_FOUND" ||
+      error.code === "CONFIG_ROOT_DIR_NOT_DIRECTORY"
+    ) {
+      return {
+        type: "unknown",
+        reason: `${error.code}: ${error.message}`,
+        hint: error.hint,
+        field: "rootDir",
       };
     }
 
