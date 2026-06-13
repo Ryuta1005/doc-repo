@@ -1,4 +1,4 @@
-# Contract: doc-repo serve / build（Task 019）
+# Contract: doc-repo serve / default-generate（Task 019）
 
 ## Scope
 
@@ -19,18 +19,19 @@ Behavior:
 3. 再生成成功時のみ SSE `reload` を通知。
 4. 失敗時はブラウザ更新せずエラー表示。
 
-### Command: `doc-repo build`
+### Command: `doc-repo [scopePath]`
 
-- 既存の主要な出力契約を維持して静的成果物を生成する。
+- 現行CLIのデフォルト実行として、既存の主要な出力契約を維持して静的成果物を生成する。
 - 生成物は既存と同じ利用方法でオフライン閲覧できる。
 
 ## HTTP Contract (Serve Runtime)
 
-注: パラメータ形式（path/query）と URL エンコード詳細は plan で最終決定。
+文書取得は query parameter 方式に固定する。
 
 ### Document List API
 
 - Purpose: 利用可能な文書一覧を返す。
+- Endpoint: `GET /api/documents`
 - Response: JSON（`identifier` は `rootDir` 正規化相対パス）
 
 ```json
@@ -46,6 +47,10 @@ Behavior:
 ### Document Detail API
 
 - Purpose: 指定文書の HTML とメタデータを返す。
+- Endpoint: `GET /api/document?path=<encoded rootDir-relative path>`
+- Client rule: `path` は `encodeURIComponent(path)` でエンコードして送信する。
+- Server rule: デコード後に正規化し、`rootDir` 外参照、空文字、`..` 逸脱を拒否する。
+- Error rule: 不正な `path` は `400 INVALID_REQUEST`、存在しない文書は `404 DOCUMENT_NOT_FOUND`。
 - Response: JSON
 
 ```json

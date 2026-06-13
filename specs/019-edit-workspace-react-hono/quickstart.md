@@ -49,10 +49,10 @@ node dist/cli/index.js serve
 - 文書一覧/取得 API の契約が保持されている
 - `identifier` は `rootDir` 正規化相対パスで一貫している
 
-## 4. `build` とオフライン閲覧を確認
+## 4. 静的生成（現行CLIデフォルト実行）とオフライン閲覧を確認
 
 ```bash
-node dist/cli/index.js build
+node dist/cli/index.js [scopePath]
 ```
 
 確認項目:
@@ -72,5 +72,5 @@ node dist/cli/index.js build
 - Markdown 変更
 - ファイル追加・削除
 - ブラウザ自動更新
-- `doc-repo build`
+- `doc-repo [scopePath]`（静的生成コマンド/現行CLIデフォルト実行）
 - 生成物のオフライン閲覧

@@ -32,7 +32,7 @@
   - `html`: string
   - `metadata`: object
 - Validation Rules:
-  - `html` は core/application 層が生成
+  - `html` は Markdown から変換した表示用 HTML（rendered HTML）
   - `identifier` 不一致時は 404 相当
 
 ## Entity: ViewerTreeNode
@@ -63,27 +63,17 @@
 
 - Purpose: SSE でブラウザへ送る更新通知。
 - Fields:
-  - `event`: string（`reload`）
-  - `occurredAt`: string（ISO datetime）
-  - `reason`: string（`regenerate-succeeded`）
+  - `eventName`: string（`reload`）
+  - `payload`: object
+    - `type`: string（`reload`）
+    - `reason`: string（`regenerate-succeeded`）
+    - `occurredAt`: string（ISO datetime）
 - Validation Rules:
   - 再生成成功時のみ送信
   - 失敗時は送信しない
-
-## Entity: HttpBoundaryLayer
-
-- Purpose: Hono 境界での責務分離単位。
-- Fields:
-  - `routeHandler`: HTTP ルート
-  - `inputValidator`: 入力検証
-  - `errorMapper`: HTTP エラー変換
-  - `applicationInvoker`: application 呼び出し
-- Validation Rules:
-  - 各責務は分離（単一層へ混在させない）
-  - 保存 API 追加時に既存一覧/取得 API 契約へ非破壊で拡張可能
+  - `eventName` と `payload.type` はともに `reload` で一致させる
 
 ## Relationships
 
 - `DocumentIdentifier` は `DocumentSummary` / `DocumentDetail` / `ViewerTreeNode` を結びつける。
 - `WatchEvent` は再生成をトリガーし、成功時に `ReloadSignal` を生成する。
-- `HttpBoundaryLayer` は `DocumentSummary` / `DocumentDetail` を HTTP レスポンスへ変換する。
