@@ -47,6 +47,8 @@
 - 機能実装タスクは Speckit のフローで管理し、backlog では起票しない
 - backlog の Task はリファクタリング、技術検証、基盤整備などに限定する
 - Spec 完了条件は、対応 Story の受け入れ条件が満たされること
+- HTTP API / CLI / file output など外部から利用される境界を変更する Spec は、内部関数の単体テストだけで完了扱いにしない。利用者と同じ入口（HTTP request、CLI process、生成ファイル）から契約を確認する integration test を完了条件に含める
+- API の 400/404/500 などのエラー契約は、validator/mapper 単体ではなく実 response の status code、headers、payload まで確認する
 
 ## 進行ルール
 

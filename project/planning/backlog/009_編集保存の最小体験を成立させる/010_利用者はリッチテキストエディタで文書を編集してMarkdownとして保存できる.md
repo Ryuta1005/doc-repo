@@ -8,7 +8,7 @@
 - ステータス: Todo
 - 優先度: P1
 - Spec: -
-- Depends On: 019
+- Depends On: 020
 
 ## ユーザー価値
 

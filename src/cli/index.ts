@@ -40,6 +40,7 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
         result = await generateSite({
           cwd,
           scopePath,
+          siteName: config.siteName,
           resolvedRootDir: config.rootDir,
           includePatterns: config.includePatterns,
           excludePatterns: config.excludePatterns,
@@ -109,6 +110,7 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
           cwd,
           rootDir: config.rootDir,
           outputDir: config.outputDir,
+          siteName: config.siteName,
           port: config.port,
           includePatterns: config.includePatterns,
           excludePatterns: config.excludePatterns,

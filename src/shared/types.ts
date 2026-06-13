@@ -36,9 +36,16 @@ export interface ReferencedImage {
   absolutePath?: string;
 }
 
+export interface ViewerAssets {
+  styleFile: string;
+  scriptFile: string;
+}
+
 export interface SiteBundle {
   pages: SitePage[];
   tree: TreeNode[];
+  viewerAssets: ViewerAssets;
+  siteName: string;
   // T005: 参照画像一覧（リポジトリ相対パスで重複排除）
   referencedImages: ReferencedImage[];
 }
@@ -51,6 +58,8 @@ export interface RootDetectionResult {
 export interface GenerationContext {
   cwd: string;
   scopePath?: string;
+  /** サイドバー上部などに表示するサイト名。 */
+  siteName?: string;
   /** 設定ファイルから解決済みの設定。指定された場合、cwd ベースの自動検出より優先される。 */
   resolvedRootDir?: string;
   /** 設定ファイルから解決済みの include パターン。 */
@@ -82,6 +91,7 @@ export type ServePortSource = "cli" | "config" | "default";
 export type RootSource = "config-rootDir" | "config-directory" | "git-root" | "cwd-fallback";
 
 export interface ResolvedConfig {
+  siteName: string;
   rootDir: string;
   outputDir: string;
   includePatterns: string[];
@@ -93,6 +103,7 @@ export interface ResolvedConfig {
 }
 
 export interface ServeConfiguration {
+  siteName: string;
   port: number;
   portSource: ServePortSource;
   rootDir: string;
@@ -138,6 +149,7 @@ export type WatchEventType = "add" | "change" | "unlink";
 export interface WatchEvent {
   eventType: WatchEventType;
   absolutePath: string;
+  notificationPath: string;
 }
 
 export interface WatchHandle {

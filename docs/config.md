@@ -19,6 +19,7 @@ Generated template:
 
 ```json
 {
+  "name": "Doc Repo",
   "rootDir": ".",
   "include": ["**/*.md"],
   "exclude": [],
@@ -32,6 +33,7 @@ If `doc-repo.config.json` already exists, the command does not overwrite it.
 
 ```json
 {
+  "name": "Team Docs",
   "rootDir": "./docs",
   "include": ["**/*.md"],
   "exclude": ["drafts/**"],
@@ -41,6 +43,7 @@ If `doc-repo.config.json` already exists, the command does not overwrite it.
 
 | Field     | Type       | Required | Description                                   |
 | --------- | ---------- | -------- | --------------------------------------------- |
+| `name`    | `string`   | No       | Site name shown in the sidebar header         |
 | `rootDir` | `string`   | No       | Root directory to collect Markdown files from |
 | `include` | `string[]` | No       | Include glob patterns                         |
 | `exclude` | `string[]` | No       | Additional exclude glob patterns              |
@@ -101,6 +104,7 @@ The command fails (`exit code 1`) for:
 - `include` is not `string[]`
 - `exclude` is not `string[]`
 - `port` is out of range or not a number
+- `name` is empty or not a string
 
 ## Examples
 

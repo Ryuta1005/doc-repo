@@ -1,7 +1,7 @@
 {
   "name": "doc-repo",
   "version": "0.2.0-alpha.0",
-  "description": "Generate a static documentation site from repository Markdown files.",
+  "description": "Browse and edit repository Markdown in a browser while keeping Git and Markdown as the source of truth.",
   "keywords": [
     "markdown",
     "documentation",
@@ -35,7 +35,10 @@
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "prebuild": "npm run clean",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "npm run build:tsc --",
+    "postbuild": "npm run build:viewer",
+    "build:tsc": "tsc -p tsconfig.build.json",
+    "build:viewer": "vite build --config vite.viewer.config.ts",
     "dev": "tsx src/cli/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.tests.json",
     "test": "vitest run --coverage",
@@ -45,23 +48,31 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@hono/node-server": "^2.0.4",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",
+    "hono": "^4.12.25",
     "markdown-it": "^14.2.0",
-    "micromatch": "^4.0.8"
+    "micromatch": "^4.0.8",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@types/micromatch": "^4.0.10",
     "@types/fs-extra": "^11.0.4",
     "@types/jsdom": "^28.0.3",
     "@types/markdown-it": "^14.1.2",
-    "@types/node": "^25.9.2",
+    "@types/micromatch": "^4.0.10",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.8",
     "jsdom": "^29.1.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
+    "vite": "^8.0.16",
     "vitest": "^4.1.8"
   }
 }

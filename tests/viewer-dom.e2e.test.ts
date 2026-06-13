@@ -19,6 +19,31 @@ afterEach(async () => {
 });
 
 describe("multi-page static output E2E", () => {
+  it("左ツリーと本文エリアに必要要素が描画されること。", async () => {
+    const fixtureRoot = await makeTempDir();
+    await fs.outputFile(path.join(fixtureRoot, "README.md"), "# Top\n\ntop body");
+    await fs.outputFile(path.join(fixtureRoot, "docs", "first.md"), "# First\n\nfirst body");
+
+    const result = await generateSite({ cwd: fixtureRoot });
+    expect(result.status).toBe("success");
+
+    const outDir = path.join(fixtureRoot, ".doc-repo");
+    const html = await fs.readFile(path.join(outDir, "docs", "first.html"), "utf8");
+
+    const dom = new JSDOM(html);
+    try {
+      const tree = dom.window.document.getElementById("tree");
+      const article = dom.window.document.getElementById("article");
+
+      expect(tree).not.toBeNull();
+      expect(article).not.toBeNull();
+      expect(tree?.textContent).toContain("README.md");
+      expect(article?.textContent).toContain("first body");
+    } finally {
+      dom.window.close();
+    }
+  });
+
   it("各 Markdown がミラー構造の実 HTML として出力され、ルート index.html が生成されること。", async () => {
     const fixtureRoot = await makeTempDir();
     await fs.outputFile(path.join(fixtureRoot, "README.md"), "# Top\n\ntop body");
@@ -93,4 +118,5 @@ describe("multi-page static output E2E", () => {
       dom.window.close();
     }
   });
+
 });

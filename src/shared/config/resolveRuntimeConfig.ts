@@ -3,10 +3,11 @@ import fs from "fs-extra";
 
 import { detectRoot } from "../../core/scanner/detectRoot.js";
 import { findConfigPath } from "./findConfigPath.js";
-import { validatePort, validatePathPatterns, validateRootDir } from "./validateRuntimeConfig.js";
+import { validatePort, validatePathPatterns, validateRootDir, validateSiteName } from "./validateRuntimeConfig.js";
 import type { ResolvedConfig } from "../types.js";
 
 interface RawConfigFile {
+  name?: unknown;
   rootDir?: unknown;
   include?: unknown;
   exclude?: unknown;
@@ -19,6 +20,7 @@ interface ResolveRuntimeConfigInput {
 }
 
 const DEFAULT_PORT = 4000;
+const DEFAULT_SITE_NAME = "Doc Repo";
 
 export const resolveRuntimeConfig = async (input: ResolveRuntimeConfigInput): Promise<ResolvedConfig> => {
   const configPath = await findConfigPath(input.cwd);
@@ -29,11 +31,15 @@ export const resolveRuntimeConfig = async (input: ResolveRuntimeConfigInput): Pr
   let includePatterns: string[] = [];
   let excludePatterns: string[] = [];
   let configPort: number | undefined;
+  let siteName = DEFAULT_SITE_NAME;
 
   if (configPath) {
     const raw = (await fs.readJson(configPath)) as RawConfigFile;
     const configDir = path.dirname(configPath);
 
+    if (raw.name !== undefined) {
+      siteName = validateSiteName(raw.name);
+    }
     includePatterns = validatePathPatterns(raw.include, "include");
     excludePatterns = validatePathPatterns(raw.exclude, "exclude");
     if (raw.port !== undefined) {
@@ -71,6 +77,7 @@ export const resolveRuntimeConfig = async (input: ResolveRuntimeConfigInput): Pr
   }
 
   return {
+    siteName,
     rootDir,
     outputDir,
     includePatterns,

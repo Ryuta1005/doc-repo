@@ -35,6 +35,8 @@ describe("buildSiteBundle.ts", () => {
     ]);
 
     expect(bundle.pages.map((p) => p.id)).toEqual(["docs/guide/b", "docs/guide/a"]);
+    expect(bundle.siteName).toBe("Doc Repo");
+    expect(bundle.viewerAssets).toEqual({ styleFile: "styles.css", scriptFile: "app.js" });
     expect(bundle.tree).toEqual([
       {
         type: "dir",

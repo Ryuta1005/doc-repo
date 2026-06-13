@@ -1,12 +1,12 @@
 import { generateSite } from "../site/generateSite.js";
-import { startStaticServer } from "./startStaticServer.js";
-import { createSseConnectionRegistry } from "./sseConnectionRegistry.js";
 import { createWatchTargetFilter } from "./watchTargetFilter.js";
 import { createRefreshCoordinator } from "./refreshCoordinator.js";
 import { startMarkdownWatcher } from "./startMarkdownWatcher.js";
 import { createWatchStatusReporter } from "./watchStatusReporter.js";
 import { createLogger } from "../../shared/logger.js";
 import { toServeUserGuidance } from "../../shared/errors.js";
+import { createServer } from "../../presentation/http/createServer.js";
+import { createSseConnectionRegistry } from "../../presentation/http/sse/sseConnectionRegistry.js";
 import type { GenerationResult, ServeSession, ServeStepResult } from "../../shared/types.js";
 
 interface ServerHandle {
@@ -16,13 +16,21 @@ interface ServerHandle {
 
 interface RunServeInput {
   cwd?: string;
+  siteName?: string;
   rootDir?: string;
   outputDir: string;
   port?: number;
   includePatterns?: string[];
   excludePatterns?: string[];
   generate?: () => Promise<GenerationResult>;
-  startServer?: (input: { outputDir: string; port: number }) => Promise<ServerHandle>;
+  startServer?: (input: {
+    outputDir: string;
+    port: number;
+    siteName?: string;
+    rootDir: string;
+    includePatterns?: string[];
+    excludePatterns?: string[];
+  }) => Promise<ServerHandle>;
   registerSignalHandler?: (signal: NodeJS.Signals, handler: () => void | Promise<void>) => void;
 }
 
@@ -51,6 +59,7 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
     (async () =>
       await generateSite({
         cwd: input.cwd ?? process.cwd(),
+        siteName: input.siteName,
         resolvedRootDir: input.rootDir,
         includePatterns: input.includePatterns,
         excludePatterns: input.excludePatterns,
@@ -94,7 +103,7 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
     const startServer =
       input.startServer ??
       (async (x) =>
-        await startStaticServer({
+        await createServer({
           ...x,
           sseHooks: {
             onSseConnect: (response) => ({
@@ -104,10 +113,18 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
               sseRegistry.remove(connectionId);
             },
           },
+          siteName: input.siteName,
         }));
 
     const serverStart = Date.now();
-    const server = await startServer({ outputDir: input.outputDir, port: resolvedPort });
+    const server = await startServer({
+      outputDir: input.outputDir,
+      port: resolvedPort,
+      siteName: input.siteName,
+      rootDir,
+      includePatterns: input.includePatterns,
+      excludePatterns: input.excludePatterns,
+    });
     steps.push({
       step: "start-server",
       status: "success",

@@ -1,7 +1,6 @@
-import http from "node:http";
 import { describe, expect, it } from "vitest";
 
-import { createSseConnectionRegistry } from "./sseConnectionRegistry.js";
+import { createSseConnectionRegistry, type SseWritableConnection } from "./sseConnectionRegistry.js";
 
 describe("sseConnectionRegistry", () => {
   it("dispatchReload sends event payload to active clients", () => {
@@ -11,7 +10,7 @@ describe("sseConnectionRegistry", () => {
       destroyed: false,
       write: () => true,
       end: () => undefined,
-    } as unknown as http.ServerResponse;
+    } satisfies SseWritableConnection;
 
     registry.add(response);
     const count = registry.dispatchReload();
@@ -27,7 +26,7 @@ describe("sseConnectionRegistry", () => {
       destroyed: false,
       write: () => true,
       end: () => undefined,
-    } as unknown as http.ServerResponse;
+    } satisfies SseWritableConnection;
 
     registry.add(response);
     await registry.closeAll();

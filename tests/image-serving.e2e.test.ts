@@ -4,7 +4,7 @@ import http from "node:http";
 import { describe, it, expect, afterEach } from "vitest";
 
 import { generateSite } from "../src/core/site/generateSite.js";
-import { startStaticServer } from "../src/core/serve/startStaticServer.js";
+import { startStaticServer } from "../src/presentation/http/server/startStaticServer.js";
 
 describe("T016: 参照画像の HTTP 200 統合テスト", () => {
   let tmpDir: string | null = null;
@@ -40,6 +40,9 @@ describe("T016: 参照画像の HTTP 200 統合テスト", () => {
     const readmeHtmlPath = path.join(tmpDir, ".doc-repo", "README.html");
     const readmeHtml = await fs.readFile(readmeHtmlPath, "utf8");
 
+    expect(readmeHtml).toContain('href="styles.css"');
+    expect(readmeHtml).toContain('src="app.js"');
+
     const srcMatch = readmeHtml.match(/<img[^>]*src="([^"]+)"/i);
     expect(srcMatch).not.toBeNull();
 
@@ -57,18 +60,24 @@ describe("T016: 参照画像の HTTP 200 統合テスト", () => {
       port: freePort,
     });
 
-    // HTTP 200 で画像が配信されることを確認
-    await new Promise<void>((resolve, reject) => {
-      const req = http.get(`http://localhost:${freePort}/${imageSrc}`, (res) => {
-        try {
-          expect(res.statusCode).toBe(200);
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-        res.destroy();
+    const expectStatus = async (targetPath: string, expectedStatus = 200): Promise<void> => {
+      await new Promise<void>((resolve, reject) => {
+        const req = http.get(`http://localhost:${freePort}/${targetPath}`, (res) => {
+          try {
+            expect(res.statusCode).toBe(expectedStatus);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+          res.destroy();
+        });
+        req.on("error", reject);
       });
-      req.on("error", reject);
-    });
+    };
+
+    // HTTP 200 で画像と静的アセットが配信されることを確認
+    await expectStatus(imageSrc);
+    await expectStatus("styles.css");
+    await expectStatus("app.js");
   });
 });

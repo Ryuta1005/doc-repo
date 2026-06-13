@@ -118,7 +118,7 @@ export const generateSite = async (context: GenerationContext): Promise<Generati
 
     await fs.ensureDir(stagingDir);
 
-    const bundle = await buildSiteBundle(markdownFiles);
+    const bundle = await buildSiteBundle(markdownFiles, context.siteName);
     await renderPages(templatesDir, stagingDir, bundle);
     // 変換結果に含まれる参照画像情報を使って画像アセットを配置する。
     await copyAssets(templatesDir, stagingDir, rootDir, bundle.referencedImages);

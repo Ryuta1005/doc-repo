@@ -3,6 +3,18 @@ import fs from "fs-extra";
 
 import { AppError } from "../errors.js";
 
+export const validateSiteName = (value: unknown): string => {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new AppError(
+      "name は空でない文字列で指定してください。",
+      "CONFIG_INVALID_NAME",
+      "name にはサイドメニューに表示する文字列を指定してください。",
+    );
+  }
+
+  return value;
+};
+
 export const validatePort = (value: unknown): number => {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 65535) {
     throw new AppError(

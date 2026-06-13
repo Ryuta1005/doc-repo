@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import net from "node:net";
 import fs from "fs-extra";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -15,6 +16,12 @@ interface CommandResult {
   code: number | null;
   stdout: string;
   stderr: string;
+}
+
+interface RunningCommand {
+  getOutput: () => string;
+  waitForTextSince: (text: string, cursor: number, timeoutMs?: number) => Promise<void>;
+  stop: () => Promise<CommandResult>;
 }
 
 const runCommand = async (command: string, args: string[], cwd: string): Promise<CommandResult> => {
@@ -89,6 +96,111 @@ const runCommandUntilOutput = async (
 
     child.on("close", (code) => {
       finalize(code);
+    });
+  });
+};
+
+const startCommand = (command: string, args: string[], cwd: string): RunningCommand => {
+  const { VITEST, ...baseEnv } = process.env;
+  const env = { ...baseEnv, FORCE_COLOR: "0" };
+
+  const child = spawn(command, args, {
+    cwd,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  let stdout = "";
+  let stderr = "";
+  let closedCode: number | null = null;
+  let closeResolved = false;
+  let closeResolve: ((result: CommandResult) => void) | undefined;
+  const waiters = new Set<() => void>();
+
+  const notifyWaiters = (): void => {
+    for (const wake of waiters) {
+      wake();
+    }
+  };
+
+  const closePromise = new Promise<CommandResult>((resolve) => {
+    closeResolve = resolve;
+  });
+
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk.toString();
+    notifyWaiters();
+  });
+
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString();
+    notifyWaiters();
+  });
+
+  child.on("close", (code) => {
+    closedCode = code;
+    notifyWaiters();
+    if (!closeResolved && closeResolve) {
+      closeResolved = true;
+      closeResolve({ code, stdout, stderr });
+    }
+  });
+
+  const waitForTextSince = async (text: string, cursor: number, timeoutMs = 30_000): Promise<void> => {
+    const started = Date.now();
+
+    while (Date.now() - started < timeoutMs) {
+      const output = `${stdout}\n${stderr}`;
+      if (output.indexOf(text, cursor) >= 0) {
+        return;
+      }
+
+      if (closedCode !== null) {
+        break;
+      }
+
+      await new Promise<void>((resolve) => {
+        const onWake = (): void => {
+          waiters.delete(onWake);
+          resolve();
+        };
+        waiters.add(onWake);
+      });
+    }
+
+    throw new Error(`Timed out waiting for text: ${text}`);
+  };
+
+  return {
+    getOutput: () => `${stdout}\n${stderr}`,
+    waitForTextSince,
+    stop: async () => {
+      if (closedCode === null) {
+        child.kill("SIGINT");
+      }
+      return await closePromise;
+    },
+  };
+};
+
+const findFreePort = async (): Promise<number> => {
+  return await new Promise<number>((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(0, () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        reject(new Error("failed to resolve free port"));
+        return;
+      }
+
+      const { port } = address;
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(port);
+      });
     });
   });
 };
@@ -230,5 +342,46 @@ describe("npm run dev", () => {
         expect(`${result.stdout}\n${result.stderr}`).toContain("http://localhost:4200");
       });
     }, 60_000);
+  });
+
+  describe("watch 回帰", () => {
+    it("change/add/unlink で変更検知と再生成成功ログが出ること。", async () => {
+      await withConfigBackup(async () => {
+        await withOutputBackup(async () => {
+          const fixtureRoot = await makeTempDir();
+          await fs.outputFile(path.join(fixtureRoot, "README.md"), "# README\n\ninitial");
+
+          const port = await findFreePort();
+          await fs.outputJson(path.join(repoRoot, "doc-repo.config.json"), {
+            rootDir: fixtureRoot,
+            port,
+          });
+
+          const running = startCommand("npm", ["run", "dev", "--", "serve"], repoRoot);
+
+          try {
+            await running.waitForTextSince("[doc-repo] watch: started", 0);
+
+            let cursor = running.getOutput().length;
+            await fs.appendFile(path.join(fixtureRoot, "README.md"), "\nchanged");
+            await running.waitForTextSince("[CHANGE_DETECTED] type=change", cursor);
+            await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
+
+            cursor = running.getOutput().length;
+            const addedPath = path.join(fixtureRoot, "docs", "added.md");
+            await fs.outputFile(addedPath, "# Added\n\nnew file");
+            await running.waitForTextSince("[CHANGE_DETECTED] type=add", cursor);
+            await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
+
+            cursor = running.getOutput().length;
+            await fs.remove(addedPath);
+            await running.waitForTextSince("[CHANGE_DETECTED] type=unlink", cursor);
+            await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
+          } finally {
+            await running.stop();
+          }
+        });
+      });
+    }, 90_000);
   });
 });

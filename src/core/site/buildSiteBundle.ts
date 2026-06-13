@@ -50,7 +50,7 @@ const addFileToTree = (root: MutableDir, relativePath: string, id: string): void
   });
 };
 
-export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle> => {
+export const buildSiteBundle = async (files: MarkdownFile[], siteName = "Doc Repo"): Promise<SiteBundle> => {
   const pages = [] as SiteBundle["pages"];
   const root = createDir("root");
   // 参照画像一覧を集約して重複を排除する。
@@ -59,28 +59,13 @@ export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle
   // 実在する全ページのID集合を先に構築し、リンク解決の唯一の正とする。
   const knownIds = new Set(files.map((file) => file.relativePath.replace(/\.md$/i, "")));
 
-  // ベース名 → ID。同名が複数ある場合は曖昧なので除外し、一意なものだけ救済対象にする。
-  const basenameCounts = new Map<string, number>();
-  const basenameToId = new Map<string, string>();
-  for (const id of knownIds) {
-    const basename = id.split("/").pop() ?? id;
-    basenameCounts.set(basename, (basenameCounts.get(basename) ?? 0) + 1);
-    basenameToId.set(basename, id);
-  }
-  const uniqueBasenames = new Map<string, string>();
-  for (const [basename, count] of basenameCounts) {
-    if (count === 1) {
-      uniqueBasenames.set(basename, basenameToId.get(basename)!);
-    }
-  }
-
   for (const file of files) {
     const id = file.relativePath.replace(/\.md$/i, "");
     let converted: { title: string; html: string; referencedImages: string[] };
 
     try {
       const source = await fs.readFile(file.absolutePath, "utf8");
-      converted = convertMarkdown(source, file.relativePath, knownIds, uniqueBasenames);
+      converted = convertMarkdown(source, file.relativePath, knownIds);
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new AppError(
@@ -105,8 +90,13 @@ export const buildSiteBundle = async (files: MarkdownFile[]): Promise<SiteBundle
   }
 
   return {
+    siteName,
     pages,
     tree: finalize(root),
+    viewerAssets: {
+      styleFile: "styles.css",
+      scriptFile: "app.js",
+    },
     referencedImages: Array.from(allReferencedImages.values()),
   };
 };
