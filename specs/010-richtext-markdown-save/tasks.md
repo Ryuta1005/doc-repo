@@ -11,9 +11,9 @@
 
 **Purpose**: 編集保存機能を追加するための土台を整える
 
-- [ ] T001 Create save feature test fixture markdown files in tests/fixtures/save/
-- [ ] T002 Create save API contract test scaffold in tests/contract/http-document-save.test.ts
-- [ ] T003 [P] Record Tiptap + unsupported pass-through feasibility spike conclusions in specs/010-richtext-markdown-save/research.md
+- [x] T001 Create save feature test fixture markdown files in tests/fixtures/save/
+- [x] T002 Create save API contract test scaffold in tests/contract/http-document-save.test.ts
+- [x] T003 [P] Record Tiptap + unsupported pass-through feasibility spike conclusions in specs/010-richtext-markdown-save/research.md
 
 ---
 
@@ -23,12 +23,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Define save request/response domain types in src/shared/types.ts
-- [ ] T005 [P] Add save error categories and mapping helpers in src/shared/errors.ts
-- [ ] T006 Implement save target validation utility (root/include/exclude/extension/path traversal) in src/core/document/validateSaveTarget.ts
-- [ ] T007 [P] Implement atomic markdown writer preserving newline style and trailing newline in src/core/document/writeMarkdownDocumentAtomically.ts
-- [ ] T008 Create markdown conversion pipeline contracts in src/core/markdown/index.ts
-- [ ] T009 Wire save route registration placeholder in src/presentation/http/routes/index.ts
+- [x] T004 Define save request/response domain types in src/shared/types.ts
+- [x] T005 [P] Add save error categories and mapping helpers in src/shared/errors.ts
+- [x] T006 Implement save target validation utility (root/include/exclude/extension/path traversal) in src/core/document/validateSaveTarget.ts
+- [x] T007 [P] Implement atomic markdown writer preserving newline style and trailing newline in src/core/document/writeMarkdownDocumentAtomically.ts
+- [x] T008 Create markdown conversion pipeline contracts in src/core/markdown/index.ts
+- [x] T009 Wire save route registration placeholder in src/presentation/http/routes/index.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -42,20 +42,20 @@
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Add HTTP contract test for successful save in tests/contract/http-document-save.test.ts
-- [ ] T011 [P] [US1] Add viewer integration test for edit-save-return flow in src/viewer/navigation.test.ts
+- [x] T010 [P] [US1] Add HTTP contract test for successful save in tests/contract/http-document-save.test.ts
+- [x] T011 [P] [US1] Add viewer integration test for edit-save-return flow in src/viewer/navigation.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implement save document use case in src/application/documents/saveDocument.ts
-- [ ] T013 [US1] Implement save API route handler in src/presentation/http/routes/documentSaveRoute.ts
-- [ ] T014 [US1] Add save request validator for API payload in src/presentation/http/validation/saveDocumentRequestValidator.ts
-- [ ] T015 [P] [US1] Implement editor API client methods for save and pre-save warning in src/viewer/services/apiClient.ts
-- [ ] T016 [P] [US1] Add rich text editor component with heading/bold/italic support in src/viewer/components/DocumentEditor.tsx
-- [ ] T017 [P] [US1] Add editor toolbar component for heading1-3/bold/italic actions in src/viewer/components/EditorToolbar.tsx
-- [ ] T018 [US1] Extend viewer state for edit mode and save lifecycle in src/viewer/state/viewerState.ts
-- [ ] T019 [US1] Integrate editor mode toggle and save flow into viewer app shell in src/viewer/App.tsx
-- [ ] T020 [US1] Ensure save success triggers latest document reload in src/viewer/hooks/useViewerState.ts
+- [x] T012 [P] [US1] Implement save document use case in src/application/documents/saveDocument.ts
+- [x] T013 [US1] Implement save API route handler in src/presentation/http/routes/documentSaveRoute.ts
+- [x] T014 [US1] Add save request validator for API payload in src/presentation/http/validation/saveDocumentRequestValidator.ts
+- [x] T015 [P] [US1] Implement editor API client methods for save and pre-save warning in src/viewer/services/apiClient.ts
+- [x] T016 [P] [US1] Add rich text editor component with heading/bold/italic support in src/viewer/components/DocumentEditor.tsx
+- [x] T017 [P] [US1] Add editor toolbar component for heading1-3/bold/italic actions in src/viewer/components/EditorToolbar.tsx
+- [x] T018 [US1] Extend viewer state for edit mode and save lifecycle in src/viewer/state/viewerState.ts
+- [x] T019 [US1] Integrate editor mode toggle and save flow into viewer app shell in src/viewer/App.tsx
+- [x] T020 [US1] Ensure save success triggers latest document reload in src/viewer/hooks/useViewerState.ts
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
 
@@ -69,15 +69,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T021 [P] [US2] Add unsaved-changes guard behavior tests in src/viewer/state/viewerState.test.ts
-- [ ] T022 [P] [US2] Add navigation guard integration tests in src/viewer/navigation.test.ts
+- [x] T021 [P] [US2] Add unsaved-changes guard behavior tests in src/viewer/state/viewerState.test.ts
+- [x] T022 [P] [US2] Add navigation guard integration tests in src/viewer/navigation.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Implement unsaved changes guard state transitions in src/viewer/state/viewerState.ts
-- [ ] T024 [P] [US2] Implement browser beforeunload guard hook in src/viewer/hooks/useUnsavedChangesGuard.ts
-- [ ] T025 [P] [US2] Add discard confirmation dialog component in src/viewer/components/UnsavedChangesDialog.tsx
-- [ ] T026 [US2] Integrate document-switch and edit-exit guard handling in src/viewer/App.tsx
+- [x] T023 [US2] Implement unsaved changes guard state transitions in src/viewer/state/viewerState.ts
+- [x] T024 [P] [US2] Implement browser beforeunload guard hook in src/viewer/hooks/useUnsavedChangesGuard.ts
+- [x] T025 [P] [US2] Add discard confirmation dialog component in src/viewer/components/UnsavedChangesDialog.tsx
+- [x] T026 [US2] Integrate document-switch and edit-exit guard handling in src/viewer/App.tsx
 
 **Checkpoint**: User Stories 1 and 2 should both work independently
 
@@ -91,19 +91,19 @@
 
 ### Tests for User Story 3
 
-- [ ] T027 [P] [US3] Add contract tests for warning response and failure categories in tests/contract/http-document-save.test.ts
-- [ ] T028 [P] [US3] Add integration tests for include/exclude and invalid target save rejection in tests/contract/http-errors.test.ts
-- [ ] T029 [P] [US3] Add conversion tests for unsupported segment pass-through behavior in src/core/markdown/serializeEditableMarkdown.test.ts
+- [x] T027 [P] [US3] Add contract tests for warning response and failure categories in tests/contract/http-document-save.test.ts
+- [x] T028 [P] [US3] Add integration tests for include/exclude and invalid target save rejection in tests/contract/http-errors.test.ts
+- [x] T029 [P] [US3] Add conversion tests for unsupported segment pass-through behavior in src/core/markdown/serializeEditableMarkdown.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T030 [P] [US3] Implement unsupported element detection and warning builder in src/core/markdown/detectUnsupportedElements.ts
-- [ ] T031 [US3] Implement editable markdown parser preserving raw unsupported fragments in src/core/markdown/parseEditableMarkdown.ts
-- [ ] T032 [US3] Implement pass-through aware markdown serializer in src/core/markdown/serializeEditableMarkdown.ts
-- [ ] T033 [US3] Integrate parse/serialize warning pipeline into save use case in src/application/documents/saveDocument.ts
-- [ ] T034 [US3] Implement API response mapping for invalid-target/unwritable-target/transient-io in src/presentation/http/errors/httpErrorMapper.ts
-- [ ] T035 [US3] Update save route to return warning step and categorized failure payloads in src/presentation/http/routes/documentSaveRoute.ts
-- [ ] T036 [US3] Surface warning dialog, retryability messaging, and continue-save UX in src/viewer/components/DocumentEditor.tsx and src/viewer/components/ErrorBanner.tsx
+- [x] T030 [P] [US3] Implement unsupported element detection and warning builder in src/core/markdown/detectUnsupportedElements.ts
+- [x] T031 [US3] Implement editable markdown parser preserving raw unsupported fragments in src/core/markdown/parseEditableMarkdown.ts
+- [x] T032 [US3] Implement pass-through aware markdown serializer in src/core/markdown/serializeEditableMarkdown.ts
+- [x] T033 [US3] Integrate parse/serialize warning pipeline into save use case in src/application/documents/saveDocument.ts
+- [x] T034 [US3] Implement API response mapping for invalid-target/unwritable-target/transient-io in src/presentation/http/errors/httpErrorMapper.ts
+- [x] T035 [US3] Update save route to return warning step and categorized failure payloads in src/presentation/http/routes/documentSaveRoute.ts
+- [x] T036 [US3] Surface warning dialog, retryability messaging, and continue-save UX in src/viewer/components/DocumentEditor.tsx and src/viewer/components/ErrorBanner.tsx
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -113,9 +113,9 @@
 
 **Purpose**: 仕様整合、手順検証、最終品質確認を実施する
 
-- [ ] T037 [P] Update save/edit usage documentation in README.md and README.ja.md
-- [ ] T038 [P] Verify quickstart scenarios and expected outcomes in specs/010-richtext-markdown-save/quickstart.md
-- [ ] T039 Run focused validation tests for Story 010 contracts and viewer flows in tests/contract/http-document-save.test.ts and src/viewer/navigation.test.ts
+- [x] T037 [P] Update save/edit usage documentation in README.md and README.ja.md
+- [x] T038 [P] Verify quickstart scenarios and expected outcomes in specs/010-richtext-markdown-save/quickstart.md
+- [x] T039 Run focused validation tests for Story 010 contracts and viewer flows in tests/contract/http-document-save.test.ts and src/viewer/navigation.test.ts
 
 ---
 

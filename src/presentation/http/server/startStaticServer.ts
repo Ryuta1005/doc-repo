@@ -22,6 +22,7 @@ interface StartStaticServerInput {
     onGetSiteConfig?: () => Promise<unknown>;
     onListDocuments: () => Promise<unknown>;
     onGetDocument: (rawPathQuery: string | null) => Promise<unknown>;
+    onSaveDocument: (payload: unknown) => Promise<unknown>;
   };
   sseHooks?: SseHooks;
 }
@@ -136,6 +137,28 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
 
     const payload = await input.apiHooks.onGetDocument(c.req.query("path") ?? null);
     return c.json(payload);
+  });
+
+  app.post("/api/document/save", async (c) => {
+    if (!input.apiHooks) {
+      return c.text("Not Found", 404);
+    }
+
+    const payload = await c.req.json().catch(() => undefined);
+    const result = await input.apiHooks.onSaveDocument(payload);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "status" in result &&
+      (result as { status?: string }).status === "failed" &&
+      "error" in result
+    ) {
+      const category = (result as { error?: { category?: string } }).error?.category;
+      const status = category === "invalid-target" ? 400 : category === "unwritable-target" ? 404 : 500;
+      return c.json(result, status);
+    }
+
+    return c.json(result);
   });
 
   app.get("/events", async (c) => {

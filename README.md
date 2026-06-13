@@ -143,6 +143,18 @@ Reliability behavior:
 - Some GFM extensions (task lists, Mermaid, code highlighting) are not yet supported
 - Relative images are rewritten to workspace-relative asset paths and served via `serve`
 
+## Edit and Save Workflow
+
+- Click `編集` in the viewer to switch the current document to rich text edit mode
+- Supported formatting in Story 010: body text, heading 1/2/3, bold, italic
+- Save request is validated against root/include/exclude/path traversal and `.md` extension rules
+- If unsupported markdown segments are detected, a warning dialog is shown before continuing save
+- Save failures are categorized and shown with retry guidance:
+  - `invalid-target` (not retryable)
+  - `unwritable-target` (not retryable until environment is fixed)
+  - `transient-io` (retryable)
+- Unsaved edits are guarded on document switch, edit exit, and browser unload
+
 ## Security Notes
 
 - Raw HTML is disabled, but generation is still intended for trusted repositories

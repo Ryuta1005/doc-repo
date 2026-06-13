@@ -32,6 +32,7 @@ describe("createServer boundary pipeline", () => {
     expect(pipeline.routes.map((route) => route.path)).toEqual([
       "/api/documents",
       "/api/document",
+      "/api/document/save",
       "/api/site-config",
       "/events",
     ]);

@@ -9,6 +9,7 @@ import { mapToHttpError } from "./errors/httpErrorMapper.js";
 import { handleDocumentsDetailRoute } from "./routes/documentsDetailRoute.js";
 import { handleDocumentsListRoute } from "./routes/documentsListRoute.js";
 import { registerRoutes } from "./routes/index.js";
+import { handleDocumentSaveRoute } from "./routes/documentSaveRoute.js";
 import { startStaticServer } from "./server/startStaticServer.js";
 import type { SseWritableConnection } from "./sse/sseConnectionRegistry.js";
 import { validateDocumentPathQuery } from "./validation/documentRequestValidator.js";
@@ -48,6 +49,7 @@ export interface HttpBoundaryPipeline {
   getSiteConfig: () => Promise<unknown>;
   listDocuments: () => Promise<unknown>;
   getDocument: (rawPathQuery: string | null) => Promise<unknown>;
+  saveDocument: (payload: unknown) => Promise<unknown>;
 }
 
 export const resolvePackageRoot = (): string => path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -153,6 +155,18 @@ export const createHttpBoundaryPipeline = (input: HttpBoundaryPipelineInput): Ht
         throw toHttpError(error);
       }
     },
+    saveDocument: async (payload: unknown) => {
+      try {
+        return await handleDocumentSaveRoute({
+          rootDir: input.rootDir,
+          includePatterns: input.includePatterns,
+          excludePatterns: input.excludePatterns,
+          payload,
+        });
+      } catch (error) {
+        throw toHttpError(error);
+      }
+    },
   };
 };
 
@@ -176,6 +190,7 @@ export const createServer = async (input: CreateServerInput): Promise<CreateServ
       onGetSiteConfig: async () => await pipeline.getSiteConfig(),
       onListDocuments: async () => await pipeline.listDocuments(),
       onGetDocument: async (rawPathQuery) => await pipeline.getDocument(rawPathQuery),
+      onSaveDocument: async (payload) => await pipeline.saveDocument(payload),
     },
     sseHooks: input.sseHooks,
   });

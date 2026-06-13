@@ -15,7 +15,9 @@ interface ViewerState {
   siteName: string;
   selectedIdentifier: string | null;
   selectIdentifier: (identifier: string) => void;
+  reloadSelectedDocument: () => void;
   title: string;
+  markdown: string;
   html: string;
   statusMessage: string;
   errorMessage: string | null;
@@ -33,6 +35,7 @@ export const useViewerState = (): ViewerState => {
   const [siteName, setSiteName] = React.useState<string>("Doc Repo");
   const [selectedIdentifier, setSelectedIdentifier] = React.useState<string | null>(initialIdentifier);
   const [title, setTitle] = React.useState<string>("Loading...");
+  const [markdown, setMarkdown] = React.useState<string>("");
   const [html, setHtml] = React.useState<string>("");
   const [statusMessage, setStatusMessage] = React.useState<string>("読み込み中...");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -82,6 +85,7 @@ export const useViewerState = (): ViewerState => {
     try {
       const detail = await fetchDocument(selectedIdentifier);
       setTitle(detail.title);
+      setMarkdown(detail.markdown);
       setHtml(detail.html);
       setErrorMessage(null);
       setStatusMessage("");
@@ -92,6 +96,10 @@ export const useViewerState = (): ViewerState => {
       setHtml('<h1>Not Found</h1><p>文書が見つかりませんでした。</p><p><a href="/">トップへ戻る</a></p>');
     }
   }, [selectedIdentifier]);
+
+  const reloadSelectedDocument = React.useCallback(() => {
+    void loadSelectedDocument();
+  }, [loadSelectedDocument]);
 
   React.useEffect(() => {
     void loadSiteConfig();
@@ -145,7 +153,9 @@ export const useViewerState = (): ViewerState => {
     siteName,
     selectedIdentifier,
     selectIdentifier,
+    reloadSelectedDocument,
     title,
+    markdown,
     html,
     statusMessage,
     errorMessage,

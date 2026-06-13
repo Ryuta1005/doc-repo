@@ -62,3 +62,48 @@ export const hrefToIdentifier = (href: string, baseUrl: string): string | null =
 
   return pathnameToIdentifier(url.pathname);
 };
+
+export interface DocumentSwitchAttempt {
+  mode: "view" | "edit";
+  hasUnsavedChanges: boolean;
+  currentIdentifier: string | null;
+  requestedIdentifier: string;
+}
+
+export interface DocumentSwitchDecision {
+  allow: boolean;
+  requireConfirmation: boolean;
+  nextIdentifier: string | null;
+}
+
+export const resolveDocumentSwitchDecision = (attempt: DocumentSwitchAttempt): DocumentSwitchDecision => {
+  const isSameDocument = attempt.currentIdentifier === attempt.requestedIdentifier;
+  if (isSameDocument) {
+    return {
+      allow: true,
+      requireConfirmation: false,
+      nextIdentifier: attempt.currentIdentifier,
+    };
+  }
+
+  if (attempt.mode === "edit" && attempt.hasUnsavedChanges) {
+    return {
+      allow: false,
+      requireConfirmation: true,
+      nextIdentifier: attempt.currentIdentifier,
+    };
+  }
+
+  return {
+    allow: true,
+    requireConfirmation: false,
+    nextIdentifier: attempt.requestedIdentifier,
+  };
+};
+
+export const resolveIdentifierAfterSave = (
+  savedIdentifier: string | null | undefined,
+  currentIdentifier: string | null,
+): string | null => {
+  return savedIdentifier ?? currentIdentifier;
+};

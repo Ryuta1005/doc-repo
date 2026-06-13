@@ -80,3 +80,12 @@ node dist/cli/index.js serve
 - 外部変更競合の検知は行われない
 - 保存時は上書き保存される
 - 競合検知は Story 011 で扱う
+
+## 8. 実装検証メモ（2026-06-14）
+
+- `npm run build` が成功すること
+- `npm run test` が成功すること
+- 重点確認:
+  - `tests/contract/http-document-save.test.ts`
+  - `src/core/markdown/serializeEditableMarkdown.test.ts`
+  - `src/viewer/navigation.test.ts`

@@ -14,6 +14,7 @@ export interface DocumentDetailDto {
   identifier: string;
   title: string;
   html: string;
+  markdown: string;
   metadata: Record<string, never>;
 }
 
@@ -43,6 +44,7 @@ export const getDocument = async (input: GetDocumentInput): Promise<DocumentDeta
     identifier: normalizedIdentifier,
     title: converted.title,
     html: converted.html,
+    markdown: source,
     metadata: {},
   };
 };
