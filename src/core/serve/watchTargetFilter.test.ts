@@ -31,7 +31,7 @@ describe("createWatchTargetFilter", () => {
   it(".doc-repo 配下は対象外になること。", () => {
     const filter = createWatchTargetFilter({ rootDir: "/repo" });
 
-    expect(filter.isTargetPath("/repo/.doc-repo/index.html")).toBe(false);
+    expect(filter.isTargetPath("/repo/.doc-repo/generated.md")).toBe(false);
   });
 
   it("dist 配下の Markdown は既定で対象になること。", () => {

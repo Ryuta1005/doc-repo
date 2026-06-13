@@ -21,7 +21,6 @@ interface SseHooks {
 }
 
 export interface CreateServerInput {
-  outputDir: string;
   port: number;
   siteName?: string;
   rootDir: string;
@@ -169,7 +168,7 @@ export const createServer = async (input: CreateServerInput): Promise<CreateServ
   });
 
   return await startStaticServer({
-    outputDir: input.outputDir,
+    outputDir: input.rootDir,
     port: input.port,
     host: input.host,
     staticAssetOverrides,

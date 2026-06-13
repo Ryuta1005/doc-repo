@@ -1,77 +1,17 @@
 #!/usr/bin/env node
-import { spawn } from "node:child_process";
-import path from "node:path";
 import { Command } from "commander";
 
-import { generateSite } from "../core/site/generateSite.js";
 import { runServe } from "../core/serve/runServe.js";
 import { createConfigFile } from "../core/init/createConfigFile.js";
 import { formatResultMessage } from "./formatResultMessage.js";
-import { resolveExitCode } from "./exitCode.js";
 import { resolveServeOptions } from "./serve/resolveServeOptions.js";
-import { resolveRuntimeConfig } from "../shared/config/resolveRuntimeConfig.js";
-import { AppError, toUserGuidance, toServeUserGuidance } from "../shared/errors.js";
-import type { GenerationResult, ServeSession, InitResult } from "../shared/types.js";
-
-const openFile = (filePath: string): void => {
-  if (process.platform === "win32") {
-    const child = spawn("cmd", ["/c", "start", "", filePath], { detached: true, stdio: "ignore" });
-    child.unref();
-    return;
-  }
-
-  const cmd = process.platform === "darwin" ? "open" : "xdg-open";
-  const child = spawn(cmd, [filePath], { detached: true, stdio: "ignore" });
-  child.unref();
-};
+import { toServeUserGuidance } from "../shared/errors.js";
+import type { ServeSession, InitResult } from "../shared/types.js";
 
 export const run = async (argv: string[] = process.argv, cwd: string = process.cwd()): Promise<void> => {
   const program = new Command();
 
-  program
-    .name("doc-repo")
-    .description("Generate a static documentation site from Markdown files.")
-    .argument("[scopePath]", "Repository-relative directory to generate")
-    .option("--open", "生成後にブラウザで index.html を開く")
-    .action(async (scopePath?: string, options?: { open?: boolean }) => {
-      let result: GenerationResult;
-      try {
-        const config = await resolveRuntimeConfig({ cwd });
-        result = await generateSite({
-          cwd,
-          scopePath,
-          siteName: config.siteName,
-          resolvedRootDir: config.rootDir,
-          includePatterns: config.includePatterns,
-          excludePatterns: config.excludePatterns,
-        });
-      } catch (error) {
-        const guidance = toUserGuidance(error);
-        result = {
-          status: "failure",
-          exitCode: 1,
-          outputDir: "",
-          targetPath: "",
-          markdownFileCount: 0,
-          message: "設定ファイルの読み込みに失敗しました。",
-          warnings: [],
-          errorReason: guidance.reason,
-          hint: guidance.hint,
-        };
-      }
-      const message = formatResultMessage(result);
-
-      if (result.status === "failure") {
-        console.error(message);
-      } else {
-        console.log(message);
-        if (options?.open) {
-          openFile(path.join(result.outputDir, "index.html"));
-        }
-      }
-
-      process.exitCode = resolveExitCode(result);
-    });
+  program.name("doc-repo").description("Serve browser workspace for repository Markdown.");
 
   program
     .command("init")
@@ -100,7 +40,7 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
 
   program
     .command("serve")
-    .description("生成済みサイトをローカルサーバーで起動する")
+    .description("ブラウザワークスペースを起動する")
     .option("--port <number>", "待受ポート", (value: string) => Number.parseInt(value, 10))
     .action(async (options?: { port?: number }) => {
       let result: ServeSession;
@@ -109,7 +49,6 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
         result = await runServe({
           cwd,
           rootDir: config.rootDir,
-          outputDir: config.outputDir,
           siteName: config.siteName,
           port: config.port,
           includePatterns: config.includePatterns,
@@ -140,7 +79,7 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
         console.log(message);
       }
 
-      process.exitCode = resolveExitCode(result);
+      process.exitCode = result.exitCode;
     });
 
   await program.parseAsync(argv);

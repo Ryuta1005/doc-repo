@@ -1,7 +1,7 @@
 import path from "node:path";
 import MarkdownIt from "markdown-it";
 
-import { assetHref, docHref, generatedAssetHref } from "../../shared/sitePaths.js";
+import { assetHref, docHref, viewerAssetHref } from "../../shared/sitePaths.js";
 
 const md = new MarkdownIt({
   html: false,
@@ -62,7 +62,7 @@ const rebaseGeneratedImageUrl = (url: string, relativePath: string): string => {
     return url;
   }
 
-  return `${generatedAssetHref(relativePath, pathFromRoot)}${suffix}`;
+  return `${viewerAssetHref(relativePath, pathFromRoot)}${suffix}`;
 };
 
 // リポジトリルートからの正規化パスを求める。ルート外（../ で抜ける）や空は null。

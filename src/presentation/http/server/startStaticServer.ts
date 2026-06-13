@@ -31,6 +31,37 @@ interface StartStaticServerResult {
   close: () => Promise<void>;
 }
 
+const viewerIndexHtml = (hasStylesheet: boolean): string => `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Doc Repo</title>
+    ${hasStylesheet ? '<link rel="stylesheet" href="/styles.css" />' : ""}
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>`;
+
+const resolveWorkspaceTarget = (
+  rootDir: string,
+  normalizedPath: string,
+): { ok: true; filePath: string } | { ok: false } => {
+  const workspaceRelative = normalizedPath.startsWith("/assets/")
+    ? normalizedPath.slice("/assets/".length)
+    : normalizedPath.slice(1);
+  const target = path.resolve(rootDir, workspaceRelative);
+  const relative = path.relative(rootDir, target);
+
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return { ok: false };
+  }
+
+  return { ok: true, filePath: target };
+};
+
 const toContentType = (targetPath: string): string => {
   if (targetPath.endsWith(".html")) {
     return "text/html; charset=utf-8";
@@ -72,7 +103,7 @@ export const mapServerStartError = (error: unknown, port: number): Error => {
 
 export const startStaticServer = async (input: StartStaticServerInput): Promise<StartStaticServerResult> => {
   if (!(await fs.pathExists(input.outputDir))) {
-    throw createServeError("missing-output", `.doc-repo が見つかりません: ${input.outputDir}`);
+    throw createServeError("unknown", `配信対象ディレクトリが見つかりません: ${input.outputDir}`);
   }
 
   const host = input.host ?? "localhost";
@@ -158,7 +189,14 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
     const requested = c.req.path || "/";
     const safePath = decodeURIComponent(requested);
     const normalized = safePath === "/" ? "/index.html" : safePath;
+    const isRootIndex = normalized === "/index.html";
     const overridePath = input.staticAssetOverrides?.[normalized];
+
+    if (isRootIndex) {
+      const content = viewerIndexHtml(Boolean(input.staticAssetOverrides?.["/styles.css"]));
+      c.header("Content-Type", "text/html; charset=utf-8");
+      return c.body(content);
+    }
 
     if (overridePath) {
       if (!(await fs.pathExists(overridePath))) {
@@ -170,20 +208,25 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
       return c.body(content);
     }
 
-    const target = path.resolve(input.outputDir, `.${normalized}`);
-    const relative = path.relative(input.outputDir, target);
+    if (normalized.endsWith(".md")) {
+      const content = viewerIndexHtml(Boolean(input.staticAssetOverrides?.["/styles.css"]));
+      c.header("Content-Type", "text/html; charset=utf-8");
+      return c.body(content);
+    }
 
-    if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    const resolved = resolveWorkspaceTarget(input.outputDir, normalized);
+    if (!resolved.ok) {
       return c.text("Forbidden", 403);
     }
 
-    const markdownHtmlTarget = normalized.endsWith(".md")
-      ? path.resolve(input.outputDir, `.${normalized.replace(/\.md$/i, ".html")}`)
-      : undefined;
-    const resolvedTarget =
-      (await fs.pathExists(target)) || !markdownHtmlTarget ? target : markdownHtmlTarget;
+    const resolvedTarget = resolved.filePath;
 
     if (!(await fs.pathExists(resolvedTarget))) {
+      if (path.posix.extname(normalized) === "") {
+        const content = viewerIndexHtml(Boolean(input.staticAssetOverrides?.["/styles.css"]));
+        c.header("Content-Type", "text/html; charset=utf-8");
+        return c.body(content);
+      }
       return c.text("Not Found", 404);
     }
 

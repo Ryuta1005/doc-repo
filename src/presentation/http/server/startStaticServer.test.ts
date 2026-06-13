@@ -418,9 +418,9 @@ describe("startStaticServer.ts", () => {
     }
   });
 
-  it("Markdown URL のリロード時は対応する生成済み HTML を配信すること。", async () => {
+  it("Markdown URL のリロード時は viewer index.html を配信すること。", async () => {
     const tempRoot = await fs.mkdtemp(path.join(process.cwd(), "tests/.tmp/start-server-markdown-url-"));
-    await fs.outputFile(path.join(tempRoot, "docs", "config.ja.html"), "<h1>config</h1>");
+    await fs.outputFile(path.join(tempRoot, "docs", "config.ja.md"), "# config");
 
     const freePort = await new Promise<number>((resolve, reject) => {
       const server = net.createServer();
@@ -458,8 +458,11 @@ describe("startStaticServer.ts", () => {
       });
 
     try {
-      await expect(response("docs/config.ja.md")).resolves.toEqual({ status: 200, body: "<h1>config</h1>" });
-      await expect(response("docs/missing.md")).resolves.toMatchObject({ status: 404 });
+      await expect(response("docs/config.ja.md")).resolves.toMatchObject({ status: 200 });
+      await expect(response("docs/config.ja.md")).resolves.toMatchObject({
+        body: expect.stringContaining('<div id="root"></div>'),
+      });
+      await expect(response("docs/missing.md")).resolves.toMatchObject({ status: 200 });
     } finally {
       await started.close();
       await fs.remove(tempRoot);
@@ -470,7 +473,7 @@ describe("startStaticServer.ts", () => {
   describe("T011: 参照画像の HTTP 200 確認（実装予定）", () => {
     it("生成サイト経由で参照画像が HTTP 200 を返す（T016 統合テストで確認）。", async () => {
       const tempRoot = await fs.mkdtemp(path.join(process.cwd(), "tests/.tmp/start-server-images-"));
-      await fs.outputFile(path.join(tempRoot, "assets", "docs", "screenshot.png"), Buffer.from("PNG_BINARY"));
+      await fs.outputFile(path.join(tempRoot, "docs", "assets", "screenshot.png"), Buffer.from("PNG_BINARY"));
 
       const freePort = await new Promise<number>((resolve, reject) => {
         const server = net.createServer();
@@ -496,7 +499,7 @@ describe("startStaticServer.ts", () => {
 
       try {
         const statusCode = await new Promise<number>((resolve, reject) => {
-          const req = http.get(`http://localhost:${freePort}/assets/docs/screenshot.png`, (res) => {
+          const req = http.get(`http://localhost:${freePort}/assets/docs/assets/screenshot.png`, (res) => {
             const code = res.statusCode ?? 0;
             res.resume();
             res.on("end", () => resolve(code));

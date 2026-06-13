@@ -28,7 +28,7 @@ This is a link to an anchor:
 
 ## Notes
 
-- Relative images like `./docs/assets/screenshot-sample.png` should be copied to `.doc-repo/assets/docs/assets/screenshot-sample.png`
+- Relative images like `./docs/assets/screenshot-sample.png` should be served from `/assets/docs/assets/screenshot-sample.png`
 - External URLs should remain unchanged
 - Hash references should remain unchanged
 - Out-of-bounds relative paths like `/../../../etc/passwd` should be ignored

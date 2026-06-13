@@ -95,7 +95,7 @@ describe("convertMarkdown.ts", () => {
       expect(result.html).toContain('src="../../assets/docs/guide/assets/screenshot.png"');
     });
 
-    it("クエリとハッシュ付きの相対画像が .doc-repo/assets 配下を指したまま suffix を維持すること。", () => {
+    it("クエリとハッシュ付きの相対画像が Viewer の assets 配信パスを指したまま suffix を維持すること。", () => {
       const result = convertMarkdown("![screenshot](./assets/screenshot.png?v=1#section)", "docs/guide/page.md");
 
       expect(result.html).toContain('src="../../assets/docs/guide/assets/screenshot.png?v=1#section"');

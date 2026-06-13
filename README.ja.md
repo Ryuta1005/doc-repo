@@ -25,12 +25,13 @@
 - ディレクトリ構造を保ったツリーナビゲーション
 - ブラウザ上でリポジトリ内 Markdown を閲覧・編集できるドキュメントワークスペース
 - 編集内容を元の Markdown ファイルへ保存
-- ローカルサーバー不要（`index.html` を直接開ける）
 - ローカルサーバーモード（`doc-repo serve`）に対応
-- `serve` 実行中は Markdown の変更を監視して自動再生成
-- 再生成成功時に SSE でブラウザを自動リロード
-- 対象ディレクトリ指定（`scopePath`）に対応
-- `--open` で生成後にブラウザを自動起動
+- `serve` 実行中は Markdown の変更を監視
+- Markdown 変更検知時に SSE でブラウザを自動リロード
+
+> [!IMPORTANT]
+> タスク 020 の方針により、静的生成の直接入口（`doc-repo [scopePath]`）は廃止されました。
+> サポートされる正規入口は `doc-repo serve` のみです。
 
 ## クイックスタート
 
@@ -41,57 +42,41 @@
 リポジトリ内で実行:
 
 ```bash
-npx doc-repo
+npx doc-repo serve
 ```
 
 alpha タグで配布している期間は、次を利用してください。
 
 ```bash
-npx doc-repo@alpha
+npx doc-repo@alpha serve
 ```
 
-生成後にブラウザで開く:
-
-```bash
-open .doc-repo/index.html
-```
-
-特定ディレクトリのみ生成する場合:
-
-```bash
-npx doc-repo specs
-npx doc-repo docs/project
-```
+起動後にブラウザで `http://localhost:4000` を開きます。
 
 ## CLI
 
 ```bash
-doc-repo [scopePath] [--open]
 doc-repo init
 doc-repo serve [--port <number>]
 ```
 
-| 引数 / オプション | 説明                                                     | デフォルト     |
-| ----------------- | -------------------------------------------------------- | -------------- |
-| `scopePath`       | 生成対象ディレクトリ（Git ルート基準の相対パス）         | Git ルート全体 |
-| `--open`          | 生成後に `.doc-repo/index.html` を既定ブラウザで開く     | `false`        |
-| `init`            | カレントディレクトリに `doc-repo.config.json` 雛形を生成 | -              |
-| `serve`           | 初回生成後にローカル静的サーバーを起動し、変更を監視する | -              |
-| `--port`          | `serve` の待受ポート（CLI > 設定 > 既定）                | `4000`         |
+| 引数 / オプション | 説明                                                     | デフォルト |
+| ----------------- | -------------------------------------------------------- | ---------- |
+| `init`            | カレントディレクトリに `doc-repo.config.json` 雛形を生成 | -          |
+| `serve`           | ローカルサーバーを起動し、変更を監視する                 | -          |
+| `--port`          | `serve` の待受ポート（CLI > 設定 > 既定）                | `4000`     |
 
 ### serve の責務
 
-- `doc-repo serve` が `初回生成 → サーバー起動 → ファイル監視開始` を順に実行
-- `.md` ファイルの変更・追加・削除を監視し、検知次第再生成する
-- 再生成成功時は SSE で接続中のブラウザへ reload イベントを配信する
-- HTTP サーバーは配信専任で、生成処理は担当しない
-- 初回生成に失敗した場合はサーバーを起動せず、終了コード `1` で終了
+- `doc-repo serve` が `サーバー起動 → ファイル監視開始` を順に実行
+- `.md` ファイルの変更・追加・削除を監視し、検知時に SSE でブラウザへ reload イベントを配信する
+- HTTP サーバーは Viewer 資産とワークスペースファイルを同一 origin で配信する
 - 終了時（Ctrl+C / SIGTERM）は watcher → SSE 接続 → HTTP サーバーの順で停止する
 
-### 対象ルートと収集対象の違い
+### 対象ルート
 
 - 対象ルート: `doc-repo.config.json` が存在すればそこから解決、なければ Git ルート、さらになければカレントディレクトリ
-- 収集対象: 対象ルート内で `scopePath` が指すディレクトリ配下
+- 収集対象: 対象ルート配下の Markdown 全体（`include`/`exclude` で絞り込み）
 
 ## 設定ファイル
 
@@ -125,28 +110,23 @@ doc-repo serve [--port <number>]
 
 ## 生成結果
 
-`.doc-repo` 配下に、Markdown のツリーをミラーしたマルチページ静的サイトを生成します。
+`.doc-repo` 配下に、`serve` 実行のためのランタイム成果物を生成します。
 
 ```text
 .doc-repo/
-├── index.html        # ホーム（README があれば README）へリダイレクト
-├── styles.css
-├── app.js            # ブラウザ側自動リロード（SSE クライアント）
-├── README.html
-└── docs/
-    └── guide/
-        └── page.html
+├── index.html        # serve のエントリ
+├── assets/
+├── viewer/
+└── ...
 ```
 
-各 Markdown は単独の `.html` として出力され、文書間リンクは素の相対リンクになります。
-そのため `file://` で直接開いても遷移できます。
+生成成果物は `doc-repo serve` 経由で利用することを前提とします。
 
 信頼性に関する挙動:
 
-- 生成成功時のみ `.doc-repo` を置換（再実行で最新化）
-- 一時ディレクトリで生成してから切り替え
-- 失敗時は既存 `.doc-repo` を保持
-- Markdown 0 件時は空サイトを生成し、警告付き成功（exit code 0）
+- Viewer 資産と API を同一 origin / 同一 port で配信
+- ワークスペースファイル配信時にパストラバーサルを防止
+- API 失敗時は JSON エラーペイロードを返却
 
 ### 終了コード
 
@@ -161,7 +141,7 @@ doc-repo serve [--port <number>]
 - `html: false`（Markdown 内の生 HTML は無効）
 - `linkify: true`, `typographer: true`
 - GFM の一部拡張（例: task list、Mermaid、コードハイライト）は未対応
-- 相対画像は自動的に `.doc-repo/assets/` へコピーされ、静的ファイルを直接開いた場合と `serve` の両方で表示できるように URL が書き換わります
+- 相対画像はワークスペース相対のアセットパスへ書き換えられ、`serve` で配信されます
 
 ## セキュリティ注意
 
@@ -182,7 +162,7 @@ doc-repo serve [--port <number>]
 ```bash
 npm install
 npm run dev
-npm run dev -- specs
+npm run dev -- serve
 npm run build
 ```
 
@@ -190,14 +170,14 @@ npm run build
 
 ```bash
 node dist/cli/index.js
-node dist/cli/index.js specs
+node dist/cli/index.js serve
 ```
 
 ## Markdown 機能と制限
 
 **サポート中**:
 
-- 相対画像（例：`![alt](./docs/assets/image.png)`）: 自動的に `.doc-repo/assets/` へコピーされ、`file://` モードと `serve` モードの両方で表示可能に URL が書き換わります
+- 相対画像（例：`![alt](./docs/assets/image.png)`）: `/assets/...` へ書き換えられ、`serve` モードで表示できます
 
 **今後のリリースで対応予定**:
 

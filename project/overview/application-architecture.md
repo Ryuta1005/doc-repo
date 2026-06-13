@@ -2,7 +2,7 @@
 
 ## 目的
 
-この文書は、doc-repo のアプリケーション構造と依存方向を定義する。特に Phase 3 以降で編集 API やリッチテキスト編集 UI を追加しても、既存の静的生成・serve・watch 体験を壊さないことを目的とする。
+この文書は、doc-repo のアプリケーション構造と依存方向を定義する。特に編集 API やリッチテキスト編集 UI を追加しても、`serve` を正規入口とする workspace 体験を壊さないことを目的とする。
 
 ## 基本方針
 
@@ -22,8 +22,6 @@ Markdown とファイルシステム処理の中核を担当する。
 
 - Markdown ファイルの探索
 - Markdown から HTML への変換
-- 静的サイト bundle の構築
-- HTML/CSS/JS/画像アセットの生成・配置
 - watch 対象判定と serve の実行フロー
 
 `core` は React, Hono, DOM, HTTP Request/Response を知らない。
@@ -44,7 +42,7 @@ Hono による HTTP 境界を担当する。
 - HTTP ルート定義
 - query/path の検証
 - HTTP エラー payload への変換
-- 静的生成物の配信
+- React Viewer と静的アセットの配信
 - SSE 接続管理
 
 HTTP 境界は処理本体を持たず、application/core へ委譲する。
@@ -65,8 +63,8 @@ Viewer は HTTP API 経由でデータを取得し、`core` を直接 import し
 
 CLI の entrypoint とコマンド引数処理を担当する。
 
-- `doc-repo [scopePath]`
 - `doc-repo serve`
+- `doc-repo init`
 - 設定解決
 - 実行結果のメッセージ整形
 
@@ -74,32 +72,28 @@ CLI は `core` や `presentation/http` の起動を orchestration するが、UI
 
 ## 主要フロー
 
-### 静的生成
+### ワークスペース起動
 
 ```text
-CLI
-→ core/site/generateSite
-→ scanMarkdown
-→ buildSiteBundle
-→ renderPages
-→ copyAssets
-→ .doc-repo
+CLI serve
+→ core/serve/runServe
+→ presentation/http/createServer
+→ startMarkdownWatcher
 ```
 
-静的生成は Phase 1 の主要価値であり、React/Hono 導入後も `.doc-repo` の HTML をオフライン閲覧できる契約を維持する。
+020 の方針では、静的生成の直接入口は廃止し、利用者導線は `serve` に統一する。
 
 ### serve
 
 ```text
 CLI serve
 → core/serve/runServe
-→ core/site/generateSite
 → presentation/http/createServer
 → Hono routes/static/SSE
 → viewer(React)
 ```
 
-`serve` では React Viewer が Hono の HTTP API から文書一覧・文書詳細を取得する。Markdown 変更時は watcher が再生成成功後に SSE `reload` を通知する。
+`serve` では React Viewer が Hono の HTTP API から文書一覧・文書詳細を取得する。Markdown 変更時は watcher が SSE `reload` を通知する。
 
 ### 文書取得 API
 
@@ -129,4 +123,4 @@ viewer apiClient
 
 ## 019 で意図的に残すこと
 
-`core/serve/runServe` は watch 起動、初回生成、HTTP server 起動、shutdown を orchestration している。019 では React + Hono 基盤化を優先し、serve orchestration の全面分割は別リファクタリング候補として残す。
+`core/serve/runServe` は watch 起動、HTTP server 起動、shutdown を orchestration している。019 では React + Hono 基盤化を優先し、serve orchestration の全面分割は別リファクタリング候補として残す。
