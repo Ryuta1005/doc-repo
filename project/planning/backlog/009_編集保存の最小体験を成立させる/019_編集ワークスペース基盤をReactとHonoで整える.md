@@ -5,9 +5,9 @@
 - 種別: Task
 - 番号: 019
 - Epic: 009
-- ステータス: Todo
+- ステータス: Done
 - 優先度: P1
-- Spec: -
+- Spec: 019-edit-workspace-react-hono
 - Depends On: 004
 
 ## 目的

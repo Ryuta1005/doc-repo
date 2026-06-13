@@ -15,11 +15,10 @@
 - Purpose: 文書一覧 API が返す最小メタデータ。
 - Fields:
   - `identifier`: DocumentIdentifier
-  - `path`: string（表示用相対パス）
   - `title`: string
   - `updatedAt`: string | null（ISO datetime）
 - Validation Rules:
-  - `identifier` と `path` は論理的に同じ文書を指す
+  - `identifier` は文書を指す唯一のクライアント向け識別子として扱う
   - `title` は未取得時フォールバック可（例: ファイル名）
 
 ## Entity: DocumentDetail
@@ -27,7 +26,6 @@
 - Purpose: 文書取得 API が返す本文表示データ。
 - Fields:
   - `identifier`: DocumentIdentifier
-  - `path`: string
   - `title`: string
   - `html`: string
   - `metadata`: object

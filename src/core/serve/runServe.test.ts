@@ -95,7 +95,13 @@ describe("runServe.ts", () => {
       outputDir: "/repo/.doc-repo",
     });
 
-    expect(startServer).toHaveBeenCalledWith({ outputDir: "/repo/.doc-repo", port: 4000 });
+    expect(startServer).toHaveBeenCalledWith({
+      outputDir: "/repo/.doc-repo",
+      port: 4000,
+      rootDir: "/repo",
+      includePatterns: undefined,
+      excludePatterns: undefined,
+    });
     expect(session.publicUrl).toBe("http://localhost:4000");
   });
 

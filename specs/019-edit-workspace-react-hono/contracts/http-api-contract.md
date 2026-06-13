@@ -28,7 +28,6 @@ Task 019 における `serve` 実行時の HTTP 契約を定義する。
 [
   {
     "identifier": "docs/overview/product.md",
-    "path": "docs/overview/product.md",
     "title": "プロダクト概要",
     "updatedAt": "2026-06-13T00:00:00.000Z"
   }
@@ -44,7 +43,6 @@ Task 019 における `serve` 実行時の HTTP 契約を定義する。
 ```json
 {
   "identifier": "docs/overview/product.md",
-  "path": "docs/overview/product.md",
   "title": "プロダクト概要",
   "html": "<h1>プロダクト概要</h1>",
   "metadata": {}
@@ -90,6 +88,21 @@ Response shape:
   }
 }
 ```
+
+## Verification Contract
+
+HTTP API 契約の合格判定は、内部 pipeline や application use case の戻り値だけでは行わない。Hono adapter を起動し、実 HTTP request/response として確認する。
+
+必須確認:
+
+- `GET /api/documents` は実 HTTP で `200` と JSON を返す
+- `GET /api/document?path=<encoded>` は実 HTTP で `200` と JSON を返す
+- `GET /api/document?path=` は実 HTTP で `400 INVALID_REQUEST` を返す
+- `GET /api/document?path=..%2FREADME.md` は実 HTTP で `400 INVALID_REQUEST` を返す
+- `GET /api/document?path=not-found.md` は実 HTTP で `404 DOCUMENT_NOT_FOUND` を返す
+- エラー response は `Content-Type: application/json; charset=utf-8` と標準 error payload を返す
+
+pipeline / mapper / validator の単体テストは補助的に実装してよいが、HTTP 契約充足の根拠は adapter-level integration test とする。
 
 ## Boundary Responsibility
 

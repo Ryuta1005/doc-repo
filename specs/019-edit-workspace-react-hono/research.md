@@ -52,3 +52,9 @@
 - Rationale: 010 以降で設計説明が散らばるのを防ぎ、Phase 横断の共通参照を作る。
 - Alternatives considered:
   - 019 の plan.md のみに記載: 将来タスクで再説明が増える。
+
+## Deferred Refactoring Candidates（019スコープ外）
+
+- `core/serve` には watcher制御、CLI実行フロー、運用ログなどの責務が引き続き混在している。
+- 019 では Hono 移行の必須範囲に限定し、HTTP 配信/SSE 接続管理のみ `src/presentation/http` へ移設した。
+- 残件は別リファクタリングとして、`runServe` のオーケストレーション分割（application サービス化、infrastructure 抽出）を次フェーズで扱う。

@@ -19,6 +19,7 @@ doc-repo init
 
 ```json
 {
+  "name": "Doc Repo",
   "rootDir": ".",
   "include": ["**/*.md"],
   "exclude": [],
@@ -32,6 +33,7 @@ doc-repo init
 
 ```json
 {
+  "name": "Team Docs",
   "rootDir": "./docs",
   "include": ["**/*.md"],
   "exclude": ["drafts/**"],
@@ -41,6 +43,7 @@ doc-repo init
 
 | フィールド | 型         | 必須   | 説明                                |
 | ---------- | ---------- | ------ | ----------------------------------- |
+| `name`     | `string`   | いいえ | サイドバー上部に表示するサイト名    |
 | `rootDir`  | `string`   | いいえ | Markdown を収集する起点ディレクトリ |
 | `include`  | `string[]` | いいえ | 収集対象の glob パターン            |
 | `exclude`  | `string[]` | いいえ | 追加の除外 glob パターン            |
@@ -101,6 +104,7 @@ doc-repo init
 - `include` が `string[]` でない
 - `exclude` が `string[]` でない
 - `port` が範囲外、または数値でない
+- `name` が空、または文字列でない
 
 ## 設定例
 

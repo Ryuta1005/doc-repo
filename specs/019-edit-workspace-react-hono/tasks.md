@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/019-edit-workspace-react-hono/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
 
-**Tests**: このfeatureでは回帰テスト固定が必須（FR-013）なので、各ストーリーにテストタスクを含める。
+**Tests**: このfeatureでは回帰テスト固定が必須（FR-013）なので、各ストーリーにテストタスクを含める。HTTP API 契約は内部 pipeline だけではなく、Hono adapter を起動した実 HTTP request/response の integration test で検証する。
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -17,9 +17,9 @@
 
 **Purpose**: React + Hono 移行に必要な最小セットアップを追加する
 
-- [ ] T001 Update runtime and build dependencies for React/Hono viewer pipeline in package.json
-- [ ] T002 Add viewer build configuration and scripts in vite.viewer.config.ts
-- [ ] T003 [P] Create initial module skeletons for application/presentation/viewer in src/application/documents/index.ts, src/presentation/http/index.ts, src/viewer/react/main.tsx
+- [x] T001 Update runtime and build dependencies for React/Hono viewer pipeline in package.json
+- [x] T002 Add viewer build configuration and scripts in vite.viewer.config.ts
+- [x] T003 [P] Create initial module skeletons for application/presentation/viewer in src/application/documents/index.ts, src/presentation/http/index.ts, src/viewer/main.tsx
 
 ---
 
@@ -29,13 +29,13 @@
 
 **⚠️ CRITICAL**: このフェーズ完了前にユーザーストーリー実装へ進まない
 
-- [ ] T004 固定対象の回帰ケース一覧を定義しテスト計画を作成 in tests/regression/phase2-baseline.md
-- [ ] T005 [P] Add shared document identifier normalization utility in src/shared/documentIdentifier.ts
-- [ ] T006 [P] Add shared HTTP error model and response type in src/presentation/http/errors/httpErrorTypes.ts
-- [ ] T007 Implement application use case for listing documents in src/application/documents/listDocuments.ts
-- [ ] T008 Implement application use case for fetching one document in src/application/documents/getDocument.ts
-- [ ] T009 Create Hono server bootstrap with separated route/validation/error layers in src/presentation/http/createServer.ts
-- [ ] T010 Wire serve entrypoint to presentation HTTP server adapter in src/core/serve/runServe.ts
+- [x] T004 固定対象の回帰ケース一覧を定義しテスト計画を作成 in tests/regression/phase2-baseline.md
+- [x] T005 [P] Add shared document identifier normalization utility in src/shared/documentIdentifier.ts
+- [x] T006 [P] Add shared HTTP error model and response type in src/presentation/http/errors/httpErrorTypes.ts
+- [x] T007 Implement application use case for listing documents in src/application/documents/listDocuments.ts
+- [x] T008 Implement application use case for fetching one document in src/application/documents/getDocument.ts
+- [x] T009 Create Hono server bootstrap with separated route/validation/error layers in src/presentation/http/createServer.ts
+- [x] T010 Wire serve entrypoint to presentation HTTP server adapter in src/core/serve/runServe.ts
 
 **Checkpoint**: 回帰固定方針と境界基盤が整い、各ストーリーを独立実装可能
 
@@ -49,20 +49,20 @@
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Add document list API contract tests in tests/contract/http-documents-list.test.ts
-- [ ] T012 [P] [US1] Add document detail API contract tests for `GET /api/document?path=<encoded rootDir-relative path>` in tests/contract/http-documents-detail.test.ts
-- [ ] T013 [US1] Extend viewer regression for tree/select/body behavior in tests/viewer-dom.e2e.test.ts
+- [x] T011 [P] [US1] Add document list API contract tests, including adapter-level HTTP response verification for `GET /api/documents`
+- [x] T012 [P] [US1] Add document detail API contract tests, including adapter-level HTTP response verification for `GET /api/document?path=<encoded rootDir-relative path>`
+- [x] T013 [US1] Extend viewer regression for tree/select/body behavior in tests/viewer-dom.e2e.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Implement `GET /api/documents` route in src/presentation/http/routes/documentsListRoute.ts
-- [ ] T015 [P] [US1] Implement `GET /api/document?path=<encoded rootDir-relative path>` route in src/presentation/http/routes/documentsDetailRoute.ts
-- [ ] T016 [P] [US1] Implement query `path` validation/normalization (`encodeURIComponent` 前提, empty/out-of-root/`..` rejection) in src/presentation/http/validation/documentRequestValidator.ts
-- [ ] T017 [P] [US1] Implement HTTP error mapping for 400/404/500 in src/presentation/http/errors/httpErrorMapper.ts
-- [ ] T018 [P] [US1] Implement React DocumentTree component in src/viewer/react/components/DocumentTree.tsx
-- [ ] T019 [P] [US1] Implement React DocumentViewer component in src/viewer/react/components/DocumentViewer.tsx
-- [ ] T020 [US1] Implement viewer API client for list/detail endpoints in src/viewer/react/services/apiClient.ts
-- [ ] T021 [US1] Integrate React viewer bundle serving in Hono server in src/presentation/http/createServer.ts
+- [x] T014 [P] [US1] Implement `GET /api/documents` route in src/presentation/http/routes/documentsListRoute.ts
+- [x] T015 [P] [US1] Implement `GET /api/document?path=<encoded rootDir-relative path>` route in src/presentation/http/routes/documentsDetailRoute.ts
+- [x] T016 [P] [US1] Implement query `path` validation/normalization (`encodeURIComponent` 前提, empty/out-of-root/`..` rejection) in src/presentation/http/validation/documentRequestValidator.ts
+- [x] T017 [P] [US1] Implement HTTP error mapping for 400/404/500 in src/presentation/http/errors/httpErrorMapper.ts
+- [x] T018 [P] [US1] Implement React DocumentTree component in src/viewer/components/DocumentTree.tsx
+- [x] T019 [P] [US1] Implement React DocumentViewer component in src/viewer/components/DocumentViewer.tsx
+- [x] T020 [US1] Implement viewer API client for list/detail endpoints in src/viewer/services/apiClient.ts
+- [x] T021 [US1] Integrate React viewer bundle serving in Hono server in src/presentation/http/createServer.ts
 
 **Checkpoint**: US1 単体で閲覧体験を提供可能
 
@@ -76,15 +76,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add E2E watch regression tests for change/add/unlink with browser auto-reload completion in tests/npm-run-dev.test.ts
-- [ ] T023 [P] [US2] Add integration tests for SSE `reload` dispatch conditions (success only, payload.type=`reload`) in src/core/serve/refreshCoordinator.test.ts
+- [x] T022 [P] [US2] Add E2E watch regression tests for change/add/unlink with browser auto-reload completion in tests/npm-run-dev.test.ts
+- [x] T023 [P] [US2] Add integration tests for SSE `reload` dispatch conditions (success only, payload.type=`reload`) in src/core/serve/refreshCoordinator.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Implement SSE events route for `reload` notifications with payload.type=`reload` in src/presentation/http/routes/eventsRoute.ts
-- [ ] T025 [US2] Adapt markdown watcher flow to Hono-boundary notification path in src/core/serve/startMarkdownWatcher.ts
-- [ ] T026 [US2] Enforce regenerate-success-only reload dispatch in src/core/serve/refreshCoordinator.ts
-- [ ] T027 [US2] Implement client-side SSE listener and reload behavior in src/viewer/react/services/sseClient.ts
+- [x] T024 [US2] Implement SSE events route for `reload` notifications with payload.type=`reload` in src/presentation/http/routes/eventsRoute.ts
+- [x] T025 [US2] Adapt markdown watcher flow to Hono-boundary notification path in src/core/serve/startMarkdownWatcher.ts
+- [x] T026 [US2] Enforce regenerate-success-only reload dispatch in src/core/serve/refreshCoordinator.ts
+- [x] T027 [US2] Implement client-side SSE listener and reload behavior in src/viewer/services/sseClient.ts
 
 **Checkpoint**: US2 単体で既存 watch 体験を提供可能
 
@@ -98,14 +98,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T028 [P] [US3] Add boundary separation tests for route/validation/error mapping in src/presentation/http/createServer.test.ts
-- [ ] T029 [P] [US3] Add dependency guard test to prevent core importing Hono/React in tests/architecture/dependency-boundary.test.ts
+- [x] T028 [P] [US3] Add boundary separation tests for route/validation/error mapping in src/presentation/http/createServer.test.ts
+- [x] T029 [P] [US3] Add dependency guard test to prevent core importing Hono/React in tests/architecture/dependency-boundary.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Refactor HTTP route registration to modular route layer in src/presentation/http/routes/index.ts
-- [ ] T031 [US3] Refactor validation and error mapping pipeline wiring in src/presentation/http/createServer.ts
-- [ ] T032 [US3] Refactor application adapters to use core scanner/parser/site only in src/application/documents/getDocument.ts
+- [x] T030 [US3] Refactor HTTP route registration to modular route layer in src/presentation/http/routes/index.ts
+- [x] T031 [US3] Refactor validation and error mapping pipeline wiring in src/presentation/http/createServer.ts
+- [x] T032 [US3] Refactor application adapters to use core scanner/parser/site only in src/application/documents/getDocument.ts
 
 **Checkpoint**: US3 単体で責務分離が成立
 
@@ -119,13 +119,13 @@
 
 ### Tests for User Story 4
 
-- [ ] T033 [P] [US4] Extend static-generation/offline regression tests for `doc-repo [scopePath]` in tests/npm-run-build.test.ts
-- [ ] T034 [P] [US4] Extend image/static asset compatibility tests in tests/image-serving.e2e.test.ts
+- [x] T033 [P] [US4] Extend static-generation/offline regression tests for `doc-repo [scopePath]` in tests/npm-run-build.test.ts
+- [x] T034 [P] [US4] Extend image/static asset compatibility tests in tests/image-serving.e2e.test.ts
 
 ### Implementation for User Story 4
 
-- [ ] T035 [US4] Preserve static generation output contract (`doc-repo [scopePath]`) while integrating viewer assets in src/core/site/buildSiteBundle.ts
-- [ ] T036 [US4] Preserve offline asset resolution behavior in src/core/site/renderPages.ts
+- [x] T035 [US4] Preserve static generation output contract (`doc-repo [scopePath]`) while integrating viewer assets in src/core/site/buildSiteBundle.ts
+- [x] T036 [US4] Preserve offline asset resolution behavior in src/core/site/renderPages.ts
 
 **Checkpoint**: US4 単体で静的生成互換を確認可能
 
@@ -139,15 +139,15 @@
 
 ### Tests for User Story 5
 
-- [ ] T037 [P] [US5] Add HTTP error contract tests for 400/404/500 in tests/contract/http-errors.test.ts
-- [ ] T038 [P] [US5] Add viewer stability tests for deleted-current-document behavior in tests/viewer-dom.e2e.test.ts
+- [x] T037 [P] [US5] Add HTTP error contract tests for 400/404/500, including adapter-level HTTP response verification for invalid and not-found document paths
+- [x] T038 [P] [US5] Add viewer stability tests for deleted-current-document fallback in src/viewer/state/viewerState.test.ts
 
 ### Implementation for User Story 5
 
-- [ ] T039 [US5] Implement standardized error payload mapping (`400 INVALID_REQUEST`, `404 DOCUMENT_NOT_FOUND`, `500 INTERNAL_ERROR`) in src/presentation/http/errors/httpErrorMapper.ts
-- [ ] T040 [US5] Implement viewer fallback selection when current document is removed in src/viewer/react/state/viewerState.ts
-- [ ] T041 [US5] Implement reconnect/failure notice handling for SSE in src/viewer/react/services/sseClient.ts
-- [ ] T042 [US5] Add user-facing error banner component in src/viewer/react/components/ErrorBanner.tsx
+- [x] T039 [US5] Implement standardized error payload mapping (`400 INVALID_REQUEST`, `404 DOCUMENT_NOT_FOUND`, `500 INTERNAL_ERROR`) in src/presentation/http/errors/httpErrorMapper.ts
+- [x] T040 [US5] Implement viewer fallback selection when current document is removed in src/viewer/hooks/useViewerState.ts
+- [x] T041 [US5] Implement reconnect/failure notice handling for SSE in src/viewer/services/sseClient.ts
+- [x] T042 [US5] Add user-facing error banner component in src/viewer/components/ErrorBanner.tsx
 
 **Checkpoint**: US5 単体で安定性要件を確認可能
 
@@ -157,14 +157,14 @@
 
 **Purpose**: 複数ストーリーに跨る最終整備
 
-- [ ] T043 [P] Update architecture responsibilities and dependency directions in project/overview/application-architecture.md
-- [ ] T044 Validate quickstart scenarios and synchronize docs in specs/019-edit-workspace-react-hono/quickstart.md
-- [ ] T045 [P] Consolidate HTTP contract wording and rendered HTML terminology in specs/019-edit-workspace-react-hono/contracts/http-api-contract.md
-- [ ] T046 [P] Fix baseline target for SC-002/SC-003/SC-005 (baseline commit + fixtures) in specs/019-edit-workspace-react-hono/checklists/performance-measurement.md
-- [ ] T047 Define performance measurement procedure and record format (warmup + 5 runs + median + 20% gate) in specs/019-edit-workspace-react-hono/checklists/performance-measurement.md
-- [ ] T048 Measure baseline implementation for SC-002/SC-003/SC-005 and record results in specs/019-edit-workspace-react-hono/checklists/performance-results.md
-- [ ] T049 Measure new implementation under identical conditions for SC-002/SC-003/SC-005 and record results in specs/019-edit-workspace-react-hono/checklists/performance-results.md
-- [ ] T050 Calculate per-target degradation rate and, for >=20% items, record user impact/reason-not-fixed-in-019/approval in specs/019-edit-workspace-react-hono/checklists/performance-results.md
+- [x] T043 [P] Update architecture responsibilities and dependency directions in project/overview/application-architecture.md
+- [x] T044 Validate quickstart scenarios and synchronize docs in specs/019-edit-workspace-react-hono/quickstart.md
+- [x] T045 [P] Consolidate HTTP contract wording and rendered HTML terminology in specs/019-edit-workspace-react-hono/contracts/http-api-contract.md
+- [x] T046 [P] Fix baseline target for SC-002/SC-003/SC-005 (baseline commit + fixtures) in specs/019-edit-workspace-react-hono/checklists/performance-measurement.md
+- [x] T047 Define performance measurement procedure and record format (warmup + 5 runs + median + 20% gate) in specs/019-edit-workspace-react-hono/checklists/performance-measurement.md
+- [x] T048 Measure baseline implementation for SC-002/SC-003/SC-005 and record results in specs/019-edit-workspace-react-hono/checklists/performance-results.md
+- [x] T049 Measure new implementation under identical conditions for SC-002/SC-003/SC-005 and record results in specs/019-edit-workspace-react-hono/checklists/performance-results.md
+- [x] T050 Calculate per-target degradation rate and, for >=20% items, record user impact/reason-not-fixed-in-019/approval in specs/019-edit-workspace-react-hono/checklists/performance-results.md
 
 ---
 
@@ -208,8 +208,8 @@ Task: T011 tests/contract/http-documents-list.test.ts
 Task: T012 tests/contract/http-documents-detail.test.ts
 
 # UI components in parallel
-Task: T018 src/viewer/react/components/DocumentTree.tsx
-Task: T019 src/viewer/react/components/DocumentViewer.tsx
+Task: T018 src/viewer/components/DocumentTree.tsx
+Task: T019 src/viewer/components/DocumentViewer.tsx
 ```
 
 ---
@@ -246,3 +246,4 @@ Task: T019 src/viewer/react/components/DocumentViewer.tsx
 - 固定性能数値は導入しない（同等性基準）
 - 保存 API 本体は 019 スコープ外（境界準備のみ）
 - `tasks.md` は `/speckit.tasks` の成果物として、実装順の単一ソースとする
+- `core/serve` に残る責務混在（watcher制御、CLI連携、運用ログ）は 019 では全面分離しない。Hono 移行必須分のみ `src/presentation/http` へ移し、残件は別リファクタリング候補として管理する

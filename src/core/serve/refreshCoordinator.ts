@@ -55,7 +55,7 @@ export const createRefreshCoordinator = (input: RefreshCoordinatorInput): Refres
 
   return {
     notifyChange: (event) => {
-      reporter.changeDetected(event.eventType, event.absolutePath);
+      reporter.changeDetected(event.eventType, event.notificationPath);
 
       if (timer) {
         clearTimeout(timer);

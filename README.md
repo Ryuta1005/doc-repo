@@ -1,6 +1,6 @@
 # doc-repo
 
-doc-repo is a CLI that converts Markdown files in your repository into a browsable static documentation site with a directory tree.
+doc-repo is a documentation management tool for browsing and editing repository Markdown files in a browser while keeping Git and Markdown as the source of truth.
 
 > [!WARNING]
 > `doc-repo` is currently in alpha. CLI arguments and generated file structure may change in future releases.
@@ -9,18 +9,22 @@ doc-repo is a CLI that converts Markdown files in your repository into a browsab
 
 ## Why doc-repo?
 
-As repositories grow, Markdown documents (specs, design notes, operational docs) tend to become harder to navigate.
+Spec-driven development and AI-assisted development make it increasingly common to keep specs, design notes, meeting notes, and operational docs as Markdown in a repository. As those documents grow across directories, they become harder for everyone on a team to use.
 
 - Markdown files are scattered across multiple directories.
 - It is hard to browse content across files without opening an editor.
-- It is difficult to share a clear reading path with non-developers.
+- It is difficult for non-developers to find and update documents through VS Code or Git.
 
-doc-repo addresses this by generating a two-pane viewer (left tree / right content) that makes repository documents easier to explore.
+doc-repo reads Markdown files from the repository, keeps the directory structure visible, and presents them as a two-pane browser workspace (left tree / right content). Documents can be edited in the browser and saved back to the original Markdown files, so non-developers can work with repository docs in a familiar OneNote- or Confluence-like flow.
+
+The core concept is not simply converting Markdown to HTML. doc-repo keeps Git and Markdown as the canonical source while making repository documents readable and editable by people across roles.
 
 ## Features
 
 - Recursively discovers `.md` files in your repository
 - Preserves directory structure in tree navigation
+- Provides a browser-based document workspace for repository Markdown
+- Saves browser edits back to the original Markdown files
 - Works without a local server (`index.html` can be opened directly)
 - Supports local server mode (`doc-repo serve`) with initial generation
 - Watches Markdown files and auto-regenerates on save while `serve` is running
@@ -97,6 +101,7 @@ Create `doc-repo.config.json` in your repository root to configure behavior:
 
 ```json
 {
+  "name": "Doc Repo",
   "rootDir": "./docs",
   "include": ["specs/**/*.md"],
   "exclude": ["drafts/**"],
@@ -106,6 +111,7 @@ Create `doc-repo.config.json` in your repository root to configure behavior:
 
 | Field     | Type       | Default        | Description                                                        |
 | --------- | ---------- | -------------- | ------------------------------------------------------------------ |
+| `name`    | `string`   | `"Doc Repo"`   | Site name shown in the sidebar header                              |
 | `rootDir` | `string`   | Git root / cwd | Root directory for Markdown collection (relative to config file)   |
 | `include` | `string[]` | `["**/*.md"]`  | Glob patterns to include. `[]` is treated the same as omitted.     |
 | `exclude` | `string[]` | `[]`           | Additional glob patterns to exclude (merged with default excludes) |
@@ -148,10 +154,6 @@ Reliability behavior:
 | ---- | ----------------------------------------- |
 | `0`  | Success (including success with warnings) |
 | `1`  | Failure                                   |
-
-## Current Limitations
-
-- Browser-based Markdown editing is not supported yet
 
 ## Markdown Support (Current)
 

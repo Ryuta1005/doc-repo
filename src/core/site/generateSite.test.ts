@@ -74,7 +74,7 @@ describe("generateSite.ts", () => {
     loggerInfoMock.mockReset();
     loggerErrorMock.mockReset();
 
-    buildSiteBundleMock.mockResolvedValue({ pages: [], referencedImages: [], tree: [] });
+    buildSiteBundleMock.mockResolvedValue({ siteName: "Doc Repo", pages: [], referencedImages: [], tree: [] });
     renderPagesMock.mockResolvedValue(undefined);
     copyAssetsMock.mockResolvedValue(undefined);
     atomicPublishMock.mockResolvedValue(undefined);

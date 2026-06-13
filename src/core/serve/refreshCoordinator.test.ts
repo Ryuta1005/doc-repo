@@ -8,7 +8,11 @@ describe("refreshCoordinator", () => {
     const onReload = vi.fn(() => 1);
     const coordinator = createRefreshCoordinator({ onRegenerate, onReload, debounceMs: 10 });
 
-    coordinator.notifyChange({ eventType: "change", absolutePath: "/repo/docs/a.md" });
+    coordinator.notifyChange({
+      eventType: "change",
+      absolutePath: "/repo/docs/a.md",
+      notificationPath: "docs/a.md",
+    });
     await new Promise((resolve) => setTimeout(resolve, 30));
 
     expect(onRegenerate).toHaveBeenCalledTimes(1);
@@ -32,15 +36,39 @@ describe("refreshCoordinator", () => {
     });
 
     const coordinator = createRefreshCoordinator({ onRegenerate, onReload, debounceMs: 5 });
-    coordinator.notifyChange({ eventType: "change", absolutePath: "/repo/docs/a.md" });
+    coordinator.notifyChange({
+      eventType: "change",
+      absolutePath: "/repo/docs/a.md",
+      notificationPath: "docs/a.md",
+    });
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    coordinator.notifyChange({ eventType: "change", absolutePath: "/repo/docs/a.md" });
+    coordinator.notifyChange({
+      eventType: "change",
+      absolutePath: "/repo/docs/a.md",
+      notificationPath: "docs/a.md",
+    });
     resolveRun?.();
 
     await coordinator.drain();
 
     expect(onRegenerate).toHaveBeenCalledTimes(2);
     expect(onReload).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not dispatch reload when regenerate fails", async () => {
+    const onRegenerate = vi.fn(async () => ({ ok: false as const, reason: "failed" }));
+    const onReload = vi.fn(() => 1);
+    const coordinator = createRefreshCoordinator({ onRegenerate, onReload, debounceMs: 10 });
+
+    coordinator.notifyChange({
+      eventType: "change",
+      absolutePath: "/repo/docs/a.md",
+      notificationPath: "docs/a.md",
+    });
+    await coordinator.drain();
+
+    expect(onRegenerate).toHaveBeenCalledTimes(1);
+    expect(onReload).not.toHaveBeenCalled();
   });
 });

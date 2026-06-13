@@ -1,14 +1,19 @@
-import type { ServerResponse } from "node:http";
+export interface SseWritableConnection {
+  writableEnded: boolean;
+  destroyed: boolean;
+  write: (chunk: string) => unknown;
+  end: () => void | Promise<void>;
+}
 
-import type { SseReloadPayload } from "../../shared/types.js";
+import type { SseReloadPayload } from "../../../shared/types.js";
 
 interface SseConnection {
   id: string;
-  response: ServerResponse;
+  response: SseWritableConnection;
 }
 
 export interface SseConnectionRegistry {
-  add: (response: ServerResponse) => string;
+  add: (response: SseWritableConnection) => string;
   remove: (id: string) => void;
   dispatchReload: () => number;
   closeAll: () => Promise<void>;
@@ -20,7 +25,7 @@ const eventPayload = (event: string, data: unknown): string => `event: ${event}\
 export const createSseConnectionRegistry = (): SseConnectionRegistry => {
   const connections = new Map<string, SseConnection>();
 
-  const add = (response: ServerResponse): string => {
+  const add = (response: SseWritableConnection): string => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     connections.set(id, { id, response });
     return id;

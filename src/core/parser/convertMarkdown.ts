@@ -86,19 +86,12 @@ const resolvePathFromRoot = (rawPath: string, relativePath: string): string | nu
 interface RenderEnv {
   relativePath?: string;
   knownIds?: Set<string>;
-  uniqueBasenames?: Map<string, string>;
   referencedImages?: Set<string>;
 }
 
 // 既知のページID集合に対してリンク先を解決し、一致したIDだけを返す。
 // 推測ではなく実在ページとの突き合わせで判定するため、遷移可否が安定する。
-// 厳密解決に失敗した .md リンクは、同名ページが一意な場合のみベース名で救済する。
-const resolveDocId = (
-  href: string,
-  relativePath: string,
-  knownIds: Set<string>,
-  uniqueBasenames: Map<string, string>,
-): string | null => {
+const resolveDocId = (href: string, relativePath: string, knownIds: Set<string>): string | null => {
   if (!href || EXTERNAL_OR_HASH.test(href)) {
     return null;
   }
@@ -114,9 +107,7 @@ const resolveDocId = (
       }
     }
 
-    // フォールバック: 相対パスがズレていても、同名ページが 1 件だけなら救済する。
-    const basename = path.posix.basename(rawPath).replace(/\.md$/i, "");
-    return uniqueBasenames.get(basename) ?? null;
+    return null;
   }
 
   if (!pathFromRoot) {
@@ -160,10 +151,10 @@ md.renderer.rules.image = (tokens, idx, options, env, self) => {
 const linkOpenRule = md.renderer.rules.link_open;
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   const href = tokens[idx]?.attrGet("href");
-  const { relativePath, knownIds, uniqueBasenames } = (env ?? {}) as RenderEnv;
+  const { relativePath, knownIds } = (env ?? {}) as RenderEnv;
 
   if (href && relativePath) {
-    const docId = knownIds ? resolveDocId(href, relativePath, knownIds, uniqueBasenames ?? new Map()) : null;
+    const docId = knownIds ? resolveDocId(href, relativePath, knownIds) : null;
 
     if (docId) {
       // 実在ページに一致したリンクは、現在ページからの相対 .html リンクへ。
@@ -190,11 +181,10 @@ export const convertMarkdown = (
   source: string,
   relativePath: string,
   knownIds: Set<string> = new Set<string>(),
-  uniqueBasenames: Map<string, string> = new Map<string, string>(),
 ): { title: string; html: string; referencedImages: string[] } => {
   const title = findTitle(source, relativePath);
   const referencedImages = new Set<string>();
-  const html = md.render(source, { relativePath, knownIds, uniqueBasenames, referencedImages } satisfies RenderEnv);
+  const html = md.render(source, { relativePath, knownIds, referencedImages } satisfies RenderEnv);
 
   return { title, html, referencedImages: Array.from(referencedImages) };
 };

@@ -15,11 +15,20 @@ const fill = (template: string, key: string, value: string): string => template.
 // サイドバーのツリーを、現在ページからの相対 .html リンクとして静的 HTML にレンダリングする。
 // フォルダは <details>/<summary> でネイティブに開閉でき、JS は不要。
 const renderTree = (nodes: TreeNode[], currentRelativePath: string, currentId: string): string => {
+  const containsCurrentPage = (item: TreeNode): boolean => {
+    if (item.type === "file") {
+      return item.id === currentId;
+    }
+
+    return item.children.some(containsCurrentPage);
+  };
+
   const renderNodes = (items: TreeNode[]): string => {
     const lis = items
       .map((item) => {
         if (item.type === "dir") {
-          return `<li><details open><summary>${escapeHtml(item.name)}</summary>${renderNodes(
+          const open = containsCurrentPage(item) ? " open" : "";
+          return `<li><details${open}><summary>${escapeHtml(item.name)}</summary>${renderNodes(
             item.children,
           )}</details></li>`;
         }
@@ -36,13 +45,14 @@ const renderTree = (nodes: TreeNode[], currentRelativePath: string, currentId: s
   return renderNodes(nodes);
 };
 
-const renderPageHtml = (template: string, page: SitePage, tree: TreeNode[]): string => {
-  const stylesHref = `${siteRootPrefix(page.relativePath)}styles.css`;
-  const appJsSrc = `${siteRootPrefix(page.relativePath)}app.js`;
+const renderPageHtml = (template: string, page: SitePage, tree: TreeNode[], bundle: SiteBundle): string => {
+  const stylesHref = `${siteRootPrefix(page.relativePath)}${bundle.viewerAssets.styleFile}`;
+  const appJsSrc = `${siteRootPrefix(page.relativePath)}${bundle.viewerAssets.scriptFile}`;
   const homeHref = `${siteRootPrefix(page.relativePath)}index.html`;
   const sidebar = renderTree(tree, page.relativePath, page.id);
 
   let html = fill(template, "__TITLE__", escapeHtml(page.title));
+  html = fill(html, "__SITE_NAME__", escapeHtml(bundle.siteName));
   html = fill(html, "__STYLES_HREF__", stylesHref);
   html = fill(html, "__APP_JS_SRC__", appJsSrc);
   html = fill(html, "__HOME_HREF__", homeHref);
@@ -64,7 +74,7 @@ const renderIndexHtml = (bundle: SiteBundle): string => {
       '<html lang="ja">',
       "<head>",
       '<meta charset="utf-8" />',
-      "<title>doc-repo</title>",
+      `<title>${escapeHtml(bundle.siteName)}</title>`,
       '<link rel="stylesheet" href="./styles.css" />',
       "</head>",
       "<body>",
@@ -84,7 +94,7 @@ const renderIndexHtml = (bundle: SiteBundle): string => {
     '<meta charset="utf-8" />',
     `<meta http-equiv="refresh" content="0; url=${homeHref}" />`,
     `<link rel="canonical" href="${homeHref}" />`,
-    "<title>doc-repo</title>",
+    `<title>${escapeHtml(bundle.siteName)}</title>`,
     "</head>",
     "<body>",
     `<p>移動中です… <a href="${homeHref}">${escapeHtml(home.title)}</a></p>`,
@@ -100,7 +110,7 @@ export const renderPages = async (templatesDir: string, stagingDir: string, bund
 
   for (const page of bundle.pages) {
     const outputPath = path.join(stagingDir, ...page.id.split("/")) + ".html";
-    await fs.outputFile(outputPath, renderPageHtml(template, page, bundle.tree), "utf8");
+    await fs.outputFile(outputPath, renderPageHtml(template, page, bundle.tree, bundle), "utf8");
   }
 
   await fs.outputFile(path.join(stagingDir, "index.html"), renderIndexHtml(bundle), "utf8");

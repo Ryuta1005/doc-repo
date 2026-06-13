@@ -87,6 +87,9 @@ MVP 段階から、CLI の信頼性を担保するために単体テストを継
 - CLI 層は引数解釈と終了コード、メッセージ出力を中心にテストする
 - カバレッジは CI で計測し、HTML レポート（`index.html`）で確認できる状態を維持する
 - 重要な不具合を修正する際は、再発防止の単体テストを先に追加または同時に追加する
+- HTTP API や CLI など外部境界を持つ機能は、use case や pipeline の単体テストだけで完了扱いにしない。実際の adapter（Hono server / CLI process）を起動し、利用者と同じ入口から status code、headers、payload、終了コードを検証する integration test を必須にする
+- HTTP エラー契約（400/404/500 など）は、mapper 単体テストに加えて実 HTTP response で検証する。framework の error handler や adapter で例外が潰れる可能性を常にテスト対象に含める
+- API 契約テスト名に `contract` を使う場合、その契約は実リクエスト/レスポンスまで含む。application 層の戻り値検証は補助テストとして扱い、契約充足の根拠にしない
 
 ## Phase をまたぐ設計境界（重要）
 

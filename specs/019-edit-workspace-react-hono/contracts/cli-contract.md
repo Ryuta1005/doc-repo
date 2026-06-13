@@ -38,7 +38,6 @@ Behavior:
 [
   {
     "identifier": "docs/overview/product.md",
-    "path": "docs/overview/product.md",
     "title": "プロダクト概要"
   }
 ]
@@ -56,7 +55,6 @@ Behavior:
 ```json
 {
   "identifier": "docs/overview/product.md",
-  "path": "docs/overview/product.md",
   "title": "プロダクト概要",
   "html": "<h1>プロダクト概要</h1>",
   "metadata": {}

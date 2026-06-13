@@ -168,6 +168,29 @@ describe("resolveRuntimeConfig", () => {
   });
 
   // ---------------------------------------------------------------
+  // name
+  // ---------------------------------------------------------------
+
+  describe("name", () => {
+    it("設定ファイルの name が siteName として返ること。", async () => {
+      const root = await makeTempDir();
+      await fs.outputJson(path.join(root, "doc-repo.config.json"), { name: "Team Docs" });
+
+      const result = await resolveRuntimeConfig({ cwd: root });
+
+      expect(result.siteName).toBe("Team Docs");
+    });
+
+    it("name が未指定の場合、既定名が返ること。", async () => {
+      const root = await makeTempDir();
+
+      const result = await resolveRuntimeConfig({ cwd: root });
+
+      expect(result.siteName).toBe("Doc Repo");
+    });
+  });
+
+  // ---------------------------------------------------------------
   // validation failures
   // ---------------------------------------------------------------
 
@@ -178,6 +201,15 @@ describe("resolveRuntimeConfig", () => {
 
       await expect(resolveRuntimeConfig({ cwd: root })).rejects.toMatchObject({
         code: "CONFIG_INVALID_PORT",
+      });
+    });
+
+    it("name が空文字の場合、CONFIG_INVALID_NAME で失敗すること。", async () => {
+      const root = await makeTempDir();
+      await fs.outputJson(path.join(root, "doc-repo.config.json"), { name: "" });
+
+      await expect(resolveRuntimeConfig({ cwd: root })).rejects.toMatchObject({
+        code: "CONFIG_INVALID_NAME",
       });
     });
 
