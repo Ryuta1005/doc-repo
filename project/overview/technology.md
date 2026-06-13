@@ -2,351 +2,126 @@
 
 ## 技術選定の考え方
 
-このプロダクトの MVP では、リッチなアプリケーション構築よりも、npm パッケージとしての導入しやすさと、静的 HTML を確実に出力できることを優先する。
+doc-repo は、Git と Markdown を正本にしながら、ブラウザ上で閲覧・編集できるドキュメントワークスペースを提供する。
 
-そのため、最初から Next.js のようなフレームワークを前提にするより、TypeScript ベースの CLI と静的サイト生成処理を中心に据える方が適している。
+020 以降の正規入口は `doc-repo serve` に統一する。過去の静的 HTML 生成入口、テンプレート UI、生成専用 pipeline は廃止済みであり、今後の設計では互換維持対象として扱わない。
 
-## 推奨する初期構成
+## 現行構成
 
 - 言語: TypeScript
 - パッケージ形態: npm パッケージ
-- 公開形態: CLI 中心、将来的にライブラリ API も検討
-- 実行方法: `npx` とローカルインストールの両対応を意識
-- 出力方式: 静的 HTML / CSS / JavaScript ファイル生成
-- 既定の出力先: `.doc-repo`
-- テスト方針: 単体テストを必須とし、テストランナーは Vitest を採用
+- 正規入口: `doc-repo serve`
+- HTTP 境界: Hono
+- Viewer UI: React
+- 変更監視: Chokidar
+- テスト方針: Vitest による単体テストと、CLI / HTTP 境界の integration test
 
-## MVP におけるアーキテクチャ方針
+## アーキテクチャ方針
 
-MVP では、将来ローカルサーバーを追加しても破壊的変更を最小化するため、責務を以下のように分離する。
-
-### 1. スキャン層
-
-役割: リポジトリ配下の Markdown ファイルとディレクトリ構造を収集する
-
-- 入力: 対象ルートディレクトリ
-- 出力: ファイルツリーと Markdown ファイル一覧
-
-### 2. 変換層
-
-役割: Markdown を HTML に変換し、表示用データを生成する
-
-- 入力: Markdown 本文
-- 出力: HTML 文字列、見出し情報、メタデータ
-
-### 3. 生成層
-
-役割: サイト全体の HTML / CSS / JavaScript とコンテンツデータを出力する
-
-- 入力: ファイルツリー、変換済みコンテンツ
-- 出力: ブラウザで開ける静的サイト
-
-### 4. CLI 層
-
-役割: ユーザー入力を受け取り、全体の処理を実行する
-
-- 入力: コマンドライン引数
-- 出力: 成功/失敗のログ、生成物
-
-この分離により、将来ローカルサーバーを追加する場合でも、CLI の一部をサーバー起動コマンドに差し替えるだけで、スキャン・変換・生成ロジックを再利用しやすい。
-
-## フロントエンド方針
-
-MVP の UI は 2 ペインのドキュメントビューアであり、複雑な状態管理や SPA 的なインタラクションは必須ではない。
-
-そのため、初期段階では以下の方針を推奨する。
-
-- React は使ってよいが、必須とはしない
-- Next.js は MVP では不要
-- Chakra UI や Zustand も MVP では不要
-- まずはシンプルな静的 UI を優先し、デザインシステム導入は後回しにする
-
-候補としては次の 2 案がある。
-
-### 案 A: プレーンな静的生成寄り
-
-- HTML テンプレートを生成
-- 最小限のクライアント JavaScript でツリー操作や画面切替を実装
-- 依存を抑えやすい
-
-### 案 B: React ベースの静的ビューア
-
-- React でビュー部分を構築
-- ビルド後は静的配布物として出力
-- 将来の拡張に備えやすいが、初期コストはやや上がる
-
-現時点では、MVP は案 A を第一候補とするのが妥当。
-
-## テスト方針
-
-MVP 段階から、CLI の信頼性を担保するために単体テストを継続的に実装する。
-
-- テストランナーは Vitest を標準採用する
-- 単体テストは `tests/unit` には集約せず、対象の実装ファイルと同じ階層に `*.test.ts` で配置する
-- 対象はまず `src/core` の純粋ロジック（スキャン、変換、生成）を優先する
-- CLI 層は引数解釈と終了コード、メッセージ出力を中心にテストする
-- カバレッジは CI で計測し、HTML レポート（`index.html`）で確認できる状態を維持する
-- 重要な不具合を修正する際は、再発防止の単体テストを先に追加または同時に追加する
-- HTTP API や CLI など外部境界を持つ機能は、use case や pipeline の単体テストだけで完了扱いにしない。実際の adapter（Hono server / CLI process）を起動し、利用者と同じ入口から status code、headers、payload、終了コードを検証する integration test を必須にする
-- HTTP エラー契約（400/404/500 など）は、mapper 単体テストに加えて実 HTTP response で検証する。framework の error handler や adapter で例外が潰れる可能性を常にテスト対象に含める
-- API 契約テスト名に `contract` を使う場合、その契約は実リクエスト/レスポンスまで含む。application 層の戻り値検証は補助テストとして扱い、契約充足の根拠にしない
-
-## Phase をまたぐ設計境界（重要）
-
-Phase 3 で編集体験を入れる際、設計を雑にすると Phase 1・2 の実装をかなり作り直すことになる。これを避けるための原則を以下にまとめる。
-
-### 懸念
-
-Phase 1 の静的 HTML 生成ロジックと、将来の UI（React 等）やサーバー（Hono 等）を強く結びつけると壊れやすい。特に次のような密結合は危険。
-
-```text
-Markdown を読む
-→ HTML 文字列を作る
-→ 完成済み index.html へ直接埋め込む
-```
-
-この作りのまま React 化すると、Phase 3 で編集状態を持たせる際に HTML 生成方式・ページ遷移方式・ファイル取得方式・表示反映方式をまとめて変えることになりやすい。
-
-### 解決方針: フレームワーク非依存の core 層を中心に置く
-
-中心に置くべきは React でも Hono でもなく、Markdown を扱う core 層。
-
-```text
-core
-├── Markdown ファイルを収集する
-├── ツリー構造を作る
-├── Markdown を HTML へ変換する
-├── 設定を解決する
-└── ファイルパスを安全に扱う
-```
-
-この core を各 Phase から利用する。
-
-```text
-Phase 1  core → 静的 HTML 生成
-Phase 2  core → Hono で配信 / Chokidar で再実行 / 閲覧 UI
-Phase 3  core → Hono API で読み書き / リッチテキスト編集 UI
-```
-
-core は React や Hono を知らない。依存方向は常に外側から core への一方向にする。
+中心に置くべきは React でも Hono でもなく、Markdown とリポジトリファイルを扱う application/core 層である。
 
 ```text
 client   ─┐
-server   ─┼→ core
+server   ─┼→ application/core
 commands ─┘
 
-core → React や Hono を知らない
+application/core → React や Hono を知らない
 ```
 
-### core はフレームワーク非依存のデータを返す
+Hono は HTTP リクエスト・レスポンス境界を担当し、ファイル探索、Markdown 変換、設定解決、保存時の検証などの処理は application/core 層から呼び出す。
 
-core は React コンポーネントや Hono の Context を返さず、JSON 相当のデータを返す。
+React は Viewer / Editor UI を担当し、core に依存されない。UI 状態、選択中文書、保存状態、エラー表示などは React 側に閉じる。
 
-```ts
-// core が返すデータ構造（現時点の例示）
-type DocumentSite = {
-  tree: DocumentNode[];
-  documents: Record<string, DocumentContent>;
-};
+## 層の責務
 
-type DocumentContent = {
-  path: string;
-  title: string;
-  markdown: string;
-  html: string;
-};
-```
+### CLI 層
 
-注意: この型定義は現時点の例示であり、Phase 2/3 で載容量や API 設計を再検討する可能性があります（例: tree と文書を納める粗粒度 API / 本文の遅延読み込み等）。
+- `doc-repo init` と `doc-repo serve` の入口を提供する
+- CLI 引数と設定ファイルを解決する
+- Hono ワークスペースの起動結果を利用者向けに表示する
 
-このデータを、静的ジェネレーター / 閲覧 UI / Hono API のどれからでも利用できるようにする。
+### Serve 層
 
-### Phase 1 の静的出力（build）は残す
+- HTTP server の起動を統括する
+- Markdown 変更監視を開始する
+- 変更通知を SSE でブラウザへ送る
+- 終了シグナル時に watcher、SSE、HTTP server を順に停止する
 
-Phase 3 で UI フレームワークを入れても、Phase 1 の静的生成の価値は捨てない。コマンドを役割で分ける。
+### HTTP 層
 
-```bash
-doc-repo build   # 静的 HTML を生成（Phase 1 の機能を維持）
-doc-repo serve   # ローカルサーバー + 変更監視（Phase 2）
-doc-repo edit    # 編集 API と編集 UI を有効化（Phase 3）
-```
+- React Viewer の配信
+- 静的アセットの配信
+- 文書一覧 API
+- 文書取得 API
+- SSE
+- 将来の保存 API
 
-`serve --edit` のようにオプションで切り替える手もあるが、将来の責務を考えるとコマンドを分ける方が明確。
+HTTP 層は入力検証とレスポンス変換に集中し、実際のファイル操作やビジネスルールを直接抱え込まない。
 
-### なお残すもの / 作り直すもの
+### Application / Core 層
 
-```text
-残せるもの（core 側）
-- Markdown 探索
-- include/exclude
+- Markdown ファイルの探索
+- include / exclude の適用
 - rootDir 解決
 - Markdown 変換
-- ツリー生成
-- 出力先管理
-- CLI の基本構造
+- 文書 ID / パスの正規化
+- 保存 API で必要になる安全なファイル操作
 
-作り直しやすいもの（UI 側）
-- 左ツリーの描画
-- 右本文の描画
-- ページ切り替え
-- ホットリロード処理
-```
+この層はフレームワーク非依存に保つ。
 
-### Phase 1 の静的出力（build）は残す
+### Viewer 層
 
-Phase 3 で UI フレームワークを入れても、Phase 1 の静的生成の価値は捨てない。コマンドを役割で分ける。
+- 文書ツリー表示
+- 文書本文表示
+- API client
+- SSE client
+- 将来の編集 UI
 
-```bash
-doc-repo build   # 静的 HTML を生成（Phase 1 の機能を維持）
-doc-repo serve   # ローカルサーバー + 変更監視（Phase 2）
-```
+## 配信契約
 
-Phase 3 での CLI 仕様（`serve` と `edit` を分ける vs `serve --editable` など）は、Phase 3 開始時の Spike とともに確定させる。
+Hono が React UI、HTTP API、SSE、静的アセットを同一 port / 同一 origin で配信する。
 
-### 結論
+`port` は Front / Back に分けない。CLI の `--port` と設定ファイルの `port` は、ワークスペース全体の単一入口を指す。
 
-React + Hono を採用すること自体より、**Phase 2 で責務の境界をきちんと作れるか**が重要。
+## Markdown とリンクの扱い
 
-- core をフレームワーク非依存にする
-- `build` を残す
-- React は UI だけ
-- **Hono は HTTP リクエスト・レスポンス請け負い**のみ。実際のファイル読み書きや内容検証などの処理を、Hono ルートへ直接埋め込まず、application/core 層から呼び出す設計にする
-- Chokidar は監視だけ
+Markdown 変換は、Viewer が扱いやすい HTML と参照メタデータを返す。文書間リンクは既知の文書 ID に照合し、Viewer 内で遷移できるリンクへ正規化する。
 
-これを守れば、Phase 3 は全面改修ではなく拡張になる。
+画像や添付などのリポジトリ資産は、Hono の配信境界で扱う。静的生成物へコピーする前提は置かない。
 
-## Phase 別 パッケージ追加方針（仮）
+## テスト方針
 
-以下は現時点での見通しであり、実装開始前に Spike や設計レビューで再確認する。
+- 純粋ロジックは実装ファイルと同じ階層の `*.test.ts` で検証する
+- CLI は利用者と同じ入口から終了コードとメッセージを検証する
+- HTTP API は実リクエスト / レスポンスで status code、headers、payload を検証する
+- error mapper 単体だけで契約充足とせず、Hono adapter 経由の挙動も確認する
+- 静的生成専用テストは 020 で削除対象とし、今後の回帰は serve / API / Viewer 契約として維持する
 
-### 判断の前提: Hono と React は独立して決める
+## パッケージ追加方針
 
-core をフレームワーク非依存に保てていれば、UI（React 等）の導入時期は core の作り直しに影響しない。壊れるのは UI 層だけで、それは元々 Phase 3 で作り直す前提の部分である。したがって「React を遅らせると壊す」という前提は成り立たない。
+### 現在採用
 
-このため、次の 2 つの判断を分離する。
+| 技術    | 用途 |
+| ------- | ---- |
+| Hono    | HTTP server、API、SSE、静的アセット配信 |
+| React   | Viewer / Editor UI |
+| Chokidar | Markdown 変更監視 |
+| Vitest  | 単体テストと integration test |
 
-- **サーバー境界（Hono）**: Phase 2 のローカル配信と Phase 3 のファイル操作を同じ境界で扱えるため、Phase 2 から導入してよい。Hono を使う理由は「React に必要だから」ではなく、配信とファイル操作を一貫した境界に置けるため。
-- **UI フレームワーク（React）**: Phase 2 の利用者価値（serve / 自動反映 / 設定解決 / include・exclude）は主に Hono・Chokidar・core の責務であり、React では増えない。Phase 3 開始時の Spike で導入可否を判断する。
+### Phase 3 で検証するもの
 
-### Phase 2: 利便性向上
+| 技術 | 用途 |
+| ---- | ---- |
+| WYSIWYG エディタ | Markdown とリッチテキスト編集の往復 |
+| Tiptap / ProseMirror 系 | Markdown ショートカット、ツールバー、保存データ生成 |
 
-| パッケージ   | 必要度     | 用途                                                                                          |
-| ------------ | ---------- | --------------------------------------------------------------------------------------------- |
-| **chokidar** | ⭐⭐⭐⭐⭐ | Markdown ファイルの変更監視（cross-platform で信頼性が高く、自前実装は割に合わない）          |
-| **Hono**     | ⭐⭐⭐⭐   | ローカル HTTP サーバー（静的配信 + ドキュメント取得 API + SSE）。Phase 3 でそのまま拡張できる |
-| **React**    | ⭐⭐       | Phase 2 では原則導入しない。現在の HTML/CSS/Vanilla JS UI を維持する                          |
-
-Phase 2 の最小 API は次の程度で足りる。場合によっては静的サイト再生成 + SSE 通知だけで成立し、`/api/documents` すら最初は不要。
-
-```http
-GET /api/documents   # 必要なら
-GET /api/events       # SSE（reload 通知）
-```
-
-ホットリロードの流れ:
-
-```text
-Markdown 変更
-→ Chokidar が検知
-→ 静的サイト再生成
-→ SSE で reload 通知
-→ ブラウザ更新
-```
-
-重要: Phase 3 で交換する可能性が高い Vanilla JS UI に機能を盛りすぎない。Phase 2 はサーバー境界と core の確立に集中する。
-
-### Phase 3: 編集体験
-
-| パッケージ       | 必要度     | 用途                                                                                                                                       |
-| ---------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Hono**         | ⭐⭐⭐⭐⭐ | Phase 2 のサーバーを拡張。HTTP 境界と読み書き API を担当し、実際のファイル操作・検証ロジックは application 層を経由                        |
-| **WYSIWYG エディタ** | ⭐⭐⭐⭐⭐ | Markdown ショートカット対応のリッチテキスト編集。自前実装は現実的でない。Markdown とのラウンドトリップ安全性を Spike で確認する |
-| **React**            | ⭐⭐⭐⭐   | 編集状態（選択中ファイル・編集内容・ツールバー状態・保存状態・未保存警告・競合・エラー表示）が増えるため必要度は高い。ただし HTTP サーバーほど必須ではない |
-
-Phase 3 で増える API（例）:
-
-```http
-GET /api/documents/:path
-PUT /api/documents/:path
-```
-
-Hono のルートはリクエスト解析と HTTP レスポンス返却に専念し、パストラバーサル拒否・ファイルバージョン突合・実際のファイル保存は application/core 層で実装する構造にする。
-
-Phase 3 開始時に短い技術検証を行い、次のような選択肢を比較する。
-
-- React + Tiptap / ProseMirror 系
-- Vanilla JS + Tiptap / ProseMirror 系
-- その他の軽量 UI フレームワーク
-
-Spike では、ツールバー操作の実現性だけでなく、既存 Markdown を読み込み、無編集で保存しても意味や未対応部分が壊れないことを重視する。MVP の編集範囲は本文、見出し1〜3、太字、イタリック、保存に絞り、下線は標準 Markdown との対応が弱いため MVP から外す。
-
-### 必要度サマリ
-
-| 技術                      |    Phase 2 |               Phase 3 |
-| ------------------------- | ---------: | --------------------: |
-| Hono などの HTTP サーバー |   ⭐⭐⭐⭐ |            ⭐⭐⭐⭐⭐ |
-| Chokidar                  | ⭐⭐⭐⭐⭐ |            ⭐⭐⭐⭐⭐ |
-| React                     |       ⭐⭐ |              ⭐⭐⭐⭐ |
-| WYSIWYG エディタ          |          ☆ |            ⭐⭐⭐⭐⭐ |
-| CSS（素）                 | ⭐⭐⭐⭐⭐ |               ⭐⭐⭐☆ |
-| Tailwind CSS              |       ⭐⭐ |               ⭐⭐⭐☆ |
-| shadcn/ui                 |          ☆ | React 採用時に⭐⭐⭐☆ |
-
-この方針は「一気に多機能化しない」「将来機能のために過度に複雑化しない」というロードマップの方針、および YAGNI に最も整合する。
-
-## npm パッケージとしての方針
-
-npm パッケージを初めて作る前提では、まず CLI として価値を成立させるのがよい。
-
-初期的には以下を目指す。
-
-- `bin` エントリを持つ CLI パッケージにする
-- `npx <package-name>` と単体コマンドの両方で実行可能にする
-- 対象ディレクトリを引数なしでカレントディレクトリから推定できるようにする
-- 生成先ディレクトリの既定値を `.doc-repo` にする
-
-CLI 体験としては、まず `doc-repo` のワンコマンド実行を基本に置き、将来的に `doc-repo build` や `doc-repo serve` のようなサブコマンドを後方互換を保ちながら追加できる形を目指す。
-
-将来的には次も検討できる。
-
-- Node API として `generateSite()` のような関数を公開する
-- 他ツールから組み込み利用できるようにする
-
-## ディレクトリ設計の考え方
-
-普段の feature 駆動開発は UI アプリには有効だが、今回の MVP は CLI 中心で、処理の流れが明確なため、まずは責務ベースで整理する方が適している。
-
-初期案:
-
-- `src/cli`: CLI エントリポイント
-- `src/core/scanner`: ファイル収集
-- `src/core/parser`: Markdown 変換
-- `src/core/site`: サイト生成
-- `src/shared`: 共通型やユーティリティ
-- `templates`: HTML テンプレートや静的アセット
-
-補足として、`.doc-repo` 配下には HTML 本体だけでなく、生成に使ったインデックス JSON や静的アセットもまとめて配置する前提が扱いやすい。
-
-この構成であれば、後から `serve` や `watch` を追加しても拡張しやすい。
-
-## 懸念と対策
-
-### 静的 HTML からローカルサーバーへ広げたときの破壊的変更
-
-最も避けたいのは、MVP の中核ロジックと配布形態が強く結びつきすぎること。
-
-対策として、以下を初期から意識する。
-
-- Markdown の収集ロジックを UI 実装から分離する
-- 変換済みデータの内部表現を安定させる
-- `build` と将来の `serve` を別コマンドとして設計できるようにする
-
-これにより、MVP の `build` コマンドを残したまま、後方互換を保って `serve` を追加しやすくなる。
+Phase 3 の Spike では、本文、見出し1〜3、太字、イタリック、保存に絞って、既存 Markdown を読み込み、無編集保存で意味が壊れないことを重視する。
 
 ## 現時点の推奨結論
 
-- TypeScript で npm CLI パッケージとして始める
-- MVP は静的 HTML 生成に限定する
-- UI は 2 ペインの最小構成に留める
-- 実装構成は feature 駆動より、スキャン/変換/生成/CLI の責務分離を優先する
-- React/Next.js は必要になってから導入を判断する
+- 正規入口は `doc-repo serve`
+- 静的生成入口と templates は復活させない
+- Hono は HTTP 境界に集中させる
+- React は UI に集中させる
+- application/core はフレームワーク非依存に保つ
+- 010 以降の編集・保存は `serve` ベースの同一 origin ワークスペース前提で設計する

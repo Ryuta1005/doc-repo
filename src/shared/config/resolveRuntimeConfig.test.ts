@@ -155,19 +155,6 @@ describe("resolveRuntimeConfig", () => {
   });
 
   // ---------------------------------------------------------------
-  // outputDir
-  // ---------------------------------------------------------------
-
-  it("outputDir が rootDir/.doc-repo になること。", async () => {
-    const root = await makeTempDir();
-    await fs.outputJson(path.join(root, "doc-repo.config.json"), {});
-
-    const result = await resolveRuntimeConfig({ cwd: root });
-
-    expect(result.outputDir).toBe(path.join(root, ".doc-repo"));
-  });
-
-  // ---------------------------------------------------------------
   // name
   // ---------------------------------------------------------------
 

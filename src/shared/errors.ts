@@ -10,12 +10,7 @@ export class AppError extends Error {
   }
 }
 
-export type ServeFailureCode =
-  | "invalid-port"
-  | "port-conflict"
-  | "initial-generate-failed"
-  | "missing-output"
-  | "unknown";
+export type ServeFailureCode = "invalid-port" | "port-conflict" | "unknown";
 
 const serveFailureCatalog: Record<ServeFailureCode, { code: string; hint: string }> = {
   "invalid-port": {
@@ -25,14 +20,6 @@ const serveFailureCatalog: Record<ServeFailureCode, { code: string; hint: string
   "port-conflict": {
     code: "PORT_CONFLICT",
     hint: "別のポートを指定するか、使用中のプロセスを停止してください。",
-  },
-  "initial-generate-failed": {
-    code: "INITIAL_GENERATE_FAILED",
-    hint: "生成エラーの原因を確認し、入力ファイルや設定を修正してください。",
-  },
-  "missing-output": {
-    code: "MISSING_OUTPUT",
-    hint: "出力先 .doc-repo が存在するか確認し、必要なら再生成してください。",
   },
   unknown: {
     code: "UNKNOWN",
@@ -83,22 +70,6 @@ export const toServeUserGuidance = (
     if (error.code === "PORT_CONFLICT") {
       return {
         type: "port-conflict",
-        reason: `${error.code}: ${error.message}`,
-        hint: error.hint,
-      };
-    }
-
-    if (error.code === "INITIAL_GENERATE_FAILED") {
-      return {
-        type: "initial-generate-failed",
-        reason: `${error.code}: ${error.message}`,
-        hint: error.hint,
-      };
-    }
-
-    if (error.code === "MISSING_OUTPUT") {
-      return {
-        type: "missing-output",
         reason: `${error.code}: ${error.message}`,
         hint: error.hint,
       };

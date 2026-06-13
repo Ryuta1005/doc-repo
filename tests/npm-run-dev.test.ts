@@ -8,7 +8,6 @@ import { afterEach, describe, expect, it } from "vitest";
 const thisFile = fileURLToPath(import.meta.url);
 const testsDir = path.dirname(thisFile);
 const repoRoot = path.resolve(testsDir, "..");
-const outputDir = path.join(repoRoot, ".doc-repo");
 
 const tempDirs: string[] = [];
 
@@ -213,24 +212,6 @@ const makeTempDir = async (): Promise<string> => {
   return dir;
 };
 
-const withOutputBackup = async (testBody: () => Promise<void>): Promise<void> => {
-  const backupDir = `${outputDir}.__it_backup__`;
-
-  await fs.remove(backupDir);
-  if (await fs.pathExists(outputDir)) {
-    await fs.move(outputDir, backupDir, { overwrite: true });
-  }
-
-  try {
-    await testBody();
-  } finally {
-    await fs.remove(outputDir);
-    if (await fs.pathExists(backupDir)) {
-      await fs.move(backupDir, outputDir, { overwrite: true });
-    }
-  }
-};
-
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => fs.remove(dir)));
   await fs.remove(path.join(repoRoot, "doc-repo.config.json.__it_backup__"));
@@ -257,74 +238,32 @@ const withConfigBackup = async (testBody: () => Promise<void>): Promise<void> =>
 
 describe("npm run dev", () => {
   describe("正常系", () => {
-    it("Markdown が 1 件以上ある場合、exit code 0 で .doc-repo/index.html が生成されること。", async () => {
+    it("serve コマンドで起動し、watch started ログを出して終了できること。", async () => {
       await withConfigBackup(async () => {
-        await withOutputBackup(async () => {
-          const fixtureRoot = await makeTempDir();
-          const scopeDir = path.join(fixtureRoot, "with-md");
-          await fs.outputFile(path.join(scopeDir, "guide.md"), "# Guide");
-
-          const relativeScope = path.relative(repoRoot, scopeDir).split(path.sep).join("/");
-          const result = await runCommand("npm", ["run", "dev", "--", relativeScope], repoRoot);
-
-          expect(result.code).toBe(0);
-          expect(`${result.stdout}\n${result.stderr}`).toContain("ドキュメントサイトの生成に成功しました。");
-          expect(await fs.pathExists(path.join(outputDir, "index.html"))).toBe(true);
-        });
-      });
-    }, 60_000);
-  });
-
-  describe("準正常系", () => {
-    it("Markdown が 0 件の場合、exit code 0 かつ警告付きで成功すること。", async () => {
-      await withOutputBackup(async () => {
         const fixtureRoot = await makeTempDir();
-        const scopeDir = path.join(fixtureRoot, "empty");
-        await fs.ensureDir(scopeDir);
+        await fs.outputFile(path.join(fixtureRoot, "README.md"), "# README\n\nhello");
 
-        const relativeScope = path.relative(repoRoot, scopeDir).split(path.sep).join("/");
-        const result = await runCommand("npm", ["run", "dev", "--", relativeScope], repoRoot);
+        const port = await findFreePort();
+        await fs.outputJson(path.join(repoRoot, "doc-repo.config.json"), {
+          rootDir: fixtureRoot,
+          port,
+        });
+
+        const result = await runCommandUntilOutput("npm", ["run", "dev", "--", "serve"], repoRoot, "watch: started");
 
         expect(result.code).toBe(0);
-        expect(`${result.stdout}\n${result.stderr}`).toContain(
-          "Markdown ファイルが 0 件でした。空サイトを生成しました。",
-        );
+        expect(`${result.stdout}\n${result.stderr}`).toContain(`http://localhost:${port}`);
+        expect(`${result.stdout}\n${result.stderr}`).toContain("[doc-repo] watch: started");
       });
     }, 60_000);
   });
 
   describe("異常系", () => {
-    it("scopePath がリポジトリ外を指す場合、exit code 1 で失敗すること。", async () => {
-      await withOutputBackup(async () => {
-        const result = await runCommand("npm", ["run", "dev", "--", "../"], repoRoot);
+    it("未定義コマンドを指定した場合、exit code 1 で失敗すること。", async () => {
+      const result = await runCommand("npm", ["run", "dev", "--", "unknown-command"], repoRoot);
 
-        expect(result.code).toBe(1);
-        expect(result.stderr).toContain("SCOPE_OUTSIDE_ROOT");
-      });
-    }, 60_000);
-
-    it("指定したスコープが存在しない場合、exit code 1 で失敗すること。", async () => {
-      await withOutputBackup(async () => {
-        const result = await runCommand("npm", ["run", "dev", "--", "nonexistent-folder"], repoRoot);
-
-        expect(result.code).toBe(1);
-        expect(result.stderr).toContain("SCOPE_NOT_FOUND");
-      });
-    }, 60_000);
-
-    it("スコープがファイルを指す場合、exit code 1 で失敗すること。", async () => {
-      await withOutputBackup(async () => {
-        const fixtureRoot = await makeTempDir();
-        const file = path.join(fixtureRoot, "test.txt");
-        await fs.outputFile(file, "content");
-
-        const relativeFile = path.relative(repoRoot, file).split(path.sep).join("/");
-        const result = await runCommand("npm", ["run", "dev", "--", relativeFile], repoRoot);
-
-        expect(result.code).toBe(1);
-        expect(result.stderr).toContain("SCOPE_NOT_DIRECTORY");
-        expect(result.stderr).toContain(relativeFile);
-      });
+      expect(result.code).toBe(1);
+      expect(`${result.stdout}\n${result.stderr}`).toContain("unknown command");
     }, 60_000);
   });
 
@@ -347,40 +286,38 @@ describe("npm run dev", () => {
   describe("watch 回帰", () => {
     it("change/add/unlink で変更検知と再生成成功ログが出ること。", async () => {
       await withConfigBackup(async () => {
-        await withOutputBackup(async () => {
-          const fixtureRoot = await makeTempDir();
-          await fs.outputFile(path.join(fixtureRoot, "README.md"), "# README\n\ninitial");
+        const fixtureRoot = await makeTempDir();
+        await fs.outputFile(path.join(fixtureRoot, "README.md"), "# README\n\ninitial");
 
-          const port = await findFreePort();
-          await fs.outputJson(path.join(repoRoot, "doc-repo.config.json"), {
-            rootDir: fixtureRoot,
-            port,
-          });
-
-          const running = startCommand("npm", ["run", "dev", "--", "serve"], repoRoot);
-
-          try {
-            await running.waitForTextSince("[doc-repo] watch: started", 0);
-
-            let cursor = running.getOutput().length;
-            await fs.appendFile(path.join(fixtureRoot, "README.md"), "\nchanged");
-            await running.waitForTextSince("[CHANGE_DETECTED] type=change", cursor);
-            await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
-
-            cursor = running.getOutput().length;
-            const addedPath = path.join(fixtureRoot, "docs", "added.md");
-            await fs.outputFile(addedPath, "# Added\n\nnew file");
-            await running.waitForTextSince("[CHANGE_DETECTED] type=add", cursor);
-            await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
-
-            cursor = running.getOutput().length;
-            await fs.remove(addedPath);
-            await running.waitForTextSince("[CHANGE_DETECTED] type=unlink", cursor);
-            await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
-          } finally {
-            await running.stop();
-          }
+        const port = await findFreePort();
+        await fs.outputJson(path.join(repoRoot, "doc-repo.config.json"), {
+          rootDir: fixtureRoot,
+          port,
         });
+
+        const running = startCommand("npm", ["run", "dev", "--", "serve"], repoRoot);
+
+        try {
+          await running.waitForTextSince("[doc-repo] watch: started", 0);
+
+          let cursor = running.getOutput().length;
+          await fs.appendFile(path.join(fixtureRoot, "README.md"), "\nchanged");
+          await running.waitForTextSince("[CHANGE_DETECTED] type=change", cursor);
+          await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
+
+          cursor = running.getOutput().length;
+          const addedPath = path.join(fixtureRoot, "docs", "added.md");
+          await fs.outputFile(addedPath, "# Added\n\nnew file");
+          await running.waitForTextSince("[CHANGE_DETECTED] type=add", cursor);
+          await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
+
+          cursor = running.getOutput().length;
+          await fs.remove(addedPath);
+          await running.waitForTextSince("[CHANGE_DETECTED] type=unlink", cursor);
+          await running.waitForTextSince("[REGEN_SUCCEEDED] regenerate succeeded", cursor);
+        } finally {
+          await running.stop();
+        }
       });
     }, 90_000);
   });

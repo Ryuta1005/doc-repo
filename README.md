@@ -25,12 +25,13 @@ The core concept is not simply converting Markdown to HTML. doc-repo keeps Git a
 - Preserves directory structure in tree navigation
 - Provides a browser-based document workspace for repository Markdown
 - Saves browser edits back to the original Markdown files
-- Works without a local server (`index.html` can be opened directly)
-- Supports local server mode (`doc-repo serve`) with initial generation
-- Watches Markdown files and auto-regenerates on save while `serve` is running
-- Reloads the browser automatically via SSE when regeneration succeeds
-- Supports directory-scoped generation (`scopePath`)
-- Supports `--open` to launch the generated page automatically
+- Supports local server mode (`doc-repo serve`)
+- Watches Markdown files while `serve` is running
+- Reloads the browser automatically via SSE when a Markdown change is detected
+
+> [!IMPORTANT]
+> As of task 020 policy, direct static-generation entry (`doc-repo [scopePath]`) is retired.
+> The only supported entry point is `doc-repo serve`.
 
 ## Quick Start
 
@@ -41,57 +42,41 @@ Prerequisite:
 Run inside a repository:
 
 ```bash
-npx doc-repo
+npx doc-repo serve
 ```
 
 If the package is published under an alpha tag, use:
 
 ```bash
-npx doc-repo@alpha
+npx doc-repo@alpha serve
 ```
 
-Open the generated site:
-
-```bash
-open .doc-repo/index.html
-```
-
-Generate only a specific directory:
-
-```bash
-npx doc-repo specs
-npx doc-repo docs/project
-```
+Then open `http://localhost:4000` in your browser.
 
 ## CLI
 
 ```bash
-doc-repo [scopePath] [--open]
 doc-repo init
 doc-repo serve [--port <number>]
 ```
 
-| Argument / Option | Description                                                              | Default        |
-| ----------------- | ------------------------------------------------------------------------ | -------------- |
-| `scopePath`       | Directory to generate from (path relative to Git root)                   | Whole Git root |
-| `--open`          | Open `.doc-repo/index.html` with your default browser after generation   | `false`        |
-| `init`            | Generate `doc-repo.config.json` template in current directory            | -              |
-| `serve`           | Run initial generation, start local static server, and watch for changes | -              |
-| `--port`          | Port for `serve` (CLI > config > default)                                | `4000`         |
+| Argument / Option | Description                                                   | Default |
+| ----------------- | ------------------------------------------------------------- | ------- |
+| `init`            | Generate `doc-repo.config.json` template in current directory | -       |
+| `serve`           | Start local server and watch for changes                      | -       |
+| `--port`          | Port for `serve` (CLI > config > default)                     | `4000`  |
 
 ### Serve Responsibilities
 
-- `doc-repo serve` orchestrates: initial generation → server start → file watch start
-- Watches `.md` files and re-generates on change, add, or unlink
-- After successful regeneration, sends a reload event to all connected browsers via SSE
-- The HTTP server is delivery-only and does not run generation by itself
-- If initial generation fails, server startup is skipped and command exits with code `1`
+- `doc-repo serve` orchestrates: server start → file watch start
+- Watches `.md` files and dispatches browser reload via SSE on change, add, or unlink
+- The HTTP server serves Viewer assets and workspace files on one origin
 - On exit (Ctrl+C / SIGTERM), stops in order: watcher → SSE connections → HTTP server
 
-### Target Root vs Collection Scope
+### Target Root
 
 - Target root: resolved from `doc-repo.config.json` if present; falls back to Git root, then current directory
-- Collection scope: Directory under target root resolved from `scopePath`
+- Collection target: all Markdown files under target root (filtered by `include`/`exclude`)
 
 ## Configuration File
 
@@ -125,28 +110,23 @@ Create `doc-repo.config.json` in your repository root to configure behavior:
 
 ## Output
 
-doc-repo generates a multi-page static site under `.doc-repo`, mirroring your Markdown tree:
+doc-repo prepares runtime artifacts under `.doc-repo` for `serve` execution:
 
 ```text
 .doc-repo/
-├── index.html        # redirects to the home page (README if present)
-├── styles.css
-├── app.js            # browser-side auto-reload (SSE client)
-├── README.html
-└── docs/
-    └── guide/
-        └── page.html
+├── index.html        # serve entry page
+├── assets/
+├── viewer/
+└── ...
 ```
 
-Each Markdown file becomes a standalone `.html`, and links between documents are
-plain relative links, so it works even when opened directly via `file://`.
+Generated artifacts are intended to be consumed through `doc-repo serve`.
 
 Reliability behavior:
 
-- Replaces `.doc-repo` only after a successful generation
-- Generates in a staging directory before publishing
-- Keeps existing `.doc-repo` when generation fails
-- Generates an empty site and exits successfully with warning when no Markdown files are found
+- Serves Viewer assets and API on the same origin/port
+- Guards against path traversal when serving workspace files
+- Returns structured JSON errors for API failures
 
 ### Exit Codes
 
@@ -161,7 +141,7 @@ Reliability behavior:
 - `html: false` (raw HTML in Markdown is disabled)
 - `linkify: true`, `typographer: true`
 - Some GFM extensions (task lists, Mermaid, code highlighting) are not yet supported
-- Relative images are automatically copied to `.doc-repo/assets/` and rewritten to work both in static files and via `serve`
+- Relative images are rewritten to workspace-relative asset paths and served via `serve`
 
 ## Security Notes
 
@@ -182,7 +162,7 @@ For contributors:
 ```bash
 npm install
 npm run dev
-npm run dev -- specs
+npm run dev -- serve
 npm run build
 ```
 
@@ -190,14 +170,14 @@ Build and run compiled CLI:
 
 ```bash
 node dist/cli/index.js
-node dist/cli/index.js specs
+node dist/cli/index.js serve
 ```
 
 ## Markdown Features & Constraints
 
 **Supported**:
 
-- Relative images (e.g., `![alt](./docs/assets/image.png)`): automatically copied to `.doc-repo/assets/` and rewritten to work in both `file://` mode and `serve` mode
+- Relative images (e.g., `![alt](./docs/assets/image.png)`): rewritten to `/assets/...` and resolved from workspace files in `serve` mode
 
 **Not yet supported (planned for future releases)**:
 

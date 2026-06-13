@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { generatedAssetHref, pageDirDepth, siteRootPrefix, docHref } from "./sitePaths.js";
+import { viewerAssetHref, pageDirDepth, siteRootPrefix, docHref } from "./sitePaths.js";
 
 describe("sitePaths.ts", () => {
   describe("pageDirDepth", () => {
@@ -45,31 +45,31 @@ describe("sitePaths.ts", () => {
     });
   });
 
-  describe("T006: generatedAssetHref", () => {
-    it("ルート直下の HTML から参照画像への相対パス", () => {
-      expect(generatedAssetHref("README.md", "docs/assets/screenshot.png")).toBe("assets/docs/assets/screenshot.png");
+  describe("viewerAssetHref", () => {
+    it("ルート直下の文書から参照画像への相対パス", () => {
+      expect(viewerAssetHref("README.md", "docs/assets/screenshot.png")).toBe("assets/docs/assets/screenshot.png");
     });
 
-    it("1 階層下の HTML から参照画像への相対パス", () => {
-      expect(generatedAssetHref("docs/guide/page.md", "docs/assets/screenshot.png")).toBe(
+    it("1 階層下の文書から参照画像への相対パス", () => {
+      expect(viewerAssetHref("docs/guide/page.md", "docs/assets/screenshot.png")).toBe(
         "../../assets/docs/assets/screenshot.png",
       );
     });
 
-    it("2 階層下の HTML から参照画像への相対パス", () => {
-      expect(generatedAssetHref("docs/guide/advanced/index.md", "docs/assets/screenshot.png")).toBe(
+    it("2 階層下の文書から参照画像への相対パス", () => {
+      expect(viewerAssetHref("docs/guide/advanced/index.md", "docs/assets/screenshot.png")).toBe(
         "../../../assets/docs/assets/screenshot.png",
       );
     });
 
     it("日本語をスペースを含む画像パスの URL エンコード", () => {
-      expect(generatedAssetHref("docs/page.md", "docs/assets/スクリーン ショット.png")).toBe(
+      expect(viewerAssetHref("docs/page.md", "docs/assets/スクリーン ショット.png")).toBe(
         "../assets/docs/assets/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%20%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88.png",
       );
     });
 
     it("ディレクトリ区切り（スラッシュ）は保持される", () => {
-      expect(generatedAssetHref("README.md", "project/docs/images/diagram.svg")).toBe(
+      expect(viewerAssetHref("README.md", "project/docs/images/diagram.svg")).toBe(
         "assets/project/docs/images/diagram.svg",
       );
     });
