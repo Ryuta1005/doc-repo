@@ -1,13 +1,14 @@
 import React from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { mergeAttributes, Node } from "@tiptap/core";
+import { mergeAttributes, Node as TiptapNode } from "@tiptap/core";
 
 import {
   parseEditableMarkdown,
   serializeEditableMarkdown,
   type MarkdownEditorDocument,
 } from "../../core/markdown/index.js";
+import { useEditorShortcuts } from "../hooks/useEditorShortcuts.js";
 import { uploadDocumentImage } from "../services/apiClient.js";
 import { EditorToolbar } from "./EditorToolbar.js";
 
@@ -28,7 +29,7 @@ interface DocumentEditorProps {
   isSaving: boolean;
 }
 
-const RawMarkdownBlock = Node.create({
+const RawMarkdownBlock = TiptapNode.create({
   name: "rawMarkdown",
   group: "block",
   atom: true,
@@ -162,6 +163,8 @@ export function DocumentEditor({
     const document = editor.getJSON() as MarkdownEditorDocument;
     onSaveRequest(buildSnapshot(document, parsed.newlineStyle, parsed.hasTrailingNewline, initialDocumentKey));
   }, [editor, initialDocumentKey, onSaveRequest, parsed.hasTrailingNewline, parsed.newlineStyle]);
+
+  useEditorShortcuts({ editor, onSave: handleSave });
 
   const handleUploadImage = React.useCallback(
     async (file: File): Promise<{ imagePath: string; altText: string }> => {

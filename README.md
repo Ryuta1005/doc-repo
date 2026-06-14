@@ -146,7 +146,7 @@ Reliability behavior:
 ## Edit and Save Workflow
 
 - Click `編集` in the viewer to switch the current document to rich text edit mode
-- Supported formatting in Story 010: body text, heading 1/2/3, bold, italic
+- Supported formatting: body text, headings 1-6, bold, italic, strikethrough, inline code, blockquote, bullet list, ordered list, code block, horizontal rule
 - Save request is validated against root/include/exclude/path traversal and `.md` extension rules
 - If unsupported markdown segments are detected, a warning dialog is shown before continuing save
 - Save failures are categorized and shown with retry guidance:
@@ -154,6 +154,28 @@ Reliability behavior:
   - `unwritable-target` (not retryable until environment is fixed)
   - `transient-io` (retryable)
 - Unsaved edits are guarded on document switch, edit exit, and browser unload
+
+### Editing Shortcuts
+
+| Action          | macOS      | Windows / Linux |
+| --------------- | ---------- | --------------- |
+| Body text       | `⌘⌥0`      | `Ctrl+Alt+0`    |
+| Heading 1       | `⌘⌥1`      | `Ctrl+Alt+1`    |
+| Heading 2       | `⌘⌥2`      | `Ctrl+Alt+2`    |
+| Heading 3       | `⌘⌥3`      | `Ctrl+Alt+3`    |
+| Heading 4       | `⌘⌥4`      | `Ctrl+Alt+4`    |
+| Heading 5       | `⌘⌥5`      | `Ctrl+Alt+5`    |
+| Heading 6       | `⌘⌥6`      | `Ctrl+Alt+6`    |
+| Bold            | `⌘B`       | `Ctrl+B`        |
+| Italic          | `⌘I`       | `Ctrl+I`        |
+| Strikethrough   | `⌘⇧S`      | `Ctrl+Shift+S`  |
+| Inline code     | `⌘⇧M`      | `Ctrl+Shift+M`  |
+| Blockquote      | `⌘⇧B`      | `Ctrl+Shift+B`  |
+| Bullet list     | `⌘⇧8`      | `Ctrl+Shift+8`  |
+| Ordered list    | `⌘⇧7`      | `Ctrl+Shift+7`  |
+| Code block      | `⌘⌥C`      | `Ctrl+Alt+C`    |
+| Horizontal rule | `⌘⇧-`      | `Ctrl+Shift+-`  |
+| Save            | `⌘Enter`   | `Ctrl+Enter`    |
 
 ## Security Notes
 

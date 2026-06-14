@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 
+import { editorBlockShortcuts, getEditorShortcutLabel, withEditorShortcut } from "../shortcuts/editorShortcuts.js";
+import { Tooltip } from "./Tooltip.js";
+
 interface EditorToolbarProps {
   editor: Editor | null;
   onSave: () => void;
@@ -331,25 +334,27 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
     >
       {/* ブロックタイプドロップダウン */}
       <div className="relative">
-        <button
-          ref={blockMenuButtonRef}
-          type="button"
-          onClick={() => setIsBlockMenuOpen(!isBlockMenuOpen)}
-          aria-label="ブロックタイプを選択"
-          aria-haspopup="listbox"
-          aria-expanded={isBlockMenuOpen}
-          className="flex items-center gap-1 rounded px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors"
-        >
-          {blockLabels[currentBlockType]}
-          <ChevronDown size={16} className={isBlockMenuOpen ? "rotate-180" : ""} />
-        </button>
+        <Tooltip content={withEditorShortcut(blockLabels[currentBlockType], editorBlockShortcuts[currentBlockType])}>
+          <button
+            ref={blockMenuButtonRef}
+            type="button"
+            onClick={() => setIsBlockMenuOpen(!isBlockMenuOpen)}
+            aria-label="ブロックタイプを選択"
+            aria-haspopup="listbox"
+            aria-expanded={isBlockMenuOpen}
+            className="flex items-center gap-1 rounded px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors"
+          >
+            {blockLabels[currentBlockType]}
+            <ChevronDown size={16} className={isBlockMenuOpen ? "rotate-180" : ""} />
+          </button>
+        </Tooltip>
 
         {isBlockMenuOpen && (
           <div
             ref={blockMenuRef}
             role="listbox"
             onKeyDown={handleKeyDown}
-            className="absolute top-full left-0 mt-1 w-40 rounded border border-gray-200 bg-white shadow-lg z-10"
+            className="absolute top-full left-0 mt-1 w-56 rounded border border-gray-200 bg-white shadow-lg z-10"
           >
             {(["paragraph", "h1", "h2", "h3", "h4", "h5", "h6"] as const).map((blockType) => (
               <button
@@ -359,13 +364,16 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
                 role="option"
                 aria-selected={currentBlockType === blockType}
                 onClick={() => handleBlockChange(blockType)}
-                className={`w-full text-left px-3 py-2 text-sm ${
+                className={`flex w-full items-center justify-between gap-4 px-3 py-2 text-left text-sm ${
                   currentBlockType === blockType
                     ? "bg-gray-300 text-slate-900 font-medium"
                     : "text-slate-700 hover:bg-slate-100"
                 } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 transition-colors`}
               >
-                {blockLabels[blockType]}
+                <span>{blockLabels[blockType]}</span>
+                <span className="font-mono text-xs text-slate-500">
+                  {getEditorShortcutLabel(editorBlockShortcuts[blockType])}
+                </span>
               </button>
             ))}
           </div>
@@ -434,62 +442,66 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
 
       {/* インライン書式 */}
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          aria-label="太字（Ctrl+B）"
-          title="太字"
-          aria-pressed={isBold}
-          className={`rounded-sm px-2.5 py-2 text-sm font-bold transition-colors ${
-            isBold
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          B
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          aria-label="イタリック（Ctrl+I）"
-          title="イタリック"
-          aria-pressed={isItalic}
-          className={`rounded-sm px-2.5 py-2 text-sm italic transition-colors ${
-            isItalic
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          I
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleStrike().run()}
-          aria-label="取り消し線"
-          title="取り消し線"
-          aria-pressed={isStrike}
-          className={`rounded-sm px-2.5 py-2 text-sm transition-colors ${
-            isStrike
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <span className="line-through">S</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleCode().run()}
-          aria-label="インラインコード"
-          title="インラインコード"
-          aria-pressed={isCode}
-          className={`rounded-sm px-2.5 py-2 text-sm font-mono transition-colors ${
-            isCode
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          {"</>"}
-        </button>
+        <Tooltip content={withEditorShortcut("太字", "bold")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+            aria-label={withEditorShortcut("太字", "bold")}
+            aria-pressed={isBold}
+            className={`rounded-sm px-2.5 py-2 text-sm font-bold transition-colors ${
+              isBold
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            B
+          </button>
+        </Tooltip>
+        <Tooltip content={withEditorShortcut("イタリック", "italic")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
+            aria-label={withEditorShortcut("イタリック", "italic")}
+            aria-pressed={isItalic}
+            className={`rounded-sm px-2.5 py-2 text-sm italic transition-colors ${
+              isItalic
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            I
+          </button>
+        </Tooltip>
+        <Tooltip content={withEditorShortcut("取り消し線", "strike")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleStrike().run()}
+            aria-label={withEditorShortcut("取り消し線", "strike")}
+            aria-pressed={isStrike}
+            className={`rounded-sm px-2.5 py-2 text-sm transition-colors ${
+              isStrike
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <span className="line-through">S</span>
+          </button>
+        </Tooltip>
+        <Tooltip content={withEditorShortcut("インラインコード", "code")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleCode().run()}
+            aria-label={withEditorShortcut("インラインコード", "code")}
+            aria-pressed={isCode}
+            className={`rounded-sm px-2.5 py-2 text-sm font-mono transition-colors ${
+              isCode
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {"</>"}
+          </button>
+        </Tooltip>
       </div>
 
       {/* セパレータ */}
@@ -497,48 +509,51 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
 
       {/* リスト・引用 */}
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          aria-label="引用"
-          title="引用"
-          aria-pressed={isBlockquote}
-          className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
-            isBlockquote
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <Quote size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          aria-label="箇条書きリスト"
-          title="箇条書き"
-          aria-pressed={isBulletList}
-          className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
-            isBulletList
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <List size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          aria-label="番号付きリスト"
-          title="番号付きリスト"
-          aria-pressed={isOrderedList}
-          className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
-            isOrderedList
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <ListOrdered size={14} />
-        </button>
+        <Tooltip content={withEditorShortcut("引用", "blockquote")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            aria-label={withEditorShortcut("引用", "blockquote")}
+            aria-pressed={isBlockquote}
+            className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
+              isBlockquote
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <Quote size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip content={withEditorShortcut("箇条書き", "bulletList")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            aria-label={withEditorShortcut("箇条書き", "bulletList")}
+            aria-pressed={isBulletList}
+            className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
+              isBulletList
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <List size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip content={withEditorShortcut("番号付きリスト", "orderedList")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            aria-label={withEditorShortcut("番号付きリスト", "orderedList")}
+            aria-pressed={isOrderedList}
+            className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
+              isOrderedList
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <ListOrdered size={14} />
+          </button>
+        </Tooltip>
       </div>
 
       {/* セパレータ */}
@@ -546,47 +561,50 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
 
       {/* その他 */}
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-          aria-label="水平線"
-          title="分割線"
-          className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <SquareSplitVertical size={14} />
-        </button>
-        <button
-          type="button"
-          onPointerDown={(event) => {
-            event.preventDefault();
-            rememberSelection();
-          }}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            rememberSelection();
-          }}
-          onClick={() => imageInputRef.current?.click()}
-          aria-label="画像を添付"
-          title="画像を添付（png/jpeg）"
-          disabled={isImageReading}
-          className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ImagePlus size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-          aria-label="コードブロック"
-          title="コードブロック"
-          aria-pressed={isCodeBlock}
-          className={`rounded-sm px-2.5 py-2 text-sm font-mono transition-colors ${
-            isCodeBlock
-              ? "bg-gray-300 text-slate-900"
-              : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
-          } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          {"{}"}
-        </button>
+        <Tooltip content={withEditorShortcut("水平線", "horizontalRule")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+            aria-label={withEditorShortcut("水平線", "horizontalRule")}
+            className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <SquareSplitVertical size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip content="画像を添付（png/jpeg）">
+          <button
+            type="button"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              rememberSelection();
+            }}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              rememberSelection();
+            }}
+            onClick={() => imageInputRef.current?.click()}
+            aria-label="画像を添付"
+            disabled={isImageReading}
+            className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ImagePlus size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip content={withEditorShortcut("コードブロック", "codeBlock")}>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+            aria-label={withEditorShortcut("コードブロック", "codeBlock")}
+            aria-pressed={isCodeBlock}
+            className={`rounded-sm px-2.5 py-2 text-sm font-mono transition-colors ${
+              isCodeBlock
+                ? "bg-gray-300 text-slate-900"
+                : "text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-500"
+            } focus-visible:outline-none focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {"{}"}
+          </button>
+        </Tooltip>
       </div>
 
       {/* スペーサー */}
@@ -602,16 +620,18 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
       >
         キャンセル
       </button>
-      <button
-        type="button"
-        onClick={onSave}
-        aria-label={isSaving ? "保存中..." : "編集を保存（Ctrl+S）"}
-        disabled={isSaving}
-        className="ml-2 flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-      >
-        <Save size={16} />
-        {isSaving ? "保存中..." : "保存"}
-      </button>
+      <Tooltip content={withEditorShortcut("保存", "save")}>
+        <button
+          type="button"
+          onClick={onSave}
+          aria-label={isSaving ? "保存中..." : withEditorShortcut("編集を保存", "save")}
+          disabled={isSaving}
+          className="ml-2 flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        >
+          <Save size={16} />
+          {isSaving ? "保存中..." : "保存"}
+        </button>
+      </Tooltip>
       <input
         ref={imageInputRef}
         type="file"
