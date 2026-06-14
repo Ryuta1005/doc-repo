@@ -86,7 +86,7 @@ export const resolveViewerStaticAssetOverrides = async (
 const buildViewerBundleIfPossible = async (packageRoot: string): Promise<void> => {
   const viewerEntryPath = path.join(packageRoot, "src/viewer/main.tsx");
   if (!(await fs.pathExists(viewerEntryPath))) {
-    throw new Error("React Viewer bundle が見つかりません。パッケージのビルド成果物を確認してください。");
+    throw new Error("React Viewer bundle was not found. Check the package build output.");
   }
 
   try {
@@ -96,7 +96,7 @@ const buildViewerBundleIfPossible = async (packageRoot: string): Promise<void> =
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(`React Viewer bundle の生成に失敗しました: ${detail}`);
+    throw new Error(`Failed to build React Viewer bundle: ${detail}`);
   }
 };
 
@@ -110,7 +110,7 @@ export const ensureViewerStaticAssetOverrides = async (packageRoot: string): Pro
   await buildViewerBundleIfPossible(packageRoot);
   const built = await resolveViewerStaticAssetOverrides(viewerDistDir);
   if (!built) {
-    throw new Error("React Viewer bundle の生成後も dist/viewer/app.js が見つかりません。");
+    throw new Error("dist/viewer/app.js was not found after building the React Viewer bundle.");
   }
 
   return built;

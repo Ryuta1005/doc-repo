@@ -34,7 +34,7 @@ interface StartStaticServerResult {
 }
 
 const viewerIndexHtml = (hasStylesheet: boolean): string => `<!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -93,19 +93,19 @@ const toHttpErrorResponse = (error: unknown): Response => {
 export const mapServerStartError = (error: unknown, port: number): Error => {
   const errno = error as NodeJS.ErrnoException;
   if (errno?.code === "EADDRINUSE") {
-    return createServeError("port-conflict", `port ${port} は既に使用されています。`);
+    return createServeError("port-conflict", `port ${port} is already in use.`);
   }
 
   if (error instanceof Error) {
     return error;
   }
 
-  return createServeError("unknown", "サーバー起動中に不明なエラーが発生しました。");
+  return createServeError("unknown", "An unknown error occurred while starting the server.");
 };
 
 export const startStaticServer = async (input: StartStaticServerInput): Promise<StartStaticServerResult> => {
   if (!(await fs.pathExists(input.outputDir))) {
-    throw createServeError("unknown", `配信対象ディレクトリが見つかりません: ${input.outputDir}`);
+    throw createServeError("unknown", `Static output directory was not found: ${input.outputDir}`);
   }
 
   const host = input.host ?? "localhost";

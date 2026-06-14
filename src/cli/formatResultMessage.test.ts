@@ -36,6 +36,6 @@ describe("formatResultMessage.ts", () => {
     });
 
     expect(text).toContain("[doc-repo] error: INITIAL_GENERATE_FAILED: x");
-    expect(text).toContain("対処: fix");
+    expect(text).toContain("Hint: fix");
   });
 });

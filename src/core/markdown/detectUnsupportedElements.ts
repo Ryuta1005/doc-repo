@@ -162,7 +162,8 @@ export const detectUnsupportedElements = (source: string): UnsupportedDetectionR
       ? [
           {
             code: "UNSUPPORTED_SEGMENT_DETECTED",
-            message: "未対応要素が含まれます。原文保持を優先しますが、保持不能な場合は内容が変化する可能性があります。",
+            message:
+              "Unsupported elements are included. Original text is preserved where possible, but content may change if it cannot be preserved.",
           },
         ]
       : [],

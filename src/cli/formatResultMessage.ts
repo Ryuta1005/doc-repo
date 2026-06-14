@@ -18,7 +18,7 @@ const formatServeMessage = (result: ServeSession): string => {
     if (failure) {
       lines.push(`[doc-repo] error: ${failure.message}`);
       if (failure.hint) {
-        lines.push(`対処: ${failure.hint}`);
+        lines.push(`Hint: ${failure.hint}`);
       }
     }
   }

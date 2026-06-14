@@ -12,14 +12,14 @@ describe("apiClient", () => {
       "fetch",
       vi.fn(
         async () =>
-          new Response(JSON.stringify({ error: { message: "対象文書が見つかりません。" } }), {
+          new Response(JSON.stringify({ error: { message: "Target document was not found." } }), {
             status: 404,
             headers: { "Content-Type": "application/json" },
           }),
       ),
     );
 
-    await expect(fetchDocument("missing.md")).rejects.toThrow("対象文書が見つかりません。");
+    await expect(fetchDocument("missing.md")).rejects.toThrow("Target document was not found.");
   });
 
   it("fetches site config", async () => {

@@ -11,8 +11,8 @@ const md = new MarkdownIt({
 
 const EXTERNAL_OR_HASH = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i;
 
-// markdown-it は href を内部でパーセントエンコードするため、解決前に生パスへ戻す。
-// 不正なエスケープはデコードせず元の値を返す（安全側）。
+// markdown-it percent-encodes href internally, so decode before resolving.
+// Keep invalid escapes unchanged as the safer fallback.
 const decodePathSafe = (value: string): string => {
   try {
     return decodeURIComponent(value);
@@ -65,7 +65,7 @@ const rebaseGeneratedImageUrl = (url: string, relativePath: string): string => {
   return `${viewerAssetHref(relativePath, pathFromRoot)}${suffix}`;
 };
 
-// リポジトリルートからの正規化パスを求める。ルート外（../ で抜ける）や空は null。
+// Resolve a normalized path from the repository root. Return null for empty paths or paths outside the root.
 const resolvePathFromRoot = (rawPath: string, relativePath: string): string | null => {
   if (!rawPath) {
     return null;
@@ -89,8 +89,8 @@ interface RenderEnv {
   referencedImages?: Set<string>;
 }
 
-// 既知のページID集合に対してリンク先を解決し、一致したIDだけを返す。
-// 推測ではなく実在ページとの突き合わせで判定するため、遷移可否が安定する。
+// Resolve link targets against known page IDs and return only exact matches.
+// Matching real pages instead of guessing keeps navigation behavior stable.
 const resolveDocId = (href: string, relativePath: string, knownIds: Set<string>): string | null => {
   if (!href || EXTERNAL_OR_HASH.test(href)) {
     return null;
@@ -135,7 +135,7 @@ md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const newSrc = rebaseGeneratedImageUrl(src, relativePath);
     tokens[idx]?.attrSet("src", newSrc);
 
-    // 画像コピー契約用に、HTML の src 変換とは独立して参照画像を収集する。
+    // Collect referenced images for the copy contract independently from HTML src rewriting.
     if (!EXTERNAL_OR_HASH.test(src)) {
       const { rawPath } = splitUrlAndSuffix(src);
       const pathFromRoot = resolvePathFromRoot(rawPath, relativePath);
@@ -157,10 +157,10 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     const docId = knownIds ? resolveDocId(href, relativePath, knownIds) : null;
 
     if (docId) {
-      // 実在ページに一致したリンクは、現在ページからの相対 .html リンクへ。
+      // Links that match real pages become relative .html links from the current page.
       tokens[idx]?.attrSet("href", docHref(relativePath, docId));
     } else {
-      // それ以外（画像/添付/外部/未解決）は資産として相対パスへリベースする。
+      // Everything else, including images, attachments, external links, and unresolved links, is rebased as an asset path.
       tokens[idx]?.attrSet("href", rebaseRepoRelativeUrl(href, relativePath));
     }
   }

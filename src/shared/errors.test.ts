@@ -4,13 +4,13 @@ import { AppError, toUserGuidance } from "./errors.js";
 
 describe("errors.ts", () => {
   it("AppError が渡された場合、code を含む理由と hint が返却されること。", () => {
-    const error = new AppError("失敗", "E001", "対処してください");
+    const error = new AppError("Failed", "E001", "Try this fix");
 
     const guidance = toUserGuidance(error);
 
     expect(guidance).toEqual({
-      reason: "E001: 失敗",
-      hint: "対処してください",
+      reason: "E001: Failed",
+      hint: "Try this fix",
     });
   });
 
@@ -18,7 +18,7 @@ describe("errors.ts", () => {
     const guidance = toUserGuidance(new Error("boom"));
 
     expect(guidance.reason).toBe("boom");
-    expect(guidance.hint).toContain("権限");
+    expect(guidance.hint).toContain("permissions");
   });
 
   it("unknown が渡された場合、Unknown error と既定ヒントが返却されること。", () => {
@@ -26,7 +26,7 @@ describe("errors.ts", () => {
 
     expect(guidance).toEqual({
       reason: "Unknown error",
-      hint: "詳細ログを確認し、問題が解消しない場合は再実行してください。",
+      hint: "Check the detailed logs and run the command again if the issue is resolved.",
     });
   });
 });

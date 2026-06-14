@@ -87,7 +87,7 @@ const toWritableError = (error: unknown): never => {
     throw createSaveError("transient-io", error.message);
   }
 
-  throw createSaveError("transient-io", "Markdown の保存に失敗しました。");
+  throw createSaveError("transient-io", "Failed to save Markdown.");
 };
 
 export const saveDocument = async (input: SaveDocumentInput): Promise<SaveResponse> => {
@@ -105,7 +105,7 @@ export const saveDocument = async (input: SaveDocumentInput): Promise<SaveRespon
   const filePath = validation.absolutePath;
   const exists = await fs.pathExists(filePath);
   if (!exists) {
-    throw createSaveError("unwritable-target", "対象文書が見つかりません。");
+    throw createSaveError("unwritable-target", "Target document was not found.");
   }
 
   try {

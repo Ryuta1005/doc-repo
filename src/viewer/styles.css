@@ -408,7 +408,7 @@ body {
   overflow: hidden;
 }
 
-/* ツールバーは Tailwind で実装 */
+/* The toolbar is implemented with Tailwind utilities. */
 
 .editor-toolbar-fixed {
   position: -webkit-sticky;

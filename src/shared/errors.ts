@@ -17,15 +17,15 @@ export type SaveFailureCode = "invalid-target" | "unwritable-target" | "transien
 const serveFailureCatalog: Record<ServeFailureCode, { code: string; hint: string }> = {
   "invalid-port": {
     code: "INVALID_PORT",
-    hint: "port は 1 から 65535 の整数で指定してください。",
+    hint: "Specify port as an integer from 1 to 65535.",
   },
   "port-conflict": {
     code: "PORT_CONFLICT",
-    hint: "別のポートを指定するか、使用中のプロセスを停止してください。",
+    hint: "Specify a different port or stop the process currently using it.",
   },
   unknown: {
     code: "UNKNOWN",
-    hint: "詳細ログを確認して再実行してください。",
+    hint: "Check the detailed logs and run the command again.",
   },
 };
 
@@ -110,30 +110,30 @@ export const toUserGuidance = (error: unknown): { reason: string; hint: string }
   if (error instanceof Error) {
     return {
       reason: error.message,
-      hint: "実行ディレクトリの権限と入力ファイルを確認して再実行してください。",
+      hint: "Check the working directory permissions and input files, then run the command again.",
     };
   }
 
   return {
     reason: "Unknown error",
-    hint: "詳細ログを確認し、問題が解消しない場合は再実行してください。",
+    hint: "Check the detailed logs and run the command again if the issue is resolved.",
   };
 };
 
 const saveFailureCatalog: Record<SaveFailureCode, { code: string; hint: string; retryable: boolean }> = {
   "invalid-target": {
     code: "SAVE_TARGET_INVALID",
-    hint: "保存先が rootDir 配下の .md で、include/exclude 条件とパス形式を満たしているか確認してください。",
+    hint: "Check that the save target is a .md file under rootDir and satisfies include/exclude rules and path format.",
     retryable: false,
   },
   "unwritable-target": {
     code: "SAVE_TARGET_UNWRITABLE",
-    hint: "対象文書の存在と書き込み権限を確認してください。",
+    hint: "Check that the target document exists and is writable.",
     retryable: false,
   },
   "transient-io": {
     code: "SAVE_IO_TEMPORARY",
-    hint: "一時的な I/O 失敗の可能性があります。再試行してください。",
+    hint: "This may be a temporary I/O failure. Try again.",
     retryable: true,
   },
 };

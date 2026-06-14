@@ -334,7 +334,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
       role="toolbar"
       aria-label={t("editorToolbar")}
     >
-      {/* ブロックタイプドロップダウン */}
+      {/* Block type dropdown */}
       <div className="relative">
         <Tooltip content={withEditorShortcut(blockLabels[currentBlockType], editorBlockShortcuts[currentBlockType])}>
           <button
@@ -382,7 +382,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
         )}
       </div>
 
-      {/* 情報パネル挿入 */}
+      {/* Info panel insertion */}
       <div className="relative">
         <button
           ref={panelMenuButtonRef}
@@ -439,10 +439,10 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
         )}
       </div>
 
-      {/* セパレータ */}
+      {/* Separator */}
       <div className="mx-1 h-6 w-px bg-gray-200" />
 
-      {/* インライン書式 */}
+      {/* Inline formatting */}
       <div className="flex items-center gap-1">
         <Tooltip content={withEditorShortcut(t("bold"), "bold")}>
           <button
@@ -506,10 +506,10 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
         </Tooltip>
       </div>
 
-      {/* セパレータ */}
+      {/* Separator */}
       <div className="mx-1 h-6 w-px bg-gray-200" />
 
-      {/* リスト・引用 */}
+      {/* Lists and quotes */}
       <div className="flex items-center gap-1">
         <Tooltip content={withEditorShortcut(t("blockquote"), "blockquote")}>
           <button
@@ -558,10 +558,10 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
         </Tooltip>
       </div>
 
-      {/* セパレータ */}
+      {/* Separator */}
       <div className="mx-1 h-6 w-px bg-gray-200" />
 
-      {/* その他 */}
+      {/* Other controls */}
       <div className="flex items-center gap-1">
         <Tooltip content={withEditorShortcut(t("horizontalRule"), "horizontalRule")}>
           <button
@@ -609,10 +609,10 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
         </Tooltip>
       </div>
 
-      {/* スペーサー */}
+      {/* Spacer */}
       <div className="flex-1" />
 
-      {/* 操作ボタン */}
+      {/* Action buttons */}
       <button
         type="button"
         onClick={onCancel}

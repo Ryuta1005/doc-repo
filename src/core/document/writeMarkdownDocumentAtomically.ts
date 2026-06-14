@@ -43,6 +43,6 @@ export const writeMarkdownDocumentAtomically = async (input: WriteMarkdownDocume
     await fs.rename(tempPath, input.filePath);
   } catch (error) {
     await fs.remove(tempPath).catch(() => undefined);
-    throw createSaveError("transient-io", error instanceof Error ? error.message : "Markdown の保存に失敗しました。");
+    throw createSaveError("transient-io", error instanceof Error ? error.message : "Failed to save Markdown.");
   }
 };
