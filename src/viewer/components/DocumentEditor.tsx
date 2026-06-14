@@ -89,8 +89,8 @@ export function DocumentEditor({
   isSaving,
 }: DocumentEditorProps): React.JSX.Element {
   const { t } = useLocale();
-  const parsed = React.useMemo(() => parseEditableMarkdown(sourceMarkdown), [sourceMarkdown]);
-  const initialDocumentKey = React.useMemo(() => JSON.stringify(parsed.document), [parsed.document]);
+  const [initialParsed] = React.useState(() => parseEditableMarkdown(sourceMarkdown));
+  const initialDocumentKey = React.useMemo(() => JSON.stringify(initialParsed.document), [initialParsed.document]);
 
   const editor = useEditor({
     extensions: [
@@ -104,7 +104,7 @@ export function DocumentEditor({
       }),
       RawMarkdownBlock,
     ],
-    content: parsed.document,
+    content: initialParsed.document,
     editorProps: {
       attributes: {
         class:
@@ -113,19 +113,21 @@ export function DocumentEditor({
     },
     onUpdate: ({ editor: nextEditor }) => {
       const document = nextEditor.getJSON() as MarkdownEditorDocument;
-      onSnapshotChange(buildSnapshot(document, parsed.newlineStyle, parsed.hasTrailingNewline, initialDocumentKey));
+      onSnapshotChange(
+        buildSnapshot(document, initialParsed.newlineStyle, initialParsed.hasTrailingNewline, initialDocumentKey),
+      );
     },
   });
 
   React.useEffect(() => {
-    if (!editor) {
-      return;
-    }
-
-    editor.commands.setContent(parsed.document);
-    const snapshot = buildSnapshot(parsed.document, parsed.newlineStyle, parsed.hasTrailingNewline, initialDocumentKey);
+    const snapshot = buildSnapshot(
+      initialParsed.document,
+      initialParsed.newlineStyle,
+      initialParsed.hasTrailingNewline,
+      initialDocumentKey,
+    );
     onSnapshotChange(snapshot);
-  }, [editor, initialDocumentKey, onSnapshotChange, parsed.document, parsed.hasTrailingNewline, parsed.newlineStyle]);
+  }, [initialDocumentKey, initialParsed, onSnapshotChange]);
 
   React.useEffect(() => {
     if (!editor) {
@@ -163,8 +165,10 @@ export function DocumentEditor({
     }
 
     const document = editor.getJSON() as MarkdownEditorDocument;
-    onSaveRequest(buildSnapshot(document, parsed.newlineStyle, parsed.hasTrailingNewline, initialDocumentKey));
-  }, [editor, initialDocumentKey, onSaveRequest, parsed.hasTrailingNewline, parsed.newlineStyle]);
+    onSaveRequest(
+      buildSnapshot(document, initialParsed.newlineStyle, initialParsed.hasTrailingNewline, initialDocumentKey),
+    );
+  }, [editor, initialDocumentKey, initialParsed, onSaveRequest]);
 
   useEditorShortcuts({ editor, onSave: handleSave });
 

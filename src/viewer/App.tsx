@@ -46,6 +46,7 @@ function AppContent(): React.JSX.Element {
   } = useViewerState();
   const [mode, setMode] = React.useState<"view" | "edit">("view");
   const [editorSnapshot, setEditorSnapshot] = React.useState<DocumentEditorSnapshot | null>(null);
+  const [editSourceMarkdown, setEditSourceMarkdown] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveErrorMessage, setSaveErrorMessage] = React.useState<string | null>(null);
   const [saveErrorHint, setSaveErrorHint] = React.useState<string | null>(null);
@@ -69,6 +70,7 @@ function AppContent(): React.JSX.Element {
       hasTrailingNewline: parsed.hasTrailingNewline,
       isDirty: false,
     };
+    setEditSourceMarkdown(markdown);
     setEditorSnapshot(snapshot);
     setMode("edit");
     setSaveErrorMessage(null);
@@ -78,6 +80,7 @@ function AppContent(): React.JSX.Element {
   const leaveEditMode = React.useCallback(() => {
     setMode("view");
     setEditorSnapshot(null);
+    setEditSourceMarkdown(null);
     setSaveErrorMessage(null);
     setSaveErrorHint(null);
     setEditSession((current) => ({ ...current, mode: "view", hasUnsavedChanges: false, saveStatus: "idle" }));
@@ -218,11 +221,10 @@ function AppContent(): React.JSX.Element {
             <div className="viewer-shell-header">
               <h2 className="viewer-shell-title">{selectedIdentifier}</h2>
             </div>
-            {editorSnapshot ? (
+            {editorSnapshot && editSourceMarkdown !== null ? (
               <DocumentEditor
-                key={selectedIdentifier ?? "editor"}
                 documentIdentifier={selectedIdentifier ?? ""}
-                sourceMarkdown={markdown}
+                sourceMarkdown={editSourceMarkdown}
                 onSnapshotChange={setEditorSnapshot}
                 onSaveRequest={handleSaveRequest}
                 onCancelRequest={() => {

@@ -41,6 +41,11 @@ export const useViewerState = (): ViewerState => {
   const [html, setHtml] = React.useState<string>("");
   const [statusMessage, setStatusMessage] = React.useState<string>(() => t("loading"));
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const selectedIdentifierRef = React.useRef<string | null>(initialIdentifier);
+
+  React.useEffect(() => {
+    selectedIdentifierRef.current = selectedIdentifier;
+  }, [selectedIdentifier]);
 
   const loadDocuments = React.useCallback(async () => {
     try {
@@ -49,8 +54,10 @@ export const useViewerState = (): ViewerState => {
       setItems(nextItems);
       setErrorMessage(null);
 
-      const nextSelected = resolveSelectedIdentifier(selectedIdentifier, docs);
-      if (nextSelected !== selectedIdentifier) {
+      const currentSelected = selectedIdentifierRef.current;
+      const nextSelected = resolveSelectedIdentifier(currentSelected, docs);
+      if (nextSelected !== currentSelected) {
+        selectedIdentifierRef.current = nextSelected;
         setSelectedIdentifier(nextSelected);
         if (nextSelected && typeof window !== "undefined") {
           window.history.replaceState({}, "", identifierToPathname(nextSelected));
@@ -68,7 +75,7 @@ export const useViewerState = (): ViewerState => {
       setErrorMessage(error instanceof Error ? error.message : String(error));
       setStatusMessage(t("documentsListLoadFailed"));
     }
-  }, [selectedIdentifier, t]);
+  }, [t]);
 
   const loadSiteConfig = React.useCallback(async () => {
     try {
@@ -79,13 +86,13 @@ export const useViewerState = (): ViewerState => {
     }
   }, []);
 
-  const loadSelectedDocument = React.useCallback(async () => {
-    if (!selectedIdentifier) {
+  const loadDocumentByIdentifier = React.useCallback(async (identifier: string | null) => {
+    if (!identifier) {
       return;
     }
 
     try {
-      const detail = await fetchDocument(selectedIdentifier);
+      const detail = await fetchDocument(identifier);
       setTitle(detail.title);
       setMarkdown(detail.markdown);
       setHtml(detail.html);
@@ -97,7 +104,11 @@ export const useViewerState = (): ViewerState => {
       setTitle("Not Found");
       setHtml(`<h1>Not Found</h1><p>${t("documentNotFound")}</p><p><a href="/">${t("backToTop")}</a></p>`);
     }
-  }, [selectedIdentifier, t]);
+  }, [t]);
+
+  const loadSelectedDocument = React.useCallback(async () => {
+    await loadDocumentByIdentifier(selectedIdentifierRef.current);
+  }, [loadDocumentByIdentifier]);
 
   const reloadSelectedDocument = React.useCallback(() => {
     void loadSelectedDocument();
@@ -109,22 +120,64 @@ export const useViewerState = (): ViewerState => {
   }, [loadDocuments, loadSiteConfig]);
 
   React.useEffect(() => {
-    void loadSelectedDocument();
-  }, [loadSelectedDocument]);
+    void loadDocumentByIdentifier(selectedIdentifier);
+  }, [loadDocumentByIdentifier, selectedIdentifier]);
 
   React.useEffect(() => {
-    const handle = startSseClient({
-      onReload: () => {
-        void loadDocuments();
-        void loadSelectedDocument();
-      },
-      onError: () => {
-        setStatusMessage(t("reconnecting"));
-      },
-    });
+    const isActivePage = (): boolean =>
+      typeof document === "undefined" || (document.visibilityState !== "hidden" && document.hasFocus());
+    let handle: ReturnType<typeof startSseClient> | null = null;
+
+    const closeSse = (): void => {
+      handle?.close();
+      handle = null;
+    };
+
+    const openSse = (): void => {
+      if (handle || !isActivePage()) {
+        return;
+      }
+
+      handle = startSseClient({
+        onReload: () => {
+          void loadDocuments();
+          void loadSelectedDocument();
+        },
+        onError: () => {
+          setStatusMessage(t("reconnecting"));
+        },
+      });
+    };
+
+    const handlePageActivationChange = (): void => {
+      if (!isActivePage()) {
+        closeSse();
+        return;
+      }
+
+      openSse();
+      void loadDocuments();
+      void loadSelectedDocument();
+    };
+
+    const handlePageBlur = (): void => {
+      closeSse();
+    };
+
+    openSse();
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handlePageActivationChange);
+      window.addEventListener("focus", handlePageActivationChange);
+      window.addEventListener("blur", handlePageBlur);
+    }
 
     return () => {
-      handle.close();
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handlePageActivationChange);
+        window.removeEventListener("focus", handlePageActivationChange);
+        window.removeEventListener("blur", handlePageBlur);
+      }
+      closeSse();
     };
   }, [loadDocuments, loadSelectedDocument, t]);
 
