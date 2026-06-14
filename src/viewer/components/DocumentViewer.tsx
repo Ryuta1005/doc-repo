@@ -99,7 +99,7 @@ const normalizeHtmlForViewer = (html: string, identifier: string | null): string
   return template.innerHTML;
 };
 
-export function DocumentViewer({ identifier, html, onNavigate }: DocumentViewerProps): JSX.Element {
+export function DocumentViewer({ identifier, html, onNavigate }: DocumentViewerProps): React.JSX.Element {
   const normalizedHtml = React.useMemo(() => normalizeHtmlForViewer(html, identifier), [html, identifier]);
   const articleRef = React.useRef<HTMLElement | null>(null);
 

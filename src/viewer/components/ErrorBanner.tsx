@@ -5,7 +5,7 @@ interface ErrorBannerProps {
   hint?: string;
 }
 
-export function ErrorBanner({ message, hint }: ErrorBannerProps): JSX.Element {
+export function ErrorBanner({ message, hint }: ErrorBannerProps): React.JSX.Element {
   return (
     <div className="viewer-error" role="alert">
       <p>{message}</p>

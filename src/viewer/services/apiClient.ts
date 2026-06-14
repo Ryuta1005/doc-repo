@@ -43,6 +43,11 @@ export interface SaveFailureResponse {
   };
 }
 
+export interface UploadDocumentImageResponse {
+  status: "uploaded";
+  imagePath: string;
+}
+
 export type SaveDocumentResponse = SaveWarningResponse | SaveSuccessResponse | SaveFailureResponse;
 
 export class SaveDocumentError extends Error {
@@ -133,4 +138,19 @@ export const saveDocument = async (request: SaveDocumentRequest): Promise<SaveDo
   );
 
   return (await response.json()) as SaveDocumentResponse;
+};
+
+export const uploadDocumentImage = async (identifier: string, file: File): Promise<UploadDocumentImageResponse> => {
+  const formData = new FormData();
+  formData.set("identifier", identifier);
+  formData.set("image", file);
+
+  const response = await ensureOk(
+    await fetch("/api/document/image", {
+      method: "POST",
+      body: formData,
+    }),
+  );
+
+  return (await response.json()) as UploadDocumentImageResponse;
 };

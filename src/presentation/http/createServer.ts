@@ -10,6 +10,7 @@ import { handleDocumentsDetailRoute } from "./routes/documentsDetailRoute.js";
 import { handleDocumentsListRoute } from "./routes/documentsListRoute.js";
 import { registerRoutes } from "./routes/index.js";
 import { handleDocumentSaveRoute } from "./routes/documentSaveRoute.js";
+import { handleDocumentImageUploadRoute } from "./routes/documentImageUploadRoute.js";
 import { startStaticServer } from "./server/startStaticServer.js";
 import type { SseWritableConnection } from "./sse/sseConnectionRegistry.js";
 import { validateDocumentPathQuery } from "./validation/documentRequestValidator.js";
@@ -50,6 +51,7 @@ export interface HttpBoundaryPipeline {
   listDocuments: () => Promise<unknown>;
   getDocument: (rawPathQuery: string | null) => Promise<unknown>;
   saveDocument: (payload: unknown) => Promise<unknown>;
+  uploadDocumentImage: (formData: FormData) => Promise<unknown>;
 }
 
 export const resolvePackageRoot = (): string => path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -167,6 +169,16 @@ export const createHttpBoundaryPipeline = (input: HttpBoundaryPipelineInput): Ht
         throw toHttpError(error);
       }
     },
+    uploadDocumentImage: async (formData: FormData) => {
+      try {
+        return await handleDocumentImageUploadRoute({
+          rootDir: input.rootDir,
+          formData,
+        });
+      } catch (error) {
+        throw toHttpError(error);
+      }
+    },
   };
 };
 
@@ -191,6 +203,7 @@ export const createServer = async (input: CreateServerInput): Promise<CreateServ
       onListDocuments: async () => await pipeline.listDocuments(),
       onGetDocument: async (rawPathQuery) => await pipeline.getDocument(rawPathQuery),
       onSaveDocument: async (payload) => await pipeline.saveDocument(payload),
+      onUploadDocumentImage: async (formData) => await pipeline.uploadDocumentImage(formData),
     },
     sseHooks: input.sseHooks,
   });

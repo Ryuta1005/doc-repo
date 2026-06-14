@@ -33,6 +33,7 @@ describe("createServer boundary pipeline", () => {
       "/api/documents",
       "/api/document",
       "/api/document/save",
+      "/api/document/image",
       "/api/site-config",
       "/events",
     ]);
@@ -64,6 +65,28 @@ describe("createServer boundary pipeline", () => {
       status: 404,
       code: "DOCUMENT_NOT_FOUND",
     });
+  });
+
+  it("画像アップロードで文書相対パスを返し、assets へ保存できること", async () => {
+    const rootDir = await makeTempDir();
+    await fs.outputFile(path.join(rootDir, "docs", "a.md"), "# A\n");
+    const pipeline = createHttpBoundaryPipeline({ rootDir });
+
+    const formData = new FormData();
+    formData.set("identifier", "docs/a.md");
+    formData.set("image", new Blob([Buffer.from("PNG")], { type: "image/png" }), "sample.png");
+
+    const result = (await pipeline.uploadDocumentImage(formData)) as {
+      status: string;
+      imagePath: string;
+    };
+
+    expect(result).toEqual({
+      status: "uploaded",
+      imagePath: "./assets/sample.png",
+    });
+
+    await expect(fs.pathExists(path.join(rootDir, "docs", "assets", "sample.png"))).resolves.toBe(true);
   });
 
   it("React viewer の app.js と CSS を serve 用 override として解決できること", async () => {

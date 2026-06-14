@@ -14,7 +14,7 @@ export function SaveWarningDialog({
   onProceed,
   onCancel,
   isSaving,
-}: SaveWarningDialogProps): JSX.Element | null {
+}: SaveWarningDialogProps): React.JSX.Element | null {
   if (!open) {
     return null;
   }

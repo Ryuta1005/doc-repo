@@ -63,7 +63,7 @@ const renderNodes = (
   openPaths: Set<string>,
   onToggleOpen: (path: string, open: boolean) => void,
   onSelect: (identifier: string) => void,
-): JSX.Element => {
+): React.JSX.Element => {
   return (
     <ul>
       {nodes.map((node) => {
@@ -116,7 +116,7 @@ interface DocumentTreeProps {
   onSelect: (identifier: string) => void;
 }
 
-export function DocumentTree({ items, selectedIdentifier, onSelect }: DocumentTreeProps): JSX.Element {
+export function DocumentTree({ items, selectedIdentifier, onSelect }: DocumentTreeProps): React.JSX.Element {
   const [openPaths, setOpenPaths] = React.useState<Set<string>>(() => new Set(getAncestorPaths(selectedIdentifier)));
 
   React.useEffect(() => {

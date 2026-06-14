@@ -23,6 +23,7 @@ interface StartStaticServerInput {
     onListDocuments: () => Promise<unknown>;
     onGetDocument: (rawPathQuery: string | null) => Promise<unknown>;
     onSaveDocument: (payload: unknown) => Promise<unknown>;
+    onUploadDocumentImage: (formData: FormData) => Promise<unknown>;
   };
   sseHooks?: SseHooks;
 }
@@ -158,6 +159,28 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
       return c.json(result, status);
     }
 
+    return c.json(result);
+  });
+
+  app.post("/api/document/image", async (c) => {
+    if (!input.apiHooks) {
+      return c.text("Not Found", 404);
+    }
+
+    const formData = await c.req.formData().catch(() => undefined);
+    if (!formData) {
+      return c.json(
+        {
+          error: {
+            code: "INVALID_REQUEST",
+            message: "multipart/form-data is required",
+          },
+        },
+        400,
+      );
+    }
+
+    const result = await input.apiHooks.onUploadDocumentImage(formData);
     return c.json(result);
   });
 

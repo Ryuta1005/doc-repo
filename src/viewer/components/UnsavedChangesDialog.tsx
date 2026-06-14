@@ -12,7 +12,7 @@ export function UnsavedChangesDialog({
   triggerLabel,
   onContinueEditing,
   onDiscardChanges,
-}: UnsavedChangesDialogProps): JSX.Element | null {
+}: UnsavedChangesDialogProps): React.JSX.Element | null {
   const continueButtonRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {

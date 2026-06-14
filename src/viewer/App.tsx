@@ -21,7 +21,7 @@ import { useViewerState } from "./hooks/useViewerState.js";
 import { useUnsavedChangesGuard } from "./hooks/useUnsavedChangesGuard.js";
 import { resolveDocumentSwitchDecision, resolveIdentifierAfterSave } from "./navigation.js";
 
-export function App(): JSX.Element {
+export function App(): React.JSX.Element {
   const {
     items,
     siteName,
@@ -196,6 +196,7 @@ export function App(): JSX.Element {
             {editorSnapshot ? (
               <DocumentEditor
                 key={selectedIdentifier ?? "editor"}
+                documentIdentifier={selectedIdentifier ?? ""}
                 sourceMarkdown={markdown}
                 onSnapshotChange={setEditorSnapshot}
                 onSaveRequest={handleSaveRequest}

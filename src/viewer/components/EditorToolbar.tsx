@@ -6,6 +6,7 @@ import {
   List,
   ListOrdered,
   SquareSplitVertical,
+  ImagePlus,
   Info,
   Lightbulb,
   CircleAlert,
@@ -19,21 +20,30 @@ interface EditorToolbarProps {
   onSave: () => void;
   onCancel: () => void;
   isSaving: boolean;
+  onUploadImage: (file: File) => Promise<{ imagePath: string; altText: string }>;
 }
 
 type AdmonitionType = "NOTE" | "TIP" | "IMPORTANT" | "WARNING" | "CAUTION";
 
 const ADMONITION_TYPES: AdmonitionType[] = ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION"];
 
-export function EditorToolbar({ editor, onSave, onCancel, isSaving }: EditorToolbarProps): JSX.Element {
+export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImage }: EditorToolbarProps): React.JSX.Element {
   const [isBlockMenuOpen, setIsBlockMenuOpen] = React.useState(false);
   const [isPanelMenuOpen, setIsPanelMenuOpen] = React.useState(false);
-  const [, setSelectionVersion] = React.useState(0);
+  const [isImageReading, setIsImageReading] = React.useState(false);
+  const [selectionVersion, setSelectionVersion] = React.useState(0);
   const savedSelectionRef = React.useRef<{ from: number; to: number } | null>(null);
   const blockMenuRef = React.useRef<HTMLDivElement>(null);
   const blockMenuButtonRef = React.useRef<HTMLButtonElement>(null);
   const panelMenuRef = React.useRef<HTMLDivElement>(null);
   const panelMenuButtonRef = React.useRef<HTMLButtonElement>(null);
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
+
+  const isSupportedImageFile = React.useCallback((file: File): boolean => {
+    const hasSupportedMimeType = file.type === "image/png" || file.type === "image/jpeg";
+    const hasSupportedExtension = /\.(png|jpe?g)$/i.test(file.name);
+    return hasSupportedMimeType || hasSupportedExtension;
+  }, []);
 
   const rememberSelection = React.useCallback(() => {
     if (!editor) {
@@ -71,7 +81,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving }: EditorTool
     if (editor.isActive("heading", { level: 5 })) return "h5";
     if (editor.isActive("heading", { level: 6 })) return "h6";
     return "paragraph";
-  }, [editor?.selection]);
+  }, [editor, selectionVersion]);
 
   const blockLabels: Record<string, string> = {
     paragraph: "本文",
@@ -92,7 +102,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving }: EditorTool
   const isOrderedList = editor?.isActive("orderedList") ?? false;
   const isCodeBlock = editor?.isActive("codeBlock") ?? false;
 
-  const renderAdmonitionIcon = (type: AdmonitionType): JSX.Element => {
+  const renderAdmonitionIcon = (type: AdmonitionType): React.JSX.Element => {
     if (type === "NOTE") {
       return <Info size={14} />;
     }
@@ -200,6 +210,50 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving }: EditorTool
       savedSelectionRef.current = null;
     },
     [editor],
+  );
+
+  const handleImageSelect = React.useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!editor) {
+        return;
+      }
+
+      const file = event.target.files?.[0];
+      event.target.value = "";
+
+      if (!file) {
+        return;
+      }
+
+      if (!isSupportedImageFile(file)) {
+        window.alert("対応している画像形式は png / jpeg のみです。");
+        return;
+      }
+
+      setIsImageReading(true);
+      try {
+        const uploaded = await onUploadImage(file);
+        const selection = savedSelectionRef.current ?? {
+          from: editor.state.selection.from,
+          to: editor.state.selection.to,
+        };
+        const escapedAltText = uploaded.altText.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+
+        editor
+          .chain()
+          .focus()
+          .setTextSelection(selection)
+          .insertContent(`![${escapedAltText}](${uploaded.imagePath})`)
+          .run();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "画像の読み込みに失敗しました。";
+        window.alert(message);
+      } finally {
+        savedSelectionRef.current = null;
+        setIsImageReading(false);
+      }
+    },
+    [editor, isSupportedImageFile, onUploadImage],
   );
 
   const handleKeyDown = React.useCallback(
@@ -503,6 +557,24 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving }: EditorTool
         </button>
         <button
           type="button"
+          onPointerDown={(event) => {
+            event.preventDefault();
+            rememberSelection();
+          }}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            rememberSelection();
+          }}
+          onClick={() => imageInputRef.current?.click()}
+          aria-label="画像を添付"
+          title="画像を添付（png/jpeg）"
+          disabled={isImageReading}
+          className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ImagePlus size={14} />
+        </button>
+        <button
+          type="button"
           onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           aria-label="コードブロック"
           title="コードブロック"
@@ -540,6 +612,15 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving }: EditorTool
         <Save size={16} />
         {isSaving ? "保存中..." : "保存"}
       </button>
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+        onChange={(event) => {
+          void handleImageSelect(event);
+        }}
+        className="hidden"
+      />
     </div>
   );
 }

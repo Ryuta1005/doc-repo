@@ -117,6 +117,7 @@ describe("startStaticServer.ts", () => {
         onListDocuments: async () => await pipeline.listDocuments(),
         onGetDocument: async (rawPathQuery) => await pipeline.getDocument(rawPathQuery),
         onSaveDocument: async () => ({ status: "saved", savedDocument: { identifier: "docs/a.md" }, warnings: [] }),
+        onUploadDocumentImage: async () => ({ status: "uploaded", imagePath: "./assets/placeholder.png" }),
       },
     });
 
@@ -185,6 +186,7 @@ describe("startStaticServer.ts", () => {
           savedDocument: { identifier: "docs/placeholder.md" },
           warnings: [],
         }),
+        onUploadDocumentImage: async () => ({ status: "uploaded", imagePath: "./assets/placeholder.png" }),
       },
     });
 
@@ -243,6 +245,9 @@ describe("startStaticServer.ts", () => {
           throw new Error("unexpected failure");
         },
         onSaveDocument: async () => {
+          throw new Error("unexpected failure");
+        },
+        onUploadDocumentImage: async () => {
           throw new Error("unexpected failure");
         },
       },

@@ -8,6 +8,7 @@ import {
   serializeEditableMarkdown,
   type MarkdownEditorDocument,
 } from "../../core/markdown/index.js";
+import { uploadDocumentImage } from "../services/apiClient.js";
 import { EditorToolbar } from "./EditorToolbar.js";
 
 export interface DocumentEditorSnapshot {
@@ -19,6 +20,7 @@ export interface DocumentEditorSnapshot {
 }
 
 interface DocumentEditorProps {
+  documentIdentifier: string;
   sourceMarkdown: string;
   onSnapshotChange: (snapshot: DocumentEditorSnapshot) => void;
   onSaveRequest: (snapshot: DocumentEditorSnapshot) => void;
@@ -77,12 +79,13 @@ const buildSnapshot = (
 };
 
 export function DocumentEditor({
+  documentIdentifier,
   sourceMarkdown,
   onSnapshotChange,
   onSaveRequest,
   onCancelRequest,
   isSaving,
-}: DocumentEditorProps): JSX.Element {
+}: DocumentEditorProps): React.JSX.Element {
   const parsed = React.useMemo(() => parseEditableMarkdown(sourceMarkdown), [sourceMarkdown]);
   const initialDocumentKey = React.useMemo(() => JSON.stringify(parsed.document), [parsed.document]);
 
@@ -90,11 +93,11 @@ export function DocumentEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4, 5, 6] },
-        bulletList: true,
-        horizontalRule: true,
-        listItem: true,
-        orderedList: true,
-        strike: true,
+        bulletList: {},
+        horizontalRule: {},
+        listItem: {},
+        orderedList: {},
+        strike: {},
       }),
       RawMarkdownBlock,
     ],
@@ -116,7 +119,7 @@ export function DocumentEditor({
       return;
     }
 
-    editor.commands.setContent(parsed.document, false);
+    editor.commands.setContent(parsed.document);
     const snapshot = buildSnapshot(parsed.document, parsed.newlineStyle, parsed.hasTrailingNewline, initialDocumentKey);
     onSnapshotChange(snapshot);
   }, [editor, initialDocumentKey, onSnapshotChange, parsed.document, parsed.hasTrailingNewline, parsed.newlineStyle]);
@@ -160,6 +163,18 @@ export function DocumentEditor({
     onSaveRequest(buildSnapshot(document, parsed.newlineStyle, parsed.hasTrailingNewline, initialDocumentKey));
   }, [editor, initialDocumentKey, onSaveRequest, parsed.hasTrailingNewline, parsed.newlineStyle]);
 
+  const handleUploadImage = React.useCallback(
+    async (file: File): Promise<{ imagePath: string; altText: string }> => {
+      const uploaded = await uploadDocumentImage(documentIdentifier, file);
+      const altTextCandidate = file.name.replace(/\.(png|jpe?g)$/i, "").trim();
+      return {
+        imagePath: uploaded.imagePath,
+        altText: altTextCandidate || "image",
+      };
+    },
+    [documentIdentifier],
+  );
+
   if (!editor) {
     return <p className="viewer-muted">エディタを準備しています...</p>;
   }
@@ -167,7 +182,13 @@ export function DocumentEditor({
   return (
     <section className="editor-panel">
       <div className="editor-frame">
-        <EditorToolbar editor={editor} onSave={handleSave} onCancel={onCancelRequest} isSaving={isSaving} />
+        <EditorToolbar
+          editor={editor}
+          onSave={handleSave}
+          onCancel={onCancelRequest}
+          isSaving={isSaving}
+          onUploadImage={handleUploadImage}
+        />
         <div className="editor-content-wrapper">
           <EditorContent editor={editor} />
         </div>
