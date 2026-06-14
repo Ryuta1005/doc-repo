@@ -20,23 +20,21 @@ npm run build
 node dist/cli/index.js serve
 ```
 
-4. 起動ログに表示された URL をブラウザで開く。
+4. 起動ログに表示された URL をブラウザで開き、環境情報に記録する。
+5. 保存 API 検証では、起動 URL と文書 identifier を実環境に合わせて各コマンドへ直接反映する。
 
-5. 保存 API 検証で使う環境変数を設定する。
+テスト対象として記録する値:
 
-```bash
-export BASE_URL="http://127.0.0.1:3000"
-export VALID_MD="docs/guide/getting-started.md"
-export EXCLUDE_MD="docs/excluded/example.md"
-export OUTSIDE_INCLUDE_MD="docs/private/not-in-include.md"
-```
-
-6. `VALID_MD` は既存の保存対象 `.md` ファイルに置き換える。
-7. `EXCLUDE_MD` は exclude 条件に該当する `.md` ファイルに置き換える。
-8. `OUTSIDE_INCLUDE_MD` は rootDir 内かつ include 条件外の `.md` ファイルに置き換える。
+- 起動 URL:
+- 保存成功確認用 identifier:
+- 保存成功確認用実ファイルパス:
+- exclude 条件確認用 identifier:
+- include 条件外確認用 identifier:
 
 注記:
 
+- `doc-repo serve` の既定ポートは `4000`。設定ファイルまたは `--port` 指定がある場合は起動ログの URL を正とする。
+- 保存 API の保存先は、閲覧中の Markdown 文書 identifier であり、任意の環境変数名には依存しない。
 - API 契約に合わせて `options.newlineStyle` / `options.hasTrailingNewline` を送信する。
 - FR-017 の観点では、サーバーが既存文書形式を維持できることを TC-010-08 で必ず検証する。
 
@@ -47,7 +45,10 @@ export OUTSIDE_INCLUDE_MD="docs/private/not-in-include.md"
 - OS:
 - Node.js バージョン:
 - ブラウザ:
-- 起動 URL (BASE_URL):
+- 起動 URL:
+- rootDir:
+- include:
+- exclude:
 
 ## 合否基準
 
@@ -79,7 +80,7 @@ export OUTSIDE_INCLUDE_MD="docs/private/not-in-include.md"
 
 手順:
 
-1. 閲覧画面で `VALID_MD` を開く。
+1. 閲覧画面で保存成功確認用 identifier の文書を開く。
 2. 編集モードへ切り替える。
 3. 本文を 1 箇所更新する。
 4. 見出し 1 または見出し 2 を 1 箇所設定する。
@@ -115,14 +116,14 @@ export OUTSIDE_INCLUDE_MD="docs/private/not-in-include.md"
 
 手順:
 
-1. 編集モードで `VALID_MD` を開く。
+1. 編集モードで保存成功確認用 identifier の文書を開く。
 2. 上記入力テキストを入力する。
 3. 入力直後のエディタ表示を確認する。
 4. 保存する。
 5. 保存対象の Markdown ファイルを確認する。
 
 ```bash
-cat "$VALID_MD"
+cat "<保存成功確認用実ファイルパス>"
 ```
 
 期待結果:
@@ -228,40 +229,42 @@ cat "$VALID_MD"
 
 手順:
 
-1. 以下の API リクエストを順に実行する。
+1. `include` / `exclude` 条件を持つ環境で `doc-repo serve` を起動する。
+   例: `include: ["docs/**/*.md"]`、`exclude: ["**/draft/**"]` の場合、`docs/draft/note.md` を exclude 条件確認用、`private/note.md` を include 条件外確認用にできる。
+2. 以下の API リクエストを順に実行する。`<起動URL>`、`<exclude条件確認用identifier>`、`<include条件外確認用identifier>` は環境情報に記録した値へ置き換える。
 
 ```bash
-curl -sS -X POST "$BASE_URL/api/document/save" \
+curl -sS -X POST "<起動URL>/api/document/save" \
   -H "Content-Type: application/json" \
   -d '{"identifier":"../outside.md","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
 ```
 
 ```bash
-curl -sS -X POST "$BASE_URL/api/document/save" \
+curl -sS -X POST "<起動URL>/api/document/save" \
   -H "Content-Type: application/json" \
   -d '{"identifier":"/tmp/outside.md","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
 ```
 
 ```bash
-curl -sS -X POST "$BASE_URL/api/document/save" \
+curl -sS -X POST "<起動URL>/api/document/save" \
   -H "Content-Type: application/json" \
   -d '{"identifier":"docs/sample.txt","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
 ```
 
 ```bash
-curl -sS -X POST "$BASE_URL/api/document/save" \
+curl -sS -X POST "<起動URL>/api/document/save" \
   -H "Content-Type: application/json" \
-  -d '{"identifier":"'"$EXCLUDE_MD"'","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
+  -d '{"identifier":"<exclude条件確認用identifier>","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
 ```
 
 ```bash
-curl -sS -X POST "$BASE_URL/api/document/save" \
+curl -sS -X POST "<起動URL>/api/document/save" \
   -H "Content-Type: application/json" \
-  -d '{"identifier":"'"$OUTSIDE_INCLUDE_MD"'","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
+  -d '{"identifier":"<include条件外確認用identifier>","markdownContent":"# invalid","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
 ```
 
-2. レスポンスの `status` と `error.category` を確認する。
-3. 該当ファイルが新規作成または上書きされていないことを確認する。
+3. レスポンスの `status` と `error.category` を確認する。
+4. 該当ファイルが新規作成または上書きされていないことを確認する。
 
 期待結果:
 
@@ -283,14 +286,14 @@ curl -sS -X POST "$BASE_URL/api/document/save" \
 手順:
 
 1. `invalid-target` は TC-010-06 の結果を利用する。
-2. `unwritable-target` は、既存ファイルの書き込み権限を一時的に外して再現する。
+2. `unwritable-target` は、保存成功確認用実ファイルパスの書き込み権限を一時的に外して再現する。
 
 ```bash
-chmod 444 "$VALID_MD"
-curl -sS -X POST "$BASE_URL/api/document/save" \
+chmod 444 "<保存成功確認用実ファイルパス>"
+curl -sS -X POST "<起動URL>/api/document/save" \
   -H "Content-Type: application/json" \
-  -d '{"identifier":"'"$VALID_MD"'","markdownContent":"# overwrite attempt","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
-chmod 644 "$VALID_MD"
+  -d '{"identifier":"<保存成功確認用identifier>","markdownContent":"# overwrite attempt","options":{"newlineStyle":"lf","hasTrailingNewline":true}}'
+chmod 644 "<保存成功確認用実ファイルパス>"
 ```
 
 3. `transient-io` は次の優先順で再現する。
@@ -347,7 +350,7 @@ print('path=', target)
 print('crlf_count=', crlf_count)
 print('lf_only_count=', lf_only_count)
 print('ends_with_newline=', data.endswith((b"\n", b"\r\n")))
-PY "$VALID_MD"
+PY "<保存成功確認用実ファイルパス>"
 ```
 
 期待結果:
@@ -436,7 +439,7 @@ PY "$VALID_MD"
 1. 対象文書をバックアップする。
 
 ```bash
-cp "$VALID_MD" "$VALID_MD.bak"
+cp "<保存成功確認用実ファイルパス>" "<保存成功確認用実ファイルパス>.bak"
 ```
 
 2. 文書を編集モードで開く。
@@ -446,7 +449,7 @@ cp "$VALID_MD" "$VALID_MD.bak"
 6. バックアップを戻す。
 
 ```bash
-mv "$VALID_MD.bak" "$VALID_MD"
+mv "<保存成功確認用実ファイルパス>.bak" "<保存成功確認用実ファイルパス>"
 ```
 
 期待結果:

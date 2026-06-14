@@ -1,19 +1,22 @@
-# doc-repo Configuration
+# Configuration
 
-This document explains how `doc-repo.config.json` works.
+This document is the reference for `doc-repo.config.json`.
 
-## File Location
+## File Name and Discovery
 
 - File name: `doc-repo.config.json`
-- Search behavior: the CLI searches from current working directory upward and uses the first file it finds.
+- Discovery: `doc-repo serve` searches from the current working directory upward and uses the first config file it finds.
+- If no config file is found, doc-repo falls back to Git root detection, then the current working directory.
 
-## Initialize Template
+## Create a Template
 
-Run `doc-repo init` to create a configuration template in the current working directory:
+Run:
 
 ```bash
 doc-repo init
 ```
+
+This creates `doc-repo.config.json` in the current working directory.
 
 Generated template:
 
@@ -27,96 +30,102 @@ Generated template:
 }
 ```
 
-If `doc-repo.config.json` already exists, the command does not overwrite it.
+If `doc-repo.config.json` already exists, `doc-repo init` does not overwrite it.
 
-## Supported Fields
+## Fields
 
-```json
-{
-  "name": "Team Docs",
-  "rootDir": "./docs",
-  "include": ["**/*.md"],
-  "exclude": ["drafts/**"],
-  "port": 4000
-}
-```
+| Field     | Type       | Required | Default when omitted                         | Description                                                        |
+| --------- | ---------- | -------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| `name`    | `string`   | No       | `"Doc Repo"`                                 | Site name shown in the Viewer sidebar                              |
+| `rootDir` | `string`   | No       | Config directory, Git root, or current cwd   | Root directory used to collect and save Markdown files             |
+| `include` | `string[]` | No       | `["**/*.md"]`                                | Glob patterns for Markdown files to include                        |
+| `exclude` | `string[]` | No       | `[]`                                         | Additional glob patterns to exclude                                |
+| `port`    | `number`   | No       | `4000`                                       | Port used by `doc-repo serve`                                      |
 
-| Field     | Type       | Required | Description                                   |
-| --------- | ---------- | -------- | --------------------------------------------- |
-| `name`    | `string`   | No       | Site name shown in the sidebar header         |
-| `rootDir` | `string`   | No       | Root directory to collect Markdown files from |
-| `include` | `string[]` | No       | Include glob patterns                         |
-| `exclude` | `string[]` | No       | Additional exclude glob patterns              |
-| `port`    | `number`   | No       | Port used by `doc-repo serve`                 |
+Unknown fields are currently ignored.
 
-Unknown fields are ignored.
+## Root Directory Resolution
 
-## Resolution Rules
-
-### `rootDir`
+When a config file exists:
 
 1. If `rootDir` is set:
-   - Relative path: resolved from the directory containing `doc-repo.config.json`
-   - Absolute path: used as-is
-1. If config exists but `rootDir` is omitted:
-   - Use the config file directory as root
-1. If config does not exist:
-   - Try Git root detection
-   - Fallback to current working directory
+   - Relative paths are resolved from the directory containing `doc-repo.config.json`.
+   - Absolute paths are used as-is.
+2. If `rootDir` is omitted:
+   - The directory containing `doc-repo.config.json` is used.
 
-### `port`
+When no config file exists:
 
-Priority:
+1. doc-repo searches for a Git root from the current working directory.
+2. If no Git root is found, the current working directory is used.
 
-1. CLI option `--port`
-1. `port` in config file
-1. default `4000`
+## Include and Exclude Rules
 
-Valid range: `1` to `65535`.
-
-### `include` and `exclude`
-
+- `include` and `exclude` are evaluated relative to `rootDir`.
 - If `include` is omitted, `**/*.md` is used.
-- If `include` is an empty array (`[]`), it is treated same as omitted (`**/*.md`).
-- `exclude` patterns are appended to default excludes.
-- Exclude has higher priority than include.
+- If `include` is an empty array (`[]`), it is treated the same as omitted.
+- `exclude` is added to the default excludes.
+- Exclude rules take precedence over include rules.
 
 Default excludes are always active:
 
 - `node_modules/**`
 - `.git/**`
 - `.doc-repo/**`
-- `dist/**`
 
-## Behavior Notes
+`dist/**` is not a default exclude in the current implementation.
 
-- `doc-repo` and `doc-repo serve` share the same config resolution behavior.
-- Invalid config causes command failure with exit code `1`.
-- Error messages include the invalid field where possible.
+## Port Resolution
+
+Port priority:
+
+1. CLI option `--port`
+2. `port` in `doc-repo.config.json`
+3. Default `4000`
+
+The port must be an integer from `1` to `65535`.
 
 ## Validation Errors
 
-The command fails (`exit code 1`) for:
+`doc-repo serve` fails with exit code `1` when:
 
-- JSON parse error
+- `doc-repo.config.json` cannot be parsed as JSON
+- `name` is missing a string value when provided, or is an empty string
+- `port` is not an integer from `1` to `65535`
+- `include` is provided but is not a string array
+- `exclude` is provided but is not a string array
+- `rootDir` is provided but is not a string
 - `rootDir` does not exist
 - `rootDir` is not a directory
-- `include` is not `string[]`
-- `exclude` is not `string[]`
-- `port` is out of range or not a number
-- `name` is empty or not a string
+
+Error output includes the failing field where possible.
 
 ## Examples
 
-### Collect only under `docs/`
+### Explicit Defaults
 
 ```json
 {
-  "rootDir": "./docs"
+  "name": "Doc Repo",
+  "rootDir": ".",
+  "include": ["**/*.md"],
+  "exclude": [],
+  "port": 4000
 }
 ```
 
-### Collect only spec markdown and skip manual tests
+### Collect Only Under `docs/`
+
+Because `include` is evaluated relative to `rootDir`, this collects all Markdown files under `docs/`:
+
+```json
+{
+  "rootDir": "./docs",
+  "include": ["**/*.md"]
+}
+```
+
+### Collect Specs and Skip Manual Test Notes
 
 ```json
 {
@@ -126,7 +135,7 @@ The command fails (`exit code 1`) for:
 }
 ```
 
-### Set default serve port
+### Use a Different Default Port
 
 ```json
 {

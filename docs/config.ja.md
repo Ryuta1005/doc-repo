@@ -1,21 +1,24 @@
-# doc-repo 設定ファイル
+# Configuration
 
-このページでは `doc-repo.config.json` の仕様を説明します。
+このドキュメントは `doc-repo.config.json` のリファレンスです。
 
-## 設置場所
+## File Name and Discovery
 
 - ファイル名: `doc-repo.config.json`
-- 探索方法: コマンド実行ディレクトリから上位へ探索し、最初に見つかったファイルを使用
+- 探索方法: `doc-repo serve` は現在の作業ディレクトリから上位へ探索し、最初に見つかった設定ファイルを使用します。
+- 設定ファイルが見つからない場合、doc-repo は Git ルート検出を行い、それも見つからなければ現在の作業ディレクトリを使用します。
 
-## 雛形の生成
+## Create a Template
 
-カレントディレクトリに設定ファイルの雛形を作るには `doc-repo init` を実行します。
+実行します。
 
 ```bash
 doc-repo init
 ```
 
-生成される雛形:
+これにより、現在の作業ディレクトリに `doc-repo.config.json` が作成されます。
+
+生成されるテンプレート:
 
 ```json
 {
@@ -27,96 +30,102 @@ doc-repo init
 }
 ```
 
-`doc-repo.config.json` が既に存在する場合は上書きされません。
+`doc-repo.config.json` がすでに存在する場合、`doc-repo init` は上書きしません。
 
-## 設定できる項目
+## Fields
 
-```json
-{
-  "name": "Team Docs",
-  "rootDir": "./docs",
-  "include": ["**/*.md"],
-  "exclude": ["drafts/**"],
-  "port": 4000
-}
-```
+| フィールド | 型         | 必須 | 省略時のデフォルト                         | 説明                                                  |
+| ---------- | ---------- | ---- | ------------------------------------------ | ----------------------------------------------------- |
+| `name`     | `string`   | No   | `"Doc Repo"`                               | Viewer サイドバーに表示されるサイト名                |
+| `rootDir`  | `string`   | No   | 設定ファイルのディレクトリ、Git ルート、または現在の cwd | Markdown ファイルの収集・保存に使うルートディレクトリ |
+| `include`  | `string[]` | No   | `["**/*.md"]`                              | 対象 Markdown ファイルの include glob パターン        |
+| `exclude`  | `string[]` | No   | `[]`                                       | 追加の exclude glob パターン                          |
+| `port`     | `number`   | No   | `4000`                                     | `doc-repo serve` で使用するポート                     |
 
-| フィールド | 型         | 必須   | 説明                                |
-| ---------- | ---------- | ------ | ----------------------------------- |
-| `name`     | `string`   | いいえ | サイドバー上部に表示するサイト名    |
-| `rootDir`  | `string`   | いいえ | Markdown を収集する起点ディレクトリ |
-| `include`  | `string[]` | いいえ | 収集対象の glob パターン            |
-| `exclude`  | `string[]` | いいえ | 追加の除外 glob パターン            |
-| `port`     | `number`   | いいえ | `doc-repo serve` で使うポート       |
+未知のフィールドは現在無視されます。
 
-未知のフィールドは無視されます。
+## Root Directory Resolution
 
-## 解決ルール
+設定ファイルが存在する場合:
 
-### `rootDir`
+1. `rootDir` が設定されている場合:
+   - 相対パスは `doc-repo.config.json` があるディレクトリから解決されます。
+   - 絶対パスはそのまま使用されます。
+2. `rootDir` が省略されている場合:
+   - `doc-repo.config.json` があるディレクトリが使用されます。
 
-1. `rootDir` を指定した場合:
-   - 相対パス: `doc-repo.config.json` が置かれたディレクトリ基準で解決
-   - 絶対パス: そのまま使用
-1. 設定ファイルが存在し、`rootDir` 省略の場合:
-   - 設定ファイルが置かれたディレクトリを使用
-1. 設定ファイルが存在しない場合:
-   - まず Git ルートを探索
-   - 見つからなければカレントディレクトリを使用
+設定ファイルが存在しない場合:
 
-### `port`
+1. doc-repo は現在の作業ディレクトリから Git ルートを探します。
+2. Git ルートが見つからない場合、現在の作業ディレクトリが使用されます。
 
-優先順位:
+## Include and Exclude Rules
 
-1. CLI オプション `--port`
-2. 設定ファイルの `port`
-3. 既定値 `4000`
+- `include` と `exclude` は `rootDir` からの相対パスとして評価されます。
+- `include` が省略された場合、`**/*.md` が使用されます。
+- `include` が空配列 (`[]`) の場合も、省略時と同じ扱いです。
+- `exclude` はデフォルト除外に追加されます。
+- exclude ルールは include ルールより優先されます。
 
-有効範囲は `1` 〜 `65535` です。
-
-### `include` と `exclude`
-
-- `include` 未指定時は `**/*.md` が使われます。
-- `include` が空配列（`[]`）でも、未指定と同じく `**/*.md` として扱います。
-- `exclude` は既定除外に追加されます。
-- 優先度は `exclude` が `include` より高く、両方に一致したファイルは除外されます。
-
-既定除外（常時適用）:
+デフォルト除外は常に有効です。
 
 - `node_modules/**`
 - `.git/**`
 - `.doc-repo/**`
-- `dist/**`
 
-## 挙動メモ
+現在の実装では、`dist/**` はデフォルト除外ではありません。
 
-- `doc-repo`（generate）と `doc-repo serve` は同じ設定解決ルールを使います。
-- 設定値が不正な場合は終了コード `1` で失敗します。
-- 可能な限り、どのフィールドが不正かを含めてエラーメッセージを返します。
+## Port Resolution
 
-## バリデーションエラー
+ポートの優先順位:
 
-以下の場合は失敗（終了コード `1`）します。
+1. CLI オプション `--port`
+2. `doc-repo.config.json` の `port`
+3. デフォルト `4000`
 
-- JSON 構文エラー
+ポートは `1` から `65535` までの整数である必要があります。
+
+## Validation Errors
+
+次の場合、`doc-repo serve` は exit code `1` で失敗します。
+
+- `doc-repo.config.json` を JSON としてパースできない
+- `name` が指定されているが文字列ではない、または空文字列
+- `port` が `1` から `65535` までの整数ではない
+- `include` が指定されているが文字列配列ではない
+- `exclude` が指定されているが文字列配列ではない
+- `rootDir` が指定されているが文字列ではない
 - `rootDir` が存在しない
-- `rootDir` がディレクトリでない
-- `include` が `string[]` でない
-- `exclude` が `string[]` でない
-- `port` が範囲外、または数値でない
-- `name` が空、または文字列でない
+- `rootDir` がディレクトリではない
 
-## 設定例
+可能な場合、エラー出力には失敗したフィールドが含まれます。
 
-### `docs/` 配下のみ収集
+## Examples
+
+### Explicit Defaults
 
 ```json
 {
-  "rootDir": "./docs"
+  "name": "Doc Repo",
+  "rootDir": ".",
+  "include": ["**/*.md"],
+  "exclude": [],
+  "port": 4000
 }
 ```
 
-### specs 配下のみ収集し、manual-tests は除外
+### Collect Only Under `docs/`
+
+`include` は `rootDir` からの相対パスとして評価されるため、この設定は `docs/` 配下のすべての Markdown ファイルを収集します。
+
+```json
+{
+  "rootDir": "./docs",
+  "include": ["**/*.md"]
+}
+```
+
+### Collect Specs and Skip Manual Test Notes
 
 ```json
 {
@@ -126,7 +135,7 @@ doc-repo init
 }
 ```
 
-### `serve` の既定ポートを変更
+### Use a Different Default Port
 
 ```json
 {

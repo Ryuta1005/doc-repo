@@ -1,37 +1,34 @@
 # doc-repo
 
-doc-repo is a documentation management tool for browsing and editing repository Markdown files in a browser while keeping Git and Markdown as the source of truth.
+doc-repo is a local browser workspace for reading and editing Markdown files in a Git repository.
+It keeps Markdown files as the source of truth while making repository docs easier to browse, navigate by structure, and update from a browser.
 
 > [!WARNING]
-> `doc-repo` is currently in alpha. CLI arguments and generated file structure may change in future releases.
+> `doc-repo` is currently alpha software. CLI behavior, editing behavior, and generated runtime files may change in future releases.
 
 ![doc-repo screenshot placeholder](./docs/assets/screenshot-sample.png)
 
-## Why doc-repo?
+## Git and Markdown as the Source of Truth
 
-Spec-driven development and AI-assisted development make it increasingly common to keep specs, design notes, meeting notes, and operational docs as Markdown in a repository. As those documents grow across directories, they become harder for everyone on a team to use.
+Managing specifications and design documents as Markdown in a Git repository makes it possible to track changes and review updates in the same way as source code. This approach also works well with spec-driven and AI-assisted development, allowing repository Markdown to serve as the **source of truth** for documentation.
 
-- Markdown files are scattered across multiple directories.
-- It is hard to browse content across files without opening an editor.
-- It is difficult for non-developers to find and update documents through VS Code or Git.
+However, reading and updating Markdown files in a repository often requires opening an editor, navigating the file structure, and understanding Git-based workflows. This is not always convenient or accessible for everyone on a team.
 
-doc-repo reads Markdown files from the repository, keeps the directory structure visible, and presents them as a two-pane browser workspace (left tree / right content). Documents can be edited in the browser and saved back to the original Markdown files, so non-developers can work with repository docs in a familiar OneNote- or Confluence-like flow.
+Moving the same content to a service such as Notion or Confluence may make it easier to use, but it also creates a second copy that must be kept in sync with the repository. Over time, the two versions may diverge.
 
-The core concept is not simply converting Markdown to HTML. doc-repo keeps Git and Markdown as the canonical source while making repository documents readable and editable by people across roles.
+doc-repo provides a browser-based workspace for reading and editing repository Markdown without moving it to a separate service. Users can navigate the existing directory structure, and edits are saved back to the original Markdown files. This keeps repository Markdown as the source of truth.
 
 ## Features
 
-- Recursively discovers `.md` files in your repository
+- Recursively discovers `.md` files under the configured root
+- Shows repository documents in a two-pane browser workspace
 - Preserves directory structure in tree navigation
-- Provides a browser-based document workspace for repository Markdown
-- Saves browser edits back to the original Markdown files
-- Supports local server mode (`doc-repo serve`)
-- Watches Markdown files while `serve` is running
-- Reloads the browser automatically via SSE when a Markdown change is detected
+- Supports browser editing and saves changes back to Markdown files
+- Watches Markdown files while the local workspace is running
+- Reloads the browser automatically when Markdown files change
+- Provides English and Japanese Viewer UI labels
 
-> [!IMPORTANT]
-> As of task 020 policy, direct static-generation entry (`doc-repo [scopePath]`) is retired.
-> The only supported entry point is `doc-repo serve`.
+Running `doc-repo` without a command starts the local browser workspace. `doc-repo serve` is the explicit equivalent.
 
 ## Quick Start
 
@@ -42,158 +39,94 @@ Prerequisite:
 Run inside a repository:
 
 ```bash
-npx doc-repo serve
+npx doc-repo
 ```
 
 If the package is published under an alpha tag, use:
 
 ```bash
-npx doc-repo@alpha serve
+npx doc-repo@alpha
 ```
 
 Then open `http://localhost:4000` in your browser.
+
+## Documentation
+
+- [Getting Started](./docs/getting-started.md)
+- [Configuration](./docs/config.md)
+- [Editing and Keyboard Shortcuts](./docs/editing.md)
+
+## CLI Overview
+
+```bash
+doc-repo init
+doc-repo
+doc-repo serve [--port <number>]
+```
+
+| Command / Option  | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `init`            | Create a `doc-repo.config.json` template                   |
+| `doc-repo`        | Start the local browser workspace and watch Markdown files |
+| `serve`           | Explicit form of the default workspace command             |
+| `--port <number>` | Override the configured/default serve port                 |
+
+## Configuration
+
+Create `doc-repo.config.json` to configure the workspace. A minimal explicit configuration looks like this:
+
+```json
+{
+  "name": "Doc Repo",
+  "rootDir": ".",
+  "include": ["**/*.md"],
+  "exclude": [],
+  "port": 4000
+}
+```
+
+For resolution rules, default excludes, validation behavior, and more examples, see [Configuration](./docs/config.md).
 
 ## Viewer Language
 
 The Viewer UI is available in English and Japanese. Use the globe menu fixed at the bottom of the left sidebar to switch languages.
 
-The default language is English. Your selected language is saved in the browser's `localStorage` and is restored when you reload the page. This changes only the Viewer UI; CLI messages, Markdown content, and repository structure are not translated.
+The default language is English, and your selected language is restored when you reload the page. This changes only the Viewer UI; CLI messages, Markdown content, and repository structure are not translated.
 
-## CLI
+## Editing
 
-```bash
-doc-repo init
-doc-repo serve [--port <number>]
-```
+Click **Edit** in the Viewer to switch the current document into rich-text edit mode. Saving writes the edited content back to the original Markdown file.
 
-| Argument / Option | Description                                                   | Default |
-| ----------------- | ------------------------------------------------------------- | ------- |
-| `init`            | Generate `doc-repo.config.json` template in current directory | -       |
-| `serve`           | Start local server and watch for changes                      | -       |
-| `--port`          | Port for `serve` (CLI > config > default)                     | `4000`  |
+> [!CAUTION]
+> Browser edits are written directly to the original Markdown files.
+> Commit or back up your changes before editing, especially while rich-text editing is in alpha.
 
-### Serve Responsibilities
+For supported formatting, save validation, unsupported Markdown warnings, save error categories, unsaved-change guards, and keyboard shortcuts, see [Editing and Keyboard Shortcuts](./docs/editing.md).
 
-- `doc-repo serve` orchestrates: server start → file watch start
-- Watches `.md` files and dispatches browser reload via SSE on change, add, or unlink
-- The HTTP server serves Viewer assets and workspace files on one origin
-- On exit (Ctrl+C / SIGTERM), stops in order: watcher → SSE connections → HTTP server
+## Markdown Support
 
-### Target Root
+- Rendering uses `markdown-it`.
+- Raw HTML in Markdown is disabled.
+- `linkify` and `typographer` are enabled.
+- Relative images are rewritten to workspace-relative asset URLs and served by the local workspace.
+- GFM task lists are not currently supported as task-list UI.
+- Mermaid diagrams are not rendered as diagrams.
+- Syntax highlighting for fenced code blocks is not currently provided.
+- File attachments such as PDF, CSV, and ZIP files linked from Markdown may remain as links, but attachment copying/serving is not a dedicated feature yet.
 
-- Target root: resolved from `doc-repo.config.json` if present; falls back to Git root, then current directory
-- Collection target: all Markdown files under target root (filtered by `include`/`exclude`)
+Viewer rendering support and rich-text editor preservation are not the same thing. The editor supports a smaller set of formatting and may warn before saving when unsupported Markdown segments are detected.
 
-## Configuration File
+## Runtime Artifacts
 
-For full configuration details and validation rules, see [docs/config.md](./docs/config.md).
+The local workspace prepares runtime files under `.doc-repo/`.
 
-Create `doc-repo.config.json` in your repository root to configure behavior:
-
-```json
-{
-  "name": "Doc Repo",
-  "rootDir": "./docs",
-  "include": ["specs/**/*.md"],
-  "exclude": ["drafts/**"],
-  "port": 4000
-}
-```
-
-| Field     | Type       | Default        | Description                                                        |
-| --------- | ---------- | -------------- | ------------------------------------------------------------------ |
-| `name`    | `string`   | `"Doc Repo"`   | Site name shown in the sidebar header                              |
-| `rootDir` | `string`   | Git root / cwd | Root directory for Markdown collection (relative to config file)   |
-| `include` | `string[]` | `["**/*.md"]`  | Glob patterns to include. `[]` is treated the same as omitted.     |
-| `exclude` | `string[]` | `[]`           | Additional glob patterns to exclude (merged with default excludes) |
-| `port`    | `number`   | `4000`         | Port for `serve` command (overridden by `--port` CLI option)       |
-
-**Resolution order**: config file (`doc-repo.config.json`) → Git root → current directory.
-
-**Default excludes** (always active): `node_modules/**`, `.git/**`, `.doc-repo/**`
-
-**`exclude` takes precedence over `include`.**
-
-## Output
-
-doc-repo prepares runtime artifacts under `.doc-repo` for `serve` execution:
-
-```text
-.doc-repo/
-├── index.html        # serve entry page
-├── assets/
-├── viewer/
-└── ...
-```
-
-Generated artifacts are intended to be consumed through `doc-repo serve`.
-
-Reliability behavior:
-
-- Serves Viewer assets and API on the same origin/port
-- Guards against path traversal when serving workspace files
-- Returns structured JSON errors for API failures
-
-### Exit Codes
-
-| Code | Meaning                                   |
-| ---- | ----------------------------------------- |
-| `0`  | Success (including success with warnings) |
-| `1`  | Failure                                   |
-
-## Markdown Support (Current)
-
-- Converter: `markdown-it`
-- `html: false` (raw HTML in Markdown is disabled)
-- `linkify: true`, `typographer: true`
-- Some GFM extensions (task lists, Mermaid, code highlighting) are not yet supported
-- Relative images are rewritten to workspace-relative asset paths and served via `serve`
-
-## Edit and Save Workflow
-
-- Click `編集` in the viewer to switch the current document to rich text edit mode
-- Supported formatting: body text, headings 1-6, bold, italic, strikethrough, inline code, blockquote, bullet list, ordered list, code block, horizontal rule
-- Save request is validated against root/include/exclude/path traversal and `.md` extension rules
-- If unsupported markdown segments are detected, a warning dialog is shown before continuing save
-- Save failures are categorized and shown with retry guidance:
-  - `invalid-target` (not retryable)
-  - `unwritable-target` (not retryable until environment is fixed)
-  - `transient-io` (retryable)
-- Unsaved edits are guarded on document switch, edit exit, and browser unload
-
-### Editing Shortcuts
-
-| Action          | macOS      | Windows / Linux |
-| --------------- | ---------- | --------------- |
-| Body text       | `⌘⌥0`      | `Ctrl+Alt+0`    |
-| Heading 1       | `⌘⌥1`      | `Ctrl+Alt+1`    |
-| Heading 2       | `⌘⌥2`      | `Ctrl+Alt+2`    |
-| Heading 3       | `⌘⌥3`      | `Ctrl+Alt+3`    |
-| Heading 4       | `⌘⌥4`      | `Ctrl+Alt+4`    |
-| Heading 5       | `⌘⌥5`      | `Ctrl+Alt+5`    |
-| Heading 6       | `⌘⌥6`      | `Ctrl+Alt+6`    |
-| Bold            | `⌘B`       | `Ctrl+B`        |
-| Italic          | `⌘I`       | `Ctrl+I`        |
-| Strikethrough   | `⌘⇧S`      | `Ctrl+Shift+S`  |
-| Inline code     | `⌘⇧M`      | `Ctrl+Shift+M`  |
-| Blockquote      | `⌘⇧B`      | `Ctrl+Shift+B`  |
-| Bullet list     | `⌘⇧8`      | `Ctrl+Shift+8`  |
-| Ordered list    | `⌘⇧7`      | `Ctrl+Shift+7`  |
-| Code block      | `⌘⌥C`      | `Ctrl+Alt+C`    |
-| Horizontal rule | `⌘⇧-`      | `Ctrl+Shift+-`  |
-| Save            | `⌘Enter`   | `Ctrl+Enter`    |
+Treat `.doc-repo/` as a generated runtime artifact and add it to `.gitignore`.
 
 ## Security Notes
 
-- Raw HTML is disabled, but generation is still intended for trusted repositories
-- If you run doc-repo on unknown repositories, review output before sharing
-
-## Git Policy for `.doc-repo`
-
-Choose a policy based on your use case:
-
-- Treat as temporary artifact: add `.doc-repo/` to `.gitignore`
-- Treat as distributable artifact: committing generated files is also possible (output is replaced on each successful run)
+- Use doc-repo with repositories you trust.
+- Raw HTML is disabled during Markdown rendering.
+- The local server serves workspace files needed by the Viewer, so avoid exposing it on untrusted networks.
 
 ## Development
 
@@ -201,27 +134,16 @@ For contributors:
 
 ```bash
 npm install
-npm run dev
 npm run dev -- serve
+npm test
 npm run build
 ```
 
-Build and run compiled CLI:
+Run the compiled CLI:
 
 ```bash
-node dist/cli/index.js
 node dist/cli/index.js serve
 ```
-
-## Markdown Features & Constraints
-
-**Supported**:
-
-- Relative images (e.g., `![alt](./docs/assets/image.png)`): rewritten to `/assets/...` and resolved from workspace files in `serve` mode
-
-**Not yet supported (planned for future releases)**:
-
-- Attachments in Markdown (PDF, CSV, ZIP, etc. referenced via normal links like `[link](./docs/assets/file.pdf)`)
 
 ## Issues / Feedback
 

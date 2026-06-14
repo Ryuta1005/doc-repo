@@ -1,232 +1,154 @@
 # doc-repo
 
-リポジトリ内の Markdown ドキュメントを、ブラウザ上で見やすく閲覧・編集できるドキュメント管理ツールです。Git と Markdown を正本として維持しながら、職種を問わず同じドキュメントを扱える環境を提供します。
+doc-repo は、Git リポジトリ内の Markdown ファイルをブラウザで閲覧・編集するためのローカルワークスペースです。
+Markdown ファイルを正本として維持しながら、リポジトリ内のドキュメントを構造で探しやすくし、ブラウザから更新できるようにします。
 
 > [!WARNING]
-> `doc-repo` は現時点で alpha 想定です。CLI の引数仕様や生成ファイル構成は将来変更される可能性があります。
+> `doc-repo` は現在 alpha 版です。CLI の挙動、編集機能、生成されるランタイムファイルは今後のリリースで変更される可能性があります。
 
 ![doc-repo screenshot placeholder](./docs/assets/screenshot-sample.png)
 
-## なぜ使うのか
+## Git and Markdown as the Source of Truth
 
-仕様駆動開発や AI を活用した開発が広がるにつれ、仕様書・設計書・議事録・運用ドキュメントなどを Markdown で管理する機会が増えています。一方で、Markdown ファイルが複数のディレクトリに分散すると、次の課題が起きやすくなります。
+仕様書や設計資料をGitリポジトリ内のMarkdownで管理すれば、コードと同じように変更履歴を残し、レビューしながら更新できます。仕様駆動開発やAIを活用した開発とも相性がよく、リポジトリ上のMarkdownをドキュメントの **Source of Truth** にできます。
 
-- Markdown ファイルが複数階層に散らばり、全体を追いづらい
-- エディタを開かないと文書の中身を横断閲覧しにくい
-- 非エンジニアが VS Code や Git を使って内容を探したり修正したりしづらい
+一方で、リポジトリ内のMarkdownを読む・更新するには、エディタを開いてファイルを探したり、Gitを使った開発フローを理解したりする必要があります。そのため、チームの全員にとって使いやすいとは限りません。
 
-`doc-repo` は、リポジトリ内の Markdown を自動的に読み込み、ディレクトリ構造を保ったまま「左ツリー / 右本文」の 2 ペインで表示します。ブラウザ上で文書を編集し、その変更を元の Markdown ファイルへ保存できるため、非エンジニアでも OneNote や Confluence を操作するような感覚で Git リポジトリ上のドキュメントを扱えます。
+NotionやConfluenceなどへ同じ内容を移せば扱いやすくなりますが、リポジトリとドキュメントサービスの二重管理になり、内容が食い違う可能性があります。
 
-目的は、単に Markdown を HTML へ変換することではありません。Git と Markdown を正本として維持しながら、誰もがドキュメントを閲覧・編集できるようにすることが中心的なコンセプトです。
+doc-repoは、リポジトリ内のMarkdownを別のサービスへ移すことなく、ブラウザから閲覧・編集できるワークスペースを提供します。既存のディレクトリ構造をそのまま辿ることができ、編集内容は元のMarkdownファイルへ保存されます。これにより、リポジトリ上のMarkdownをSource of Truthとして維持できます。
 
-## 主な特徴
+## Features
 
-- リポジトリ内の `.md` を再帰的に自動収集
-- ディレクトリ構造を保ったツリーナビゲーション
-- ブラウザ上でリポジトリ内 Markdown を閲覧・編集できるドキュメントワークスペース
-- 編集内容を元の Markdown ファイルへ保存
-- ローカルサーバーモード（`doc-repo serve`）に対応
-- `serve` 実行中は Markdown の変更を監視
-- Markdown 変更検知時に SSE でブラウザを自動リロード
+- 設定されたルート配下の `.md` ファイルを再帰的に検出
+- リポジトリ内ドキュメントを 2 ペインのブラウザワークスペースで表示
+- ツリーナビゲーションでディレクトリ構造を保持
+- ブラウザ編集に対応し、変更を Markdown ファイルへ保存
+- ローカルワークスペースの実行中に Markdown ファイルを監視
+- Markdown ファイルの変更時にブラウザを自動リロード
+- Viewer UI ラベルは英語と日本語に対応
 
-> [!IMPORTANT]
-> タスク 020 の方針により、静的生成の直接入口（`doc-repo [scopePath]`）は廃止されました。
-> サポートされる正規入口は `doc-repo serve` のみです。
+コマンドを指定せずに `doc-repo` を実行すると、ローカルブラウザワークスペースが起動します。`doc-repo serve` は同じ処理を明示的に実行する形式です。
 
-## クイックスタート
+## Quick Start
 
 前提:
 
-- Node.js 20 以上
+- Node.js 20+
 
-リポジトリ内で実行:
-
-```bash
-npx doc-repo serve
-```
-
-alpha タグで配布している期間は、次を利用してください。
+リポジトリ内で実行します。
 
 ```bash
-npx doc-repo@alpha serve
+npx doc-repo
 ```
 
-起動後にブラウザで `http://localhost:4000` を開きます。
+パッケージが alpha タグで公開されている場合は、次を使います。
 
-## Viewer の表示言語
+```bash
+npx doc-repo@alpha
+```
 
-Viewer UI は英語と日本語に対応しています。左サイドバー最下部に固定された地球アイコン付きメニューから表示言語を切り替えられます。
+その後、ブラウザで `http://localhost:4000` を開きます。
 
-デフォルト言語は英語です。選択した言語はブラウザの `localStorage` に保存され、ページ再読み込み後も維持されます。対象は Viewer UI のみで、CLI メッセージ、Markdown 本文、リポジトリ構成は翻訳されません。
+## Documentation
 
-## CLI
+- [Getting Started](./docs/getting-started.ja.md)
+- [Configuration](./docs/config.ja.md)
+- [Editing and Keyboard Shortcuts](./docs/editing.ja.md)
+
+## CLI Overview
 
 ```bash
 doc-repo init
+doc-repo
 doc-repo serve [--port <number>]
 ```
 
-| 引数 / オプション | 説明                                                     | デフォルト |
-| ----------------- | -------------------------------------------------------- | ---------- |
-| `init`            | カレントディレクトリに `doc-repo.config.json` 雛形を生成 | -          |
-| `serve`           | ローカルサーバーを起動し、変更を監視する                 | -          |
-| `--port`          | `serve` の待受ポート（CLI > 設定 > 既定）                | `4000`     |
+| コマンド / オプション | 説明                                                   |
+| --------------------- | ------------------------------------------------------ |
+| `init`                | `doc-repo.config.json` のテンプレートを作成            |
+| `doc-repo`            | ローカルブラウザワークスペースを起動し Markdown を監視 |
+| `serve`               | デフォルトのワークスペースコマンドを明示的に実行       |
+| `--port <number>`     | 設定値またはデフォルトの serve ポートを上書き          |
 
-### serve の責務
+## Configuration
 
-- `doc-repo serve` が `サーバー起動 → ファイル監視開始` を順に実行
-- `.md` ファイルの変更・追加・削除を監視し、検知時に SSE でブラウザへ reload イベントを配信する
-- HTTP サーバーは Viewer 資産とワークスペースファイルを同一 origin で配信する
-- 終了時（Ctrl+C / SIGTERM）は watcher → SSE 接続 → HTTP サーバーの順で停止する
-
-### 対象ルート
-
-- 対象ルート: `doc-repo.config.json` が存在すればそこから解決、なければ Git ルート、さらになければカレントディレクトリ
-- 収集対象: 対象ルート配下の Markdown 全体（`include`/`exclude` で絞り込み）
-
-## 設定ファイル
-
-設定項目の詳細とバリデーション仕様は [docs/config.ja.md](./docs/config.ja.md) を参照してください（英語版: [docs/config.md](./docs/config.md)）。
-
-リポジトリルートに `doc-repo.config.json` を置くことで動作を制御できます。
+ワークスペースを設定するには `doc-repo.config.json` を作成します。明示的な最小設定は次のようになります。
 
 ```json
 {
   "name": "Doc Repo",
-  "rootDir": "./docs",
-  "include": ["specs/**/*.md"],
-  "exclude": ["drafts/**"],
+  "rootDir": ".",
+  "include": ["**/*.md"],
+  "exclude": [],
   "port": 4000
 }
 ```
 
-| フィールド | 型         | デフォルト       | 説明                                                      |
-| ---------- | ---------- | ---------------- | --------------------------------------------------------- |
-| `name`     | `string`   | `"Doc Repo"`     | サイドバー上部に表示するサイト名                          |
-| `rootDir`  | `string`   | Git ルート / cwd | Markdown 収集の起点（設定ファイル基準の相対パスで指定）   |
-| `include`  | `string[]` | `["**/*.md"]`    | 収集対象の glob パターン。`[]` は未指定と同じ扱い。       |
-| `exclude`  | `string[]` | `[]`             | 既定除外に追加する glob パターン                          |
-| `port`     | `number`   | `4000`           | `serve` の待受ポート（`--port` CLI オプションで上書き可） |
+解決規則、デフォルト除外、バリデーション、その他の例は [Configuration](./docs/config.ja.md) を参照してください。
 
-**解決順序**: 設定ファイル（`doc-repo.config.json`）→ Git ルート → カレントディレクトリ。
+## Viewer Language
 
-**常時除外**（変更不可）: `node_modules/**`, `.git/**`, `.doc-repo/**`
+Viewer UI は英語と日本語に対応しています。左サイドバー下部に固定された地球アイコン付きメニューから表示言語を切り替えられます。
 
-**`exclude` は `include` より優先されます。**
+デフォルト言語は英語で、選択した言語はページ再読み込み後も復元されます。これは Viewer UI のみを変更します。CLI メッセージ、Markdown 本文、リポジトリ構成は翻訳されません。
 
-## 生成結果
+## Editing
 
-`.doc-repo` 配下に、`serve` 実行のためのランタイム成果物を生成します。
+Viewer の **Edit** をクリックすると、現在のドキュメントをリッチテキスト編集モードに切り替えられます。保存すると、編集内容は元の Markdown ファイルへ書き戻されます。
 
-```text
-.doc-repo/
-├── index.html        # serve のエントリ
-├── assets/
-├── viewer/
-└── ...
-```
+> [!CAUTION]
+> ブラウザでの編集内容は、元の Markdown ファイルへ直接書き込まれます。
+> 特にリッチテキスト編集が alpha の間は、編集前に変更をコミットするかバックアップしてください。
 
-生成成果物は `doc-repo serve` 経由で利用することを前提とします。
+対応書式、保存時の検証、未対応 Markdown の警告、保存エラー分類、未保存変更の保護、キーボードショートカットは [Editing and Keyboard Shortcuts](./docs/editing.ja.md) を参照してください。
 
-信頼性に関する挙動:
+## Markdown Support
 
-- Viewer 資産と API を同一 origin / 同一 port で配信
-- ワークスペースファイル配信時にパストラバーサルを防止
-- API 失敗時は JSON エラーペイロードを返却
+- レンダリングには `markdown-it` を使用します。
+- Markdown 内の raw HTML は無効です。
+- `linkify` と `typographer` は有効です。
+- 相対画像はワークスペース相対のアセット URL に書き換えられ、ローカルワークスペースで配信されます。
+- GFM task list は task list UI としては現在サポートされていません。
+- Mermaid diagram は diagram として描画されません。
+- fenced code block の syntax highlighting は現在提供されていません。
+- Markdown からリンクされた PDF、CSV、ZIP などのファイルはリンクとして残る場合がありますが、添付ファイルのコピーや配信は専用機能としてはまだ提供されていません。
 
-### 終了コード
+Viewer で表示できる Markdown と、リッチテキストエディタで編集・保持できる Markdown は同じではありません。エディタはより小さい書式セットに対応しており、未対応 Markdown セグメントが検出された場合は保存前に警告することがあります。
 
-| コード | 意味                       |
-| ------ | -------------------------- |
-| `0`    | 成功（警告付き成功を含む） |
-| `1`    | 失敗                       |
+## Runtime Artifacts
 
-## Markdown 対応方針（現状）
+ローカルワークスペースは `.doc-repo/` 配下にランタイムファイルを作成します。
 
-- 変換ライブラリ: `markdown-it`
-- `html: false`（Markdown 内の生 HTML は無効）
-- `linkify: true`, `typographer: true`
-- GFM の一部拡張（例: task list、Mermaid、コードハイライト）は未対応
-- 相対画像はワークスペース相対のアセットパスへ書き換えられ、`serve` で配信されます
+`.doc-repo/` は生成されるランタイム成果物として扱い、`.gitignore` に追加してください。
 
-## 編集・保存フロー（Story 010）
+## Security Notes
 
-- 閲覧画面の `編集` ボタンで、表示中文書をリッチテキスト編集モードへ切り替え
-- 対応書式: 本文、見出し 1〜6、太字、イタリック、取り消し線、インラインコード、引用、箇条書き、番号付きリスト、コードブロック、水平線
-- 保存時は root/include/exclude/パストラバーサル/`.md` 拡張子を検証
-- 未対応 Markdown 要素がある場合、保存継続前に警告ダイアログを表示
-- 保存失敗は 3 分類で案内:
-  - `invalid-target`（再試行不可）
-  - `unwritable-target`（環境修正まで再試行不可）
-  - `transient-io`（再試行可）
-- 未保存変更は、文書切替・編集終了・ブラウザ離脱時にガードされます
+- doc-repo は信頼できるリポジトリで使用してください。
+- Markdown レンダリング時、raw HTML は無効化されます。
+- ローカルサーバーは Viewer に必要なワークスペースファイルを配信するため、信頼できないネットワークへ公開しないでください。
 
-### 編集ショートカット
+## Development
 
-| 操作             | macOS      | Windows / Linux |
-| ---------------- | ---------- | --------------- |
-| 本文             | `⌘⌥0`      | `Ctrl+Alt+0`    |
-| 見出し 1         | `⌘⌥1`      | `Ctrl+Alt+1`    |
-| 見出し 2         | `⌘⌥2`      | `Ctrl+Alt+2`    |
-| 見出し 3         | `⌘⌥3`      | `Ctrl+Alt+3`    |
-| 見出し 4         | `⌘⌥4`      | `Ctrl+Alt+4`    |
-| 見出し 5         | `⌘⌥5`      | `Ctrl+Alt+5`    |
-| 見出し 6         | `⌘⌥6`      | `Ctrl+Alt+6`    |
-| 太字             | `⌘B`       | `Ctrl+B`        |
-| イタリック       | `⌘I`       | `Ctrl+I`        |
-| 取り消し線       | `⌘⇧S`      | `Ctrl+Shift+S`  |
-| インラインコード | `⌘⇧M`      | `Ctrl+Shift+M`  |
-| 引用             | `⌘⇧B`      | `Ctrl+Shift+B`  |
-| 箇条書き         | `⌘⇧8`      | `Ctrl+Shift+8`  |
-| 番号付きリスト   | `⌘⇧7`      | `Ctrl+Shift+7`  |
-| コードブロック   | `⌘⌥C`      | `Ctrl+Alt+C`    |
-| 水平線           | `⌘⇧-`      | `Ctrl+Shift+-`  |
-| 保存             | `⌘Enter`   | `Ctrl+Enter`    |
-
-## セキュリティ注意
-
-- 生 HTML は無効化していますが、生成対象は基本的に信頼できるリポジトリを想定してください
-- 未知のリポジトリに対して実行する場合は、生成結果を確認してから共有してください
-
-## `.doc-repo` の Git 管理方針
-
-用途に応じて選択してください。
-
-- 一時生成物として扱う場合: `.gitignore` に `.doc-repo/` を追加
-- 成果物配布・公開に使う場合: 生成物コミット運用も可（毎回再生成で置換される前提）
-
-## 開発者向け
-
-開発者向け手順:
+コントリビューター向け:
 
 ```bash
 npm install
-npm run dev
 npm run dev -- serve
+npm test
 npm run build
 ```
 
-ビルド済み CLI 実行:
+ビルド済み CLI を実行します。
 
 ```bash
-node dist/cli/index.js
 node dist/cli/index.js serve
 ```
-
-## Markdown 機能と制限
-
-**サポート中**:
-
-- 相対画像（例：`![alt](./docs/assets/image.png)`）: `/assets/...` へ書き換えられ、`serve` モードで表示できます
-
-**今後のリリースで対応予定**:
-
-- Markdown 内の添付ファイル（PDF、CSV、ZIP など通常リンク `[link](./docs/assets/file.pdf)` で参照されるもの）
 
 ## Issues / Feedback
 
 不具合報告や要望は GitHub Issues を利用してください。
 
-## ライセンス
+## License
 
 MIT
