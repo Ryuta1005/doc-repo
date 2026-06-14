@@ -15,12 +15,17 @@ import {
 import { DocumentTree } from "./components/DocumentTree.js";
 import { DocumentViewer } from "./components/DocumentViewer.js";
 import { ErrorBanner } from "./components/ErrorBanner.js";
-import { DocumentEditor, type DocumentEditorSnapshot } from "./components/DocumentEditor.js";
+import type { DocumentEditorSnapshot } from "./components/DocumentEditor.js";
 import { UnsavedChangesDialog } from "./components/UnsavedChangesDialog.js";
 import { useViewerState } from "./hooks/useViewerState.js";
 import { useUnsavedChangesGuard } from "./hooks/useUnsavedChangesGuard.js";
 import { LocaleProvider, type Locale, useLocale } from "./locale/index.js";
 import { resolveDocumentSwitchDecision, resolveIdentifierAfterSave } from "./navigation.js";
+
+const DocumentEditor = React.lazy(async () => {
+  const module = await import("./components/DocumentEditor.js");
+  return { default: module.DocumentEditor };
+});
 
 export function App(): React.JSX.Element {
   return (
@@ -147,9 +152,7 @@ function AppContent(): React.JSX.Element {
         setEditSession((current) => markSaveFailed(current));
         if (error instanceof SaveDocumentError) {
           setSaveErrorMessage(error.message);
-          setSaveErrorHint(
-            error.retryable ? t("appRetryableSaveHint") : t("appUnretryableSaveHint"),
-          );
+          setSaveErrorHint(error.retryable ? t("appRetryableSaveHint") : t("appUnretryableSaveHint"));
         } else {
           setSaveErrorMessage(error instanceof Error ? error.message : String(error));
           setSaveErrorHint(null);
@@ -218,23 +221,25 @@ function AppContent(): React.JSX.Element {
             <div className="viewer-shell-header">
               <h2 className="viewer-shell-title">{selectedIdentifier}</h2>
             </div>
-            {editorSnapshot ? (
-              <DocumentEditor
-                key={selectedIdentifier ?? "editor"}
-                documentIdentifier={selectedIdentifier ?? ""}
-                sourceMarkdown={markdown}
-                onSnapshotChange={setEditorSnapshot}
-                onSaveRequest={handleSaveRequest}
-                onCancelRequest={() => {
-                  if (shouldPromptUnsavedChanges({ mode, hasUnsavedChanges: isDirty }, "exit-edit")) {
-                    setShowUnsavedDialog(true);
-                    return;
-                  }
-                  leaveEditMode();
-                }}
-                isSaving={isSaving}
-              />
-            ) : null}
+            <React.Suspense fallback={<p className="viewer-muted">{t("editorPreparing")}</p>}>
+              {editorSnapshot ? (
+                <DocumentEditor
+                  key={selectedIdentifier ?? "editor"}
+                  documentIdentifier={selectedIdentifier ?? ""}
+                  sourceMarkdown={markdown}
+                  onSnapshotChange={setEditorSnapshot}
+                  onSaveRequest={handleSaveRequest}
+                  onCancelRequest={() => {
+                    if (shouldPromptUnsavedChanges({ mode, hasUnsavedChanges: isDirty }, "exit-edit")) {
+                      setShowUnsavedDialog(true);
+                      return;
+                    }
+                    leaveEditMode();
+                  }}
+                  isSaving={isSaving}
+                />
+              ) : null}
+            </React.Suspense>
           </section>
         )}
       </section>
