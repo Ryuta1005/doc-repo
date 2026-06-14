@@ -12,13 +12,13 @@ This guide walks from first launch to the first browser edit.
 Run from the repository you want to browse:
 
 ```bash
-npx doc-repo serve
+npx doc-repo
 ```
 
 If the package is published under an alpha tag, use:
 
 ```bash
-npx doc-repo@alpha serve
+npx doc-repo@alpha
 ```
 
 Then open:
@@ -34,8 +34,10 @@ The Viewer shows a document tree on the left and the selected Markdown document 
 If `doc-repo` is installed locally in a project:
 
 ```bash
-npx doc-repo serve
+npx doc-repo
 ```
+
+`npx doc-repo serve` is the explicit equivalent.
 
 If you are working in this repository from source:
 
@@ -64,13 +66,13 @@ This writes `doc-repo.config.json` in the current directory:
 }
 ```
 
-Run `doc-repo serve` again after changing the config.
+Run `doc-repo` again after changing the config.
 
 For all configuration rules, see [Configuration](./config.md).
 
 ## Browse Markdown Files
 
-1. Start `doc-repo serve`.
+1. Start `doc-repo`.
 2. Open `http://localhost:4000`.
 3. Select a Markdown file from the left tree.
 4. Read the rendered document in the main pane.
@@ -93,7 +95,7 @@ For supported formatting, save warnings, and keyboard shortcuts, see [Editing an
 
 ## Runtime Files
 
-`doc-repo serve` creates `.doc-repo/` as a runtime artifact directory.
+The local workspace creates `.doc-repo/` as a runtime artifact directory.
 
 Add it to `.gitignore`:
 
@@ -122,4 +124,4 @@ Check:
 
 ### Config is not being used
 
-`doc-repo serve` searches upward from the current working directory for `doc-repo.config.json`. Run the command from the repository or a subdirectory under the config file.
+doc-repo searches upward from the current working directory for `doc-repo.config.json`. Run the command from the repository or a subdirectory under the config file.

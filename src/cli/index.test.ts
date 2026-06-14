@@ -69,6 +69,32 @@ describe("index.ts", () => {
     errSpy.mockRestore();
   });
 
+  it("引数なしの場合、serve と同じ処理を実行すること。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    runServeMock.mockResolvedValue({ status: "watching", exitCode: 0, publicUrl: "http://localhost:4000" });
+    formatResultMessageMock.mockReturnValue("serve ok");
+
+    const { run } = await import("./index.js");
+    await run(["node", "doc-repo"], "/tmp/repo");
+
+    expect(runServeMock).toHaveBeenCalledWith({
+      cwd: "/tmp/repo",
+      rootDir: "/tmp/repo",
+      siteName: "Doc Repo",
+      port: 4000,
+      includePatterns: [],
+      excludePatterns: [],
+    });
+    expect(logSpy).toHaveBeenCalledWith("serve ok");
+    expect(errSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+
+    logSpy.mockRestore();
+    errSpy.mockRestore();
+  });
+
   it("help で serve をブラウザワークスペース起動として説明すること。", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);

@@ -5,7 +5,7 @@
 ## File Name and Discovery
 
 - ファイル名: `doc-repo.config.json`
-- 探索方法: `doc-repo serve` は現在の作業ディレクトリから上位へ探索し、最初に見つかった設定ファイルを使用します。
+- 探索方法: doc-repo は現在の作業ディレクトリから上位へ探索し、最初に見つかった設定ファイルを使用します。
 - 設定ファイルが見つからない場合、doc-repo は Git ルート検出を行い、それも見つからなければ現在の作業ディレクトリを使用します。
 
 ## Create a Template
@@ -40,7 +40,7 @@ doc-repo init
 | `rootDir`  | `string`   | No   | 設定ファイルのディレクトリ、Git ルート、または現在の cwd | Markdown ファイルの収集・保存に使うルートディレクトリ |
 | `include`  | `string[]` | No   | `["**/*.md"]`                              | 対象 Markdown ファイルの include glob パターン        |
 | `exclude`  | `string[]` | No   | `[]`                                       | 追加の exclude glob パターン                          |
-| `port`     | `number`   | No   | `4000`                                     | `doc-repo serve` で使用するポート                     |
+| `port`     | `number`   | No   | `4000`                                     | ローカルワークスペースで使用するポート                |
 
 未知のフィールドは現在無視されます。
 
@@ -87,7 +87,7 @@ doc-repo init
 
 ## Validation Errors
 
-次の場合、`doc-repo serve` は exit code `1` で失敗します。
+次の場合、ワークスペースコマンドは exit code `1` で失敗します。
 
 - `doc-repo.config.json` を JSON としてパースできない
 - `name` が指定されているが文字列ではない、または空文字列

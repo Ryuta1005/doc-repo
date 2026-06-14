@@ -5,7 +5,7 @@ This document is the reference for `doc-repo.config.json`.
 ## File Name and Discovery
 
 - File name: `doc-repo.config.json`
-- Discovery: `doc-repo serve` searches from the current working directory upward and uses the first config file it finds.
+- Discovery: doc-repo searches from the current working directory upward and uses the first config file it finds.
 - If no config file is found, doc-repo falls back to Git root detection, then the current working directory.
 
 ## Create a Template
@@ -40,7 +40,7 @@ If `doc-repo.config.json` already exists, `doc-repo init` does not overwrite it.
 | `rootDir` | `string`   | No       | Config directory, Git root, or current cwd   | Root directory used to collect and save Markdown files             |
 | `include` | `string[]` | No       | `["**/*.md"]`                                | Glob patterns for Markdown files to include                        |
 | `exclude` | `string[]` | No       | `[]`                                         | Additional glob patterns to exclude                                |
-| `port`    | `number`   | No       | `4000`                                       | Port used by `doc-repo serve`                                      |
+| `port`    | `number`   | No       | `4000`                                       | Port used by the local workspace                                   |
 
 Unknown fields are currently ignored.
 
@@ -87,7 +87,7 @@ The port must be an integer from `1` to `65535`.
 
 ## Validation Errors
 
-`doc-repo serve` fails with exit code `1` when:
+The workspace command fails with exit code `1` when:
 
 - `doc-repo.config.json` cannot be parsed as JSON
 - `name` is missing a string value when provided, or is an empty string

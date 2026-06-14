@@ -12,13 +12,13 @@
 閲覧したいリポジトリで実行します。
 
 ```bash
-npx doc-repo serve
+npx doc-repo
 ```
 
 パッケージが alpha タグで公開されている場合は、次を使います。
 
 ```bash
-npx doc-repo@alpha serve
+npx doc-repo@alpha
 ```
 
 その後、次の URL を開きます。
@@ -34,8 +34,10 @@ Viewer には左側にドキュメントツリー、右側に選択した Markdo
 `doc-repo` がプロジェクトにローカルインストールされている場合:
 
 ```bash
-npx doc-repo serve
+npx doc-repo
 ```
+
+`npx doc-repo serve` は同じ処理を明示的に実行する形式です。
 
 このリポジトリのソースから作業している場合:
 
@@ -64,13 +66,13 @@ npx doc-repo init
 }
 ```
 
-設定を変更した後は、`doc-repo serve` を再実行してください。
+設定を変更した後は、`doc-repo` を再実行してください。
 
 すべての設定ルールは [Configuration](./config.ja.md) を参照してください。
 
 ## Browse Markdown Files
 
-1. `doc-repo serve` を起動します。
+1. `doc-repo` を起動します。
 2. `http://localhost:4000` を開きます。
 3. 左側のツリーから Markdown ファイルを選択します。
 4. メインペインでレンダリングされたドキュメントを読みます。
@@ -93,7 +95,7 @@ npx doc-repo init
 
 ## Runtime Files
 
-`doc-repo serve` は `.doc-repo/` をランタイム成果物ディレクトリとして作成します。
+ローカルワークスペースは `.doc-repo/` をランタイム成果物ディレクトリとして作成します。
 
 `.gitignore` に追加してください。
 
@@ -122,4 +124,4 @@ npx doc-repo serve --port 4100
 
 ### Config is not being used
 
-`doc-repo serve` は現在の作業ディレクトリから上位へ `doc-repo.config.json` を探します。リポジトリ、または設定ファイル配下のサブディレクトリからコマンドを実行してください。
+doc-repo は現在の作業ディレクトリから上位へ `doc-repo.config.json` を探します。リポジトリ、または設定ファイル配下のサブディレクトリからコマンドを実行してください。

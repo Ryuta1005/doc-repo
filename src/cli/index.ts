@@ -8,6 +8,10 @@ import { resolveServeOptions } from "./serve/resolveServeOptions.js";
 import { toServeUserGuidance } from "../shared/errors.js";
 import type { ServeSession, InitResult } from "../shared/types.js";
 
+const DEFAULT_COMMAND = "serve";
+
+const shouldUseDefaultServeCommand = (argv: string[]): boolean => argv.length <= 2;
+
 export const run = async (argv: string[] = process.argv, cwd: string = process.cwd()): Promise<void> => {
   const program = new Command();
 
@@ -82,7 +86,8 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
       process.exitCode = result.exitCode;
     });
 
-  await program.parseAsync(argv);
+  const normalizedArgv = shouldUseDefaultServeCommand(argv) ? [...argv, DEFAULT_COMMAND] : argv;
+  await program.parseAsync(normalizedArgv);
 };
 
 if (process.env.VITEST !== "true") {
