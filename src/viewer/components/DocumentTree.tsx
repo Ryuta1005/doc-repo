@@ -1,5 +1,6 @@
 import React from "react";
 import { identifierToPathname } from "../navigation.js";
+import { useLocale } from "../locale/index.js";
 
 export interface DocumentTreeItem {
   identifier: string;
@@ -117,6 +118,7 @@ interface DocumentTreeProps {
 }
 
 export function DocumentTree({ items, selectedIdentifier, onSelect }: DocumentTreeProps): React.JSX.Element {
+  const { t } = useLocale();
   const [openPaths, setOpenPaths] = React.useState<Set<string>>(() => new Set(getAncestorPaths(selectedIdentifier)));
 
   React.useEffect(() => {
@@ -147,14 +149,14 @@ export function DocumentTree({ items, selectedIdentifier, onSelect }: DocumentTr
   }, []);
 
   if (!items.length) {
-    return <p className="viewer-muted">ドキュメントがありません。</p>;
+    return <p className="viewer-muted">{t("noDocumentsTree")}</p>;
   }
 
   const root = buildTree(items);
   const nodes = Array.from(root.children.values()).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <nav aria-label="Documents" className="viewer-tree">
+    <nav aria-label={t("navDocuments")} className="viewer-tree">
       {renderNodes(nodes, selectedIdentifier, openPaths, toggleOpen, onSelect)}
     </nav>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocale } from "../locale/index.js";
 
 interface SaveWarningDialogProps {
   open: boolean;
@@ -15,6 +16,7 @@ export function SaveWarningDialog({
   onCancel,
   isSaving,
 }: SaveWarningDialogProps): React.JSX.Element | null {
+  const { t } = useLocale();
   if (!open) {
     return null;
   }
@@ -22,8 +24,8 @@ export function SaveWarningDialog({
   return (
     <div className="dialog-overlay" role="presentation">
       <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="save-warning-title">
-        <h2 id="save-warning-title">未対応要素が含まれています</h2>
-        <p>原文保持を優先しますが、保持不能な場合は内容が変化する可能性があります。</p>
+        <h2 id="save-warning-title">{t("saveWarningTitle")}</h2>
+        <p>{t("saveWarningBody")}</p>
         <ul className="dialog-list">
           {warnings.map((warning) => (
             <li key={warning}>{warning}</li>
@@ -31,7 +33,7 @@ export function SaveWarningDialog({
         </ul>
         <div className="dialog-actions">
           <button type="button" className="editor-toolbar-button" onClick={onCancel}>
-            キャンセル
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -39,7 +41,7 @@ export function SaveWarningDialog({
             onClick={onProceed}
             disabled={isSaving}
           >
-            {isSaving ? "保存中..." : "保存を続ける"}
+            {isSaving ? t("saving") : t("continueSave")}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocale } from "../locale/index.js";
 
 interface UnsavedChangesDialogProps {
   open: boolean;
@@ -13,6 +14,7 @@ export function UnsavedChangesDialog({
   onContinueEditing,
   onDiscardChanges,
 }: UnsavedChangesDialogProps): React.JSX.Element | null {
+  const { t } = useLocale();
   const continueButtonRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
@@ -40,18 +42,20 @@ export function UnsavedChangesDialog({
   return (
     <div className="dialog-overlay" role="presentation">
       <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="unsaved-dialog-title">
-        <h2 id="unsaved-dialog-title">未保存の変更があります</h2>
-        <p>{triggerLabel}すると、保存されていない変更は失われます。</p>
+        <h2 id="unsaved-dialog-title">{t("unsavedTitle")}</h2>
+        <p>
+          {triggerLabel}: {t("unsavedBody")}
+        </p>
         <div className="dialog-actions">
           <button
             type="button"
             className="rounded px-3 py-2 font-medium text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
             onClick={onDiscardChanges}
           >
-            変更を破棄する
+            {t("discardChanges")}
           </button>
           <button ref={continueButtonRef} type="button" className="btn btn-primary" onClick={onContinueEditing}>
-            編集を続ける
+            {t("continueEditing")}
           </button>
         </div>
       </div>

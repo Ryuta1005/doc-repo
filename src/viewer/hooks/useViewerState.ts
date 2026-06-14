@@ -4,6 +4,7 @@ import { fetchDocument, fetchDocuments, fetchSiteConfig } from "../services/apiC
 import { pathnameToIdentifier, identifierToPathname } from "../navigation.js";
 import { startSseClient } from "../services/sseClient.js";
 import { resolveSelectedIdentifier } from "../state/viewerState.js";
+import { useLocale } from "../locale/index.js";
 
 interface DocumentTreeItem {
   identifier: string;
@@ -24,6 +25,7 @@ interface ViewerState {
 }
 
 export const useViewerState = (): ViewerState => {
+  const { t } = useLocale();
   const initialIdentifier = React.useMemo(() => {
     if (typeof window === "undefined") {
       return null;
@@ -34,10 +36,10 @@ export const useViewerState = (): ViewerState => {
   const [items, setItems] = React.useState<DocumentTreeItem[]>([]);
   const [siteName, setSiteName] = React.useState<string>("Doc Repo");
   const [selectedIdentifier, setSelectedIdentifier] = React.useState<string | null>(initialIdentifier);
-  const [title, setTitle] = React.useState<string>("Loading...");
+  const [title, setTitle] = React.useState<string>(() => t("loading"));
   const [markdown, setMarkdown] = React.useState<string>("");
   const [html, setHtml] = React.useState<string>("");
-  const [statusMessage, setStatusMessage] = React.useState<string>("読み込み中...");
+  const [statusMessage, setStatusMessage] = React.useState<string>(() => t("loading"));
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const loadDocuments = React.useCallback(async () => {
@@ -56,17 +58,17 @@ export const useViewerState = (): ViewerState => {
       }
 
       if (!docs.length) {
-        setStatusMessage("表示できるドキュメントがありません。");
+        setStatusMessage(t("noDocumentsStatus"));
         setTitle("No documents");
-        setHtml("<p>Markdown が見つかりませんでした。</p>");
+        setHtml(`<p>${t("markdownNotFound")}</p>`);
       } else {
         setStatusMessage("");
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
-      setStatusMessage("ドキュメント一覧の取得に失敗しました。");
+      setStatusMessage(t("documentsListLoadFailed"));
     }
-  }, [selectedIdentifier]);
+  }, [selectedIdentifier, t]);
 
   const loadSiteConfig = React.useCallback(async () => {
     try {
@@ -91,11 +93,11 @@ export const useViewerState = (): ViewerState => {
       setStatusMessage("");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
-      setStatusMessage("文書の取得に失敗しました。");
+      setStatusMessage(t("documentLoadFailed"));
       setTitle("Not Found");
-      setHtml('<h1>Not Found</h1><p>文書が見つかりませんでした。</p><p><a href="/">トップへ戻る</a></p>');
+      setHtml(`<h1>Not Found</h1><p>${t("documentNotFound")}</p><p><a href="/">${t("backToTop")}</a></p>`);
     }
-  }, [selectedIdentifier]);
+  }, [selectedIdentifier, t]);
 
   const reloadSelectedDocument = React.useCallback(() => {
     void loadSelectedDocument();
@@ -117,14 +119,14 @@ export const useViewerState = (): ViewerState => {
         void loadSelectedDocument();
       },
       onError: () => {
-        setStatusMessage("自動更新の接続が一時的に不安定です。再接続を試行しています...");
+        setStatusMessage(t("reconnecting"));
       },
     });
 
     return () => {
       handle.close();
     };
-  }, [loadDocuments, loadSelectedDocument]);
+  }, [loadDocuments, loadSelectedDocument, t]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") {

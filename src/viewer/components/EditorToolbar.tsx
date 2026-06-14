@@ -16,6 +16,7 @@ import {
 import type { Editor } from "@tiptap/react";
 
 import { editorBlockShortcuts, getEditorShortcutLabel, withEditorShortcut } from "../shortcuts/editorShortcuts.js";
+import { useLocale } from "../locale/index.js";
 import { Tooltip } from "./Tooltip.js";
 
 interface EditorToolbarProps {
@@ -31,6 +32,7 @@ type AdmonitionType = "NOTE" | "TIP" | "IMPORTANT" | "WARNING" | "CAUTION";
 const ADMONITION_TYPES: AdmonitionType[] = ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION"];
 
 export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImage }: EditorToolbarProps): React.JSX.Element {
+  const { t } = useLocale();
   const [isBlockMenuOpen, setIsBlockMenuOpen] = React.useState(false);
   const [isPanelMenuOpen, setIsPanelMenuOpen] = React.useState(false);
   const [isImageReading, setIsImageReading] = React.useState(false);
@@ -87,13 +89,13 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
   }, [editor, selectionVersion]);
 
   const blockLabels: Record<string, string> = {
-    paragraph: "本文",
-    h1: "見出し1",
-    h2: "見出し2",
-    h3: "見出し3",
-    h4: "見出し4",
-    h5: "見出し5",
-    h6: "見出し6",
+    paragraph: t("blockParagraph"),
+    h1: t("blockHeading1"),
+    h2: t("blockHeading2"),
+    h3: t("blockHeading3"),
+    h4: t("blockHeading4"),
+    h5: t("blockHeading5"),
+    h6: t("blockHeading6"),
   };
 
   const isBold = editor?.isActive("bold") ?? false;
@@ -229,7 +231,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
       }
 
       if (!isSupportedImageFile(file)) {
-        window.alert("対応している画像形式は png / jpeg のみです。");
+        window.alert(t("unsupportedImageType"));
         return;
       }
 
@@ -249,14 +251,14 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
           .insertContent(`![${escapedAltText}](${uploaded.imagePath})`)
           .run();
       } catch (error) {
-        const message = error instanceof Error ? error.message : "画像の読み込みに失敗しました。";
+        const message = error instanceof Error ? error.message : t("imageLoadFailed");
         window.alert(message);
       } finally {
         savedSelectionRef.current = null;
         setIsImageReading(false);
       }
     },
-    [editor, isSupportedImageFile, onUploadImage],
+    [editor, isSupportedImageFile, onUploadImage, t],
   );
 
   const handleKeyDown = React.useCallback(
@@ -330,7 +332,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
     <div
       className="editor-toolbar-fixed flex items-center gap-0.5 border-b border-gray-200 bg-gray-50 px-2 py-2"
       role="toolbar"
-      aria-label="編集ツールバー"
+      aria-label={t("editorToolbar")}
     >
       {/* ブロックタイプドロップダウン */}
       <div className="relative">
@@ -339,7 +341,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             ref={blockMenuButtonRef}
             type="button"
             onClick={() => setIsBlockMenuOpen(!isBlockMenuOpen)}
-            aria-label="ブロックタイプを選択"
+            aria-label={t("blockTypeSelect")}
             aria-haspopup="listbox"
             aria-expanded={isBlockMenuOpen}
             className="flex items-center gap-1 rounded px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors"
@@ -394,7 +396,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             rememberSelection();
           }}
           onClick={() => setIsPanelMenuOpen(!isPanelMenuOpen)}
-          aria-label="情報パネルを挿入"
+          aria-label={t("panelInsert")}
           aria-haspopup="listbox"
           aria-expanded={isPanelMenuOpen}
           className={`flex items-center gap-1 rounded px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${
@@ -404,7 +406,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
           }`}
         >
           {activeAdmonitionType ? renderAdmonitionIcon(activeAdmonitionType) : <Info size={14} />}
-          <span>{activeAdmonitionType ?? "パネル"}</span>
+          <span>{activeAdmonitionType ?? t("panel")}</span>
           <ChevronDown size={16} className={isPanelMenuOpen ? "rotate-180" : ""} />
         </button>
 
@@ -425,7 +427,7 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
                   event.preventDefault();
                 }}
                 role="option"
-                aria-label={`${panelType} パネルを挿入`}
+                aria-label={`${panelType} ${t("panelInsertType")}`}
                 onClick={() => insertAdmonition(panelType)}
                 className="flex w-full items-center gap-2 text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 transition-colors"
               >
@@ -442,11 +444,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
 
       {/* インライン書式 */}
       <div className="flex items-center gap-1">
-        <Tooltip content={withEditorShortcut("太字", "bold")}>
+        <Tooltip content={withEditorShortcut(t("bold"), "bold")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleBold().run()}
-            aria-label={withEditorShortcut("太字", "bold")}
+            aria-label={withEditorShortcut(t("bold"), "bold")}
             aria-pressed={isBold}
             className={`rounded-sm px-2.5 py-2 text-sm font-bold transition-colors ${
               isBold
@@ -457,11 +459,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             B
           </button>
         </Tooltip>
-        <Tooltip content={withEditorShortcut("イタリック", "italic")}>
+        <Tooltip content={withEditorShortcut(t("italic"), "italic")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleItalic().run()}
-            aria-label={withEditorShortcut("イタリック", "italic")}
+            aria-label={withEditorShortcut(t("italic"), "italic")}
             aria-pressed={isItalic}
             className={`rounded-sm px-2.5 py-2 text-sm italic transition-colors ${
               isItalic
@@ -472,11 +474,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             I
           </button>
         </Tooltip>
-        <Tooltip content={withEditorShortcut("取り消し線", "strike")}>
+        <Tooltip content={withEditorShortcut(t("strike"), "strike")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleStrike().run()}
-            aria-label={withEditorShortcut("取り消し線", "strike")}
+            aria-label={withEditorShortcut(t("strike"), "strike")}
             aria-pressed={isStrike}
             className={`rounded-sm px-2.5 py-2 text-sm transition-colors ${
               isStrike
@@ -487,11 +489,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             <span className="line-through">S</span>
           </button>
         </Tooltip>
-        <Tooltip content={withEditorShortcut("インラインコード", "code")}>
+        <Tooltip content={withEditorShortcut(t("inlineCode"), "code")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleCode().run()}
-            aria-label={withEditorShortcut("インラインコード", "code")}
+            aria-label={withEditorShortcut(t("inlineCode"), "code")}
             aria-pressed={isCode}
             className={`rounded-sm px-2.5 py-2 text-sm font-mono transition-colors ${
               isCode
@@ -509,11 +511,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
 
       {/* リスト・引用 */}
       <div className="flex items-center gap-1">
-        <Tooltip content={withEditorShortcut("引用", "blockquote")}>
+        <Tooltip content={withEditorShortcut(t("blockquote"), "blockquote")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            aria-label={withEditorShortcut("引用", "blockquote")}
+            aria-label={withEditorShortcut(t("blockquote"), "blockquote")}
             aria-pressed={isBlockquote}
             className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
               isBlockquote
@@ -524,11 +526,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             <Quote size={14} />
           </button>
         </Tooltip>
-        <Tooltip content={withEditorShortcut("箇条書き", "bulletList")}>
+        <Tooltip content={withEditorShortcut(t("bulletList"), "bulletList")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            aria-label={withEditorShortcut("箇条書き", "bulletList")}
+            aria-label={withEditorShortcut(t("bulletList"), "bulletList")}
             aria-pressed={isBulletList}
             className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
               isBulletList
@@ -539,11 +541,11 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
             <List size={14} />
           </button>
         </Tooltip>
-        <Tooltip content={withEditorShortcut("番号付きリスト", "orderedList")}>
+        <Tooltip content={withEditorShortcut(t("orderedList"), "orderedList")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-            aria-label={withEditorShortcut("番号付きリスト", "orderedList")}
+            aria-label={withEditorShortcut(t("orderedList"), "orderedList")}
             aria-pressed={isOrderedList}
             className={`flex items-center rounded-sm px-2.5 py-2 text-sm transition-colors ${
               isOrderedList
@@ -561,17 +563,17 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
 
       {/* その他 */}
       <div className="flex items-center gap-1">
-        <Tooltip content={withEditorShortcut("水平線", "horizontalRule")}>
+        <Tooltip content={withEditorShortcut(t("horizontalRule"), "horizontalRule")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-            aria-label={withEditorShortcut("水平線", "horizontalRule")}
+            aria-label={withEditorShortcut(t("horizontalRule"), "horizontalRule")}
             className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <SquareSplitVertical size={14} />
           </button>
         </Tooltip>
-        <Tooltip content="画像を添付（png/jpeg）">
+        <Tooltip content={t("attachImageWithTypes")}>
           <button
             type="button"
             onPointerDown={(event) => {
@@ -583,18 +585,18 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
               rememberSelection();
             }}
             onClick={() => imageInputRef.current?.click()}
-            aria-label="画像を添付"
+            aria-label={t("attachImage")}
             disabled={isImageReading}
             className="flex items-center rounded-sm px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ImagePlus size={14} />
           </button>
         </Tooltip>
-        <Tooltip content={withEditorShortcut("コードブロック", "codeBlock")}>
+        <Tooltip content={withEditorShortcut(t("codeBlock"), "codeBlock")}>
           <button
             type="button"
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-            aria-label={withEditorShortcut("コードブロック", "codeBlock")}
+            aria-label={withEditorShortcut(t("codeBlock"), "codeBlock")}
             aria-pressed={isCodeBlock}
             className={`rounded-sm px-2.5 py-2 text-sm font-mono transition-colors ${
               isCodeBlock
@@ -614,22 +616,22 @@ export function EditorToolbar({ editor, onSave, onCancel, isSaving, onUploadImag
       <button
         type="button"
         onClick={onCancel}
-        aria-label="編集をキャンセル"
+        aria-label={t("cancelEdit")}
         disabled={isSaving}
         className="rounded px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        キャンセル
+        {t("cancel")}
       </button>
-      <Tooltip content={withEditorShortcut("保存", "save")}>
+      <Tooltip content={withEditorShortcut(t("save"), "save")}>
         <button
           type="button"
           onClick={onSave}
-          aria-label={isSaving ? "保存中..." : withEditorShortcut("編集を保存", "save")}
+          aria-label={isSaving ? t("saving") : withEditorShortcut(t("saveEdit"), "save")}
           disabled={isSaving}
           className="ml-2 flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           <Save size={16} />
-          {isSaving ? "保存中..." : "保存"}
+          {isSaving ? t("saving") : t("save")}
         </button>
       </Tooltip>
       <input

@@ -1,5 +1,5 @@
 import React from "react";
-import { Pencil } from "lucide-react";
+import { Globe, Pencil } from "lucide-react";
 
 import { parseEditableMarkdown } from "../core/markdown/index.js";
 import { SaveDocumentError, saveDocument } from "./services/apiClient.js";
@@ -19,9 +19,19 @@ import { DocumentEditor, type DocumentEditorSnapshot } from "./components/Docume
 import { UnsavedChangesDialog } from "./components/UnsavedChangesDialog.js";
 import { useViewerState } from "./hooks/useViewerState.js";
 import { useUnsavedChangesGuard } from "./hooks/useUnsavedChangesGuard.js";
+import { LocaleProvider, type Locale, useLocale } from "./locale/index.js";
 import { resolveDocumentSwitchDecision, resolveIdentifierAfterSave } from "./navigation.js";
 
 export function App(): React.JSX.Element {
+  return (
+    <LocaleProvider>
+      <AppContent />
+    </LocaleProvider>
+  );
+}
+
+function AppContent(): React.JSX.Element {
+  const { locale, setLocale, t } = useLocale();
   const {
     items,
     siteName,
@@ -123,7 +133,7 @@ export function App(): React.JSX.Element {
         });
 
         if (response.status !== "saved") {
-          throw new Error("保存処理に失敗しました。時間をおいて再試行してください。");
+          throw new Error(t("appSaveFailed"));
         }
 
         const nextIdentifier = resolveIdentifierAfterSave(response.savedDocument.identifier, selectedIdentifier);
@@ -138,7 +148,7 @@ export function App(): React.JSX.Element {
         if (error instanceof SaveDocumentError) {
           setSaveErrorMessage(error.message);
           setSaveErrorHint(
-            error.retryable ? "再試行できます。" : "設定または対象ファイルを確認してください。再試行不可です。",
+            error.retryable ? t("appRetryableSaveHint") : t("appUnretryableSaveHint"),
           );
         } else {
           setSaveErrorMessage(error instanceof Error ? error.message : String(error));
@@ -148,7 +158,7 @@ export function App(): React.JSX.Element {
         setIsSaving(false);
       }
     },
-    [leaveEditMode, reloadSelectedDocument, selectedIdentifier],
+    [leaveEditMode, reloadSelectedDocument, selectedIdentifier, t],
   );
 
   const confirmDiscard = React.useCallback(() => {
@@ -167,11 +177,26 @@ export function App(): React.JSX.Element {
 
   return (
     <main className="viewer-layout">
-      <aside className="viewer-sidebar" id="tree" aria-label="Document sidebar">
+      <aside className="viewer-sidebar" id="tree" aria-label={t("appDocumentSidebar")}>
         <h1 className="viewer-brand">
           <a href="/">{siteName}</a>
         </h1>
-        <DocumentTree items={items} selectedIdentifier={selectedIdentifier} onSelect={requestSelectIdentifier} />
+        <div className="viewer-tree-scroll">
+          <DocumentTree items={items} selectedIdentifier={selectedIdentifier} onSelect={requestSelectIdentifier} />
+        </div>
+        <label className="viewer-locale-switcher">
+          <Globe size={16} aria-hidden="true" />
+          <select
+            aria-label={t("displayLanguage")}
+            value={locale}
+            onChange={(event) => {
+              setLocale(event.target.value as Locale);
+            }}
+          >
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </label>
       </aside>
       <section className="viewer-content">
         {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
@@ -183,7 +208,7 @@ export function App(): React.JSX.Element {
               <h2 className="viewer-shell-title">{selectedIdentifier}</h2>
               <button type="button" className="btn btn-primary" onClick={enterEditMode} disabled={!selectedIdentifier}>
                 <Pencil size={18} />
-                編集
+                {t("appEditDocument")}
               </button>
             </div>
             <DocumentViewer identifier={selectedIdentifier} html={html} onNavigate={requestSelectIdentifier} />
@@ -215,7 +240,7 @@ export function App(): React.JSX.Element {
       </section>
       <UnsavedChangesDialog
         open={showUnsavedDialog}
-        triggerLabel={pendingSelection ? "別ファイルへの切り替え" : "編集を終了"}
+        triggerLabel={pendingSelection ? t("appSwitchDocument") : t("appExitEdit")}
         onContinueEditing={continueEditing}
         onDiscardChanges={confirmDiscard}
       />

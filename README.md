@@ -53,6 +53,12 @@ npx doc-repo@alpha serve
 
 Then open `http://localhost:4000` in your browser.
 
+## Viewer Language
+
+The Viewer UI is available in English and Japanese. Use the globe menu fixed at the bottom of the left sidebar to switch languages.
+
+The default language is English. Your selected language is saved in the browser's `localStorage` and is restored when you reload the page. This changes only the Viewer UI; CLI messages, Markdown content, and repository structure are not translated.
+
 ## CLI
 
 ```bash

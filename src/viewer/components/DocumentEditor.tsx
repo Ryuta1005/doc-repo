@@ -10,6 +10,7 @@ import {
 } from "../../core/markdown/index.js";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts.js";
 import { uploadDocumentImage } from "../services/apiClient.js";
+import { useLocale } from "../locale/index.js";
 import { EditorToolbar } from "./EditorToolbar.js";
 
 export interface DocumentEditorSnapshot {
@@ -87,6 +88,7 @@ export function DocumentEditor({
   onCancelRequest,
   isSaving,
 }: DocumentEditorProps): React.JSX.Element {
+  const { t } = useLocale();
   const parsed = React.useMemo(() => parseEditableMarkdown(sourceMarkdown), [sourceMarkdown]);
   const initialDocumentKey = React.useMemo(() => JSON.stringify(parsed.document), [parsed.document]);
 
@@ -179,7 +181,7 @@ export function DocumentEditor({
   );
 
   if (!editor) {
-    return <p className="viewer-muted">エディタを準備しています...</p>;
+    return <p className="viewer-muted">{t("editorPreparing")}</p>;
   }
 
   return (
