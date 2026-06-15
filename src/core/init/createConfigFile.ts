@@ -5,6 +5,7 @@ import { toUserGuidance } from "../../shared/errors.js";
 import type { InitResult } from "../../shared/types.js";
 
 const DEFAULT_CONFIG = {
+  name: "Doc Repo",
   rootDir: ".",
   include: ["**/*.md"],
   exclude: [],

@@ -1,13 +1,12 @@
-import { generateSite } from "../site/generateSite.js";
-import { startStaticServer } from "./startStaticServer.js";
-import { createSseConnectionRegistry } from "./sseConnectionRegistry.js";
 import { createWatchTargetFilter } from "./watchTargetFilter.js";
 import { createRefreshCoordinator } from "./refreshCoordinator.js";
 import { startMarkdownWatcher } from "./startMarkdownWatcher.js";
 import { createWatchStatusReporter } from "./watchStatusReporter.js";
 import { createLogger } from "../../shared/logger.js";
 import { toServeUserGuidance } from "../../shared/errors.js";
-import type { GenerationResult, ServeSession, ServeStepResult } from "../../shared/types.js";
+import { createServer } from "../../presentation/http/createServer.js";
+import { createSseConnectionRegistry } from "../../presentation/http/sse/sseConnectionRegistry.js";
+import type { ServeSession, ServeStepResult } from "../../shared/types.js";
 
 interface ServerHandle {
   url: string;
@@ -16,45 +15,27 @@ interface ServerHandle {
 
 interface RunServeInput {
   cwd?: string;
+  siteName?: string;
   rootDir?: string;
-  outputDir: string;
   port?: number;
   includePatterns?: string[];
   excludePatterns?: string[];
-  generate?: () => Promise<GenerationResult>;
-  startServer?: (input: { outputDir: string; port: number }) => Promise<ServerHandle>;
+  startServer?: (input: {
+    port: number;
+    siteName?: string;
+    rootDir: string;
+    includePatterns?: string[];
+    excludePatterns?: string[];
+  }) => Promise<ServerHandle>;
   registerSignalHandler?: (signal: NodeJS.Signals, handler: () => void | Promise<void>) => void;
 }
 
 const elapsedMs = (start: number): number => Date.now() - start;
 
-const buildFailedSession = (steps: ServeStepResult[], reason: string, hint: string): ServeSession => ({
-  status: "failed",
-  exitCode: 1,
-  steps,
-  failures: [
-    {
-      type: "initial-generate-failed",
-      message: reason,
-      hint,
-      exitCode: 1,
-    },
-  ],
-});
-
 export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
   const resolvedPort = input.port ?? 4000;
   const logger = createLogger();
   const reporter = createWatchStatusReporter(logger);
-  const generate =
-    input.generate ??
-    (async () =>
-      await generateSite({
-        cwd: input.cwd ?? process.cwd(),
-        resolvedRootDir: input.rootDir,
-        includePatterns: input.includePatterns,
-        excludePatterns: input.excludePatterns,
-      }));
   const rootDir = input.rootDir ?? input.cwd ?? process.cwd();
   const registerSignalHandler = input.registerSignalHandler ?? ((signal, handler) => process.once(signal, handler));
   const sseRegistry = createSseConnectionRegistry();
@@ -66,35 +47,11 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
 
   const steps: ServeStepResult[] = [];
 
-  const genStart = Date.now();
-  const generated = await generate();
-  if (generated.status === "failure") {
-    steps.push({
-      step: "initial-generate",
-      status: "failure",
-      message: generated.errorReason ?? generated.message,
-      durationMs: elapsedMs(genStart),
-    });
-
-    return buildFailedSession(
-      steps,
-      generated.errorReason ?? generated.message,
-      generated.hint ?? "入力を確認してください。",
-    );
-  }
-
-  steps.push({
-    step: "initial-generate",
-    status: "success",
-    message: generated.message,
-    durationMs: elapsedMs(genStart),
-  });
-
   try {
     const startServer =
       input.startServer ??
       (async (x) =>
-        await startStaticServer({
+        await createServer({
           ...x,
           sseHooks: {
             onSseConnect: (response) => ({
@@ -104,10 +61,17 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
               sseRegistry.remove(connectionId);
             },
           },
+          siteName: input.siteName,
         }));
 
     const serverStart = Date.now();
-    const server = await startServer({ outputDir: input.outputDir, port: resolvedPort });
+    const server = await startServer({
+      port: resolvedPort,
+      siteName: input.siteName,
+      rootDir,
+      includePatterns: input.includePatterns,
+      excludePatterns: input.excludePatterns,
+    });
     steps.push({
       step: "start-server",
       status: "success",
@@ -116,17 +80,7 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
     });
 
     const coordinator = createRefreshCoordinator({
-      onRegenerate: async () => {
-        const result = await generate();
-        if (result.status === "success") {
-          return { ok: true };
-        }
-
-        return {
-          ok: false,
-          reason: result.errorReason ?? result.message,
-        };
-      },
+      onRegenerate: async () => ({ ok: true }),
       onReload: () => sseRegistry.dispatchReload(),
     });
 

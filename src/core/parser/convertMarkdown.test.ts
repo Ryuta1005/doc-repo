@@ -44,24 +44,22 @@ describe("convertMarkdown.ts", () => {
     expect(result.html).toContain('href="001_epic/index.html"');
   });
 
-  it("相対パスがズレた .md リンクでも、同名ページが一意なら救済されること。", () => {
+  it("相対パスがズレた .md リンクは同名ページが一意でも救済しないこと。", () => {
     const knownIds = new Set(["project/issue-workflow", "project/planning/backlog/index"]);
-    const uniqueBasenames = new Map([["issue-workflow", "project/issue-workflow"]]);
     // 記述は ../issue-workflow.md（= project/planning/issue-workflow で実在しない）。
     const result = convertMarkdown(
       "[workflow](../issue-workflow.md)",
       "project/planning/backlog/index.md",
       knownIds,
-      uniqueBasenames,
     );
 
-    expect(result.html).toContain('href="../../issue-workflow.html"');
+    expect(result.html).toContain('href="../../../../project/planning/issue-workflow.md"');
+    expect(result.html).not.toContain('href="../../issue-workflow.html"');
   });
 
-  it("同名ページが複数ある場合、ベース名フォールバックは効かず資産パスのまま保たれること。", () => {
+  it("同名ページが複数ある場合も資産パスのまま保たれること。", () => {
     const knownIds = new Set(["a/index", "b/index"]);
-    // index は複数あり曖昧なため uniqueBasenames には含めない（救済対象外）。
-    const result = convertMarkdown("[x](../missing/index.md)", "a/sub/page.md", knownIds, new Map());
+    const result = convertMarkdown("[x](../missing/index.md)", "a/sub/page.md", knownIds);
 
     expect(result.html).not.toContain("index.html");
     expect(result.html).toContain("index.md");
@@ -97,7 +95,7 @@ describe("convertMarkdown.ts", () => {
       expect(result.html).toContain('src="../../assets/docs/guide/assets/screenshot.png"');
     });
 
-    it("クエリとハッシュ付きの相対画像が .doc-repo/assets 配下を指したまま suffix を維持すること。", () => {
+    it("クエリとハッシュ付きの相対画像が Viewer の assets 配信パスを指したまま suffix を維持すること。", () => {
       const result = convertMarkdown("![screenshot](./assets/screenshot.png?v=1#section)", "docs/guide/page.md");
 
       expect(result.html).toContain('src="../../assets/docs/guide/assets/screenshot.png?v=1#section"');

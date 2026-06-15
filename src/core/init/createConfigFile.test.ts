@@ -31,6 +31,7 @@ describe("createConfigFile", () => {
 
     const actual = await fs.readJson(configPath);
     expect(actual).toEqual({
+      name: "Doc Repo",
       rootDir: ".",
       include: ["**/*.md"],
       exclude: [],

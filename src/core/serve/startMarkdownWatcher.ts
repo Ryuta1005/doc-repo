@@ -1,26 +1,38 @@
 import path from "node:path";
 import chokidar from "chokidar";
 
-import type { WatchEventType, WatchHandle } from "../../shared/types.js";
+import type { WatchEvent, WatchEventType, WatchHandle } from "../../shared/types.js";
 
 interface StartMarkdownWatcherInput {
   rootDir: string;
   isTargetPath: (absolutePath: string) => boolean;
-  onEvent: (event: { eventType: WatchEventType; absolutePath: string }) => void;
+  onEvent: (event: WatchEvent) => void;
 }
 
+const toPosixPath = (value: string): string => value.split(path.sep).join(path.posix.sep);
+
 export const startMarkdownWatcher = async (input: StartMarkdownWatcherInput): Promise<WatchHandle> => {
-  const watcher = chokidar.watch(input.rootDir, {
+  const rootDir = path.resolve(input.rootDir);
+  const watcher = chokidar.watch(rootDir, {
     ignoreInitial: true,
   });
 
-  const onEvent = (eventType: WatchEventType) => (relativePath: string) => {
-    const absolutePath = path.resolve(input.rootDir, relativePath);
+  const onEvent = (eventType: WatchEventType) => (eventPath: string) => {
+    const absolutePath = path.isAbsolute(eventPath) ? path.resolve(eventPath) : path.resolve(rootDir, eventPath);
     if (!input.isTargetPath(absolutePath)) {
       return;
     }
 
-    input.onEvent({ eventType, absolutePath });
+    const relativePath = path.relative(rootDir, absolutePath);
+    if (relativePath.startsWith("..") || path.isAbsolute(relativePath) || !relativePath) {
+      return;
+    }
+
+    input.onEvent({
+      eventType,
+      absolutePath,
+      notificationPath: toPosixPath(relativePath),
+    });
   };
 
   watcher.on("add", onEvent("add"));

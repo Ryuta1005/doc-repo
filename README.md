@@ -1,209 +1,143 @@
 # doc-repo
 
-doc-repo is a CLI that converts Markdown files in your repository into a browsable static documentation site with a directory tree.
+doc-repo is a local workspace for viewing and editing Markdown files in a Git repository from your browser.
+
+It lets you browse documents using the repository's existing directory structure and update them from the browser while keeping the Markdown files as the source of truth.
 
 > [!WARNING]
-> `doc-repo` is currently in alpha. CLI arguments and generated file structure may change in future releases.
+> doc-repo is currently in alpha. CLI behavior, editing features, and generated runtime files may change in future releases.
 
-![doc-repo screenshot placeholder](./docs/assets/screenshot-sample.png)
+![doc-repo Viewer](./docs/assets/screenshot-sample.png)
 
-## Why doc-repo?
+## Git and Markdown as the Source of Truth
 
-As repositories grow, Markdown documents (specs, design notes, operational docs) tend to become harder to navigate.
+Managing specifications and design documents as Markdown files in a Git repository lets you track changes and review updates in the same way as source code. This approach also works well with specification-driven development and AI-assisted development, allowing the Markdown files in the repository to serve as the documentation **Source of Truth**.
 
-- Markdown files are scattered across multiple directories.
-- It is hard to browse content across files without opening an editor.
-- It is difficult to share a clear reading path with non-developers.
+However, reading and updating Markdown files in a repository may require users to open an editor, locate files, and understand Git-based workflows. This may not be convenient for everyone on a team.
 
-doc-repo addresses this by generating a two-pane viewer (left tree / right content) that makes repository documents easier to explore.
+doc-repo provides a browser-based workspace for viewing and editing Markdown without moving the content to a separate documentation service. Changes are saved to the original Markdown files, allowing the repository to remain the Source of Truth.
 
 ## Features
 
-- Recursively discovers `.md` files in your repository
-- Preserves directory structure in tree navigation
-- Works without a local server (`index.html` can be opened directly)
-- Supports local server mode (`doc-repo serve`) with initial generation
-- Watches Markdown files and auto-regenerates on save while `serve` is running
-- Reloads the browser automatically via SSE when regeneration succeeds
-- Supports directory-scoped generation (`scopePath`)
-- Supports `--open` to launch the generated page automatically
+- Browse Markdown documents in the browser while preserving the repository's directory structure
+- Edit Markdown documents using a rich-text editor in the browser
 
 ## Quick Start
 
-Prerequisite:
+### Prerequisites
 
-- Node.js 20+
+- Node.js 20 or later
+- A repository or directory containing Markdown files
 
-Run inside a repository:
+### Install and Start
 
-```bash
-npx doc-repo
-```
-
-If the package is published under an alpha tag, use:
+Install doc-repo in your project as a `devDependency`.
 
 ```bash
-npx doc-repo@alpha
+npm install --save-dev doc-repo@alpha
 ```
 
-Open the generated site:
+Add doc-repo to the existing `scripts` section of your `package.json`.
+
+```json
+{
+  "scripts": {
+    "doc-repo": "doc-repo"
+  }
+}
+```
+
+Start doc-repo.
 
 ```bash
-open .doc-repo/index.html
+npm run doc-repo
 ```
 
-Generate only a specific directory:
+Open the following URL in your browser:
 
-```bash
-npx doc-repo specs
-npx doc-repo docs/project
+```text
+http://localhost:4000
 ```
+
+The document tree appears on the left, and the selected Markdown document appears on the right.
+
+For detailed instructions, see [Getting Started](./docs/getting-started.md).
+
+## Documentation
+
+- [Getting Started](./docs/getting-started.md)
+- [Configuration](./docs/config.md)
+- [Editing Documents](./docs/editing.md)
 
 ## CLI
 
 ```bash
-doc-repo [scopePath] [--open]
-doc-repo init
-doc-repo serve [--port <number>]
+npm run doc-repo
+npm run doc-repo -- init
+npm run doc-repo -- serve --port 4100
 ```
 
-| Argument / Option | Description                                                              | Default        |
-| ----------------- | ------------------------------------------------------------------------ | -------------- |
-| `scopePath`       | Directory to generate from (path relative to Git root)                   | Whole Git root |
-| `--open`          | Open `.doc-repo/index.html` with your default browser after generation   | `false`        |
-| `init`            | Generate `doc-repo.config.json` template in current directory            | -              |
-| `serve`           | Run initial generation, start local static server, and watch for changes | -              |
-| `--port`          | Port for `serve` (CLI > config > default)                                | `4000`         |
+| Command or option | Description                         |
+| ----------------- | ----------------------------------- |
+| `doc-repo`        | Start the local workspace           |
+| `init`            | Create `doc-repo.config.json`       |
+| `serve`           | Explicitly start the workspace      |
+| `--port <number>` | Specify the port used by the Viewer |
 
-### Serve Responsibilities
+## Configuration
 
-- `doc-repo serve` orchestrates: initial generation → server start → file watch start
-- Watches `.md` files and re-generates on change, add, or unlink
-- After successful regeneration, sends a reload event to all connected browsers via SSE
-- The HTTP server is delivery-only and does not run generation by itself
-- If initial generation fails, server startup is skipped and command exits with code `1`
-- On exit (Ctrl+C / SIGTERM), stops in order: watcher → SSE connections → HTTP server
+doc-repo can run without a configuration file.
 
-### Target Root vs Collection Scope
+To change settings such as the files to display or the port number, create `doc-repo.config.json` with the following command:
 
-- Target root: resolved from `doc-repo.config.json` if present; falls back to Git root, then current directory
-- Collection scope: Directory under target root resolved from `scopePath`
-
-## Configuration File
-
-For full configuration details and validation rules, see [docs/config.md](./docs/config.md).
-
-Create `doc-repo.config.json` in your repository root to configure behavior:
-
-```json
-{
-  "rootDir": "./docs",
-  "include": ["specs/**/*.md"],
-  "exclude": ["drafts/**"],
-  "port": 4000
-}
+```bash
+npm run doc-repo -- init
 ```
 
-| Field     | Type       | Default        | Description                                                        |
-| --------- | ---------- | -------------- | ------------------------------------------------------------------ |
-| `rootDir` | `string`   | Git root / cwd | Root directory for Markdown collection (relative to config file)   |
-| `include` | `string[]` | `["**/*.md"]`  | Glob patterns to include. `[]` is treated the same as omitted.     |
-| `exclude` | `string[]` | `[]`           | Additional glob patterns to exclude (merged with default excludes) |
-| `port`    | `number`   | `4000`         | Port for `serve` command (overridden by `--port` CLI option)       |
+For details about each configuration option, see [Configuration](./docs/config.md).
 
-**Resolution order**: config file (`doc-repo.config.json`) → Git root → current directory.
+## Editing
 
-**Default excludes** (always active): `node_modules/**`, `.git/**`, `.doc-repo/**`
+Click **Edit** in the Viewer to edit the selected Markdown document. Saved changes are written directly to the original `.md` file in the repository.
 
-**`exclude` takes precedence over `include`.**
+The Viewer may display Markdown that the rich-text editor cannot safely edit or preserve.
 
-## Output
+For supported formatting and keyboard shortcuts, see [Editing Documents](./docs/editing.md).
 
-doc-repo generates a multi-page static site under `.doc-repo`, mirroring your Markdown tree:
+## Runtime Files
 
-```text
+doc-repo creates runtime files in the `.doc-repo/` directory.
+
+Add it to `.gitignore`:
+
+```gitignore
 .doc-repo/
-├── index.html        # redirects to the home page (README if present)
-├── styles.css
-├── app.js            # browser-side auto-reload (SSE client)
-├── README.html
-└── docs/
-    └── guide/
-        └── page.html
 ```
 
-Each Markdown file becomes a standalone `.html`, and links between documents are
-plain relative links, so it works even when opened directly via `file://`.
+## Security
 
-Reliability behavior:
-
-- Replaces `.doc-repo` only after a successful generation
-- Generates in a staging directory before publishing
-- Keeps existing `.doc-repo` when generation fails
-- Generates an empty site and exits successfully with warning when no Markdown files are found
-
-### Exit Codes
-
-| Code | Meaning                                   |
-| ---- | ----------------------------------------- |
-| `0`  | Success (including success with warnings) |
-| `1`  | Failure                                   |
-
-## Current Limitations
-
-- Browser-based Markdown editing is not supported yet
-
-## Markdown Support (Current)
-
-- Converter: `markdown-it`
-- `html: false` (raw HTML in Markdown is disabled)
-- `linkify: true`, `typographer: true`
-- Some GFM extensions (task lists, Mermaid, code highlighting) are not yet supported
-- Relative images are automatically copied to `.doc-repo/assets/` and rewritten to work both in static files and via `serve`
-
-## Security Notes
-
-- Raw HTML is disabled, but generation is still intended for trusted repositories
-- If you run doc-repo on unknown repositories, review output before sharing
-
-## Git Policy for `.doc-repo`
-
-Choose a policy based on your use case:
-
-- Treat as temporary artifact: add `.doc-repo/` to `.gitignore`
-- Treat as distributable artifact: committing generated files is also possible (output is replaced on each successful run)
+- Use doc-repo only with repositories you trust
+- Raw HTML in Markdown is not rendered
+- Do not expose the local server to an untrusted network
 
 ## Development
 
-For contributors:
-
 ```bash
 npm install
-npm run dev
-npm run dev -- specs
+npm run dev -- serve
+npm test
 npm run build
 ```
 
-Build and run compiled CLI:
+To run the built CLI, use:
 
 ```bash
-node dist/cli/index.js
-node dist/cli/index.js specs
+node dist/cli/index.js serve
 ```
-
-## Markdown Features & Constraints
-
-**Supported**:
-
-- Relative images (e.g., `![alt](./docs/assets/image.png)`): automatically copied to `.doc-repo/assets/` and rewritten to work in both `file://` mode and `serve` mode
-
-**Not yet supported (planned for future releases)**:
-
-- Attachments in Markdown (PDF, CSV, ZIP, etc. referenced via normal links like `[link](./docs/assets/file.pdf)`)
 
 ## Issues / Feedback
 
-Please use GitHub Issues for bug reports and feature requests.
+Use GitHub Issues to report bugs or request features.
 
 ## License
 
