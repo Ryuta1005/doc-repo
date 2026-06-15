@@ -19,6 +19,10 @@ export const validateDocumentIdentifier = (rootDirRelativePath: string): Documen
     return { ok: false, reason: "identifier must not be empty" };
   }
 
+  if (path.isAbsolute(normalized)) {
+    return { ok: false, reason: "identifier must be a relative path" };
+  }
+
   if (normalized.startsWith("../") || normalized === "..") {
     return { ok: false, reason: "identifier must remain inside rootDir" };
   }

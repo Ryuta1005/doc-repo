@@ -22,6 +22,8 @@ interface StartStaticServerInput {
     onGetSiteConfig?: () => Promise<unknown>;
     onListDocuments: () => Promise<unknown>;
     onGetDocument: (rawPathQuery: string | null) => Promise<unknown>;
+    onSaveDocument: (payload: unknown) => Promise<unknown>;
+    onUploadDocumentImage: (formData: FormData) => Promise<unknown>;
   };
   sseHooks?: SseHooks;
 }
@@ -32,7 +34,7 @@ interface StartStaticServerResult {
 }
 
 const viewerIndexHtml = (hasStylesheet: boolean): string => `<!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -91,19 +93,19 @@ const toHttpErrorResponse = (error: unknown): Response => {
 export const mapServerStartError = (error: unknown, port: number): Error => {
   const errno = error as NodeJS.ErrnoException;
   if (errno?.code === "EADDRINUSE") {
-    return createServeError("port-conflict", `port ${port} は既に使用されています。`);
+    return createServeError("port-conflict", `port ${port} is already in use.`);
   }
 
   if (error instanceof Error) {
     return error;
   }
 
-  return createServeError("unknown", "サーバー起動中に不明なエラーが発生しました。");
+  return createServeError("unknown", "An unknown error occurred while starting the server.");
 };
 
 export const startStaticServer = async (input: StartStaticServerInput): Promise<StartStaticServerResult> => {
   if (!(await fs.pathExists(input.outputDir))) {
-    throw createServeError("unknown", `配信対象ディレクトリが見つかりません: ${input.outputDir}`);
+    throw createServeError("unknown", `Static output directory was not found: ${input.outputDir}`);
   }
 
   const host = input.host ?? "localhost";
@@ -136,6 +138,50 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
 
     const payload = await input.apiHooks.onGetDocument(c.req.query("path") ?? null);
     return c.json(payload);
+  });
+
+  app.post("/api/document/save", async (c) => {
+    if (!input.apiHooks) {
+      return c.text("Not Found", 404);
+    }
+
+    const payload = await c.req.json().catch(() => undefined);
+    const result = await input.apiHooks.onSaveDocument(payload);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "status" in result &&
+      (result as { status?: string }).status === "failed" &&
+      "error" in result
+    ) {
+      const category = (result as { error?: { category?: string } }).error?.category;
+      const status = category === "invalid-target" ? 400 : category === "unwritable-target" ? 404 : 500;
+      return c.json(result, status);
+    }
+
+    return c.json(result);
+  });
+
+  app.post("/api/document/image", async (c) => {
+    if (!input.apiHooks) {
+      return c.text("Not Found", 404);
+    }
+
+    const formData = await c.req.formData().catch(() => undefined);
+    if (!formData) {
+      return c.json(
+        {
+          error: {
+            code: "INVALID_REQUEST",
+            message: "multipart/form-data is required",
+          },
+        },
+        400,
+      );
+    }
+
+    const result = await input.apiHooks.onUploadDocumentImage(formData);
+    return c.json(result);
   });
 
   app.get("/events", async (c) => {

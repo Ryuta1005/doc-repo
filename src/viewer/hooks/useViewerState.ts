@@ -4,6 +4,7 @@ import { fetchDocument, fetchDocuments, fetchSiteConfig } from "../services/apiC
 import { pathnameToIdentifier, identifierToPathname } from "../navigation.js";
 import { startSseClient } from "../services/sseClient.js";
 import { resolveSelectedIdentifier } from "../state/viewerState.js";
+import { useLocale } from "../locale/index.js";
 
 interface DocumentTreeItem {
   identifier: string;
@@ -15,13 +16,16 @@ interface ViewerState {
   siteName: string;
   selectedIdentifier: string | null;
   selectIdentifier: (identifier: string) => void;
+  reloadSelectedDocument: () => void;
   title: string;
+  markdown: string;
   html: string;
   statusMessage: string;
   errorMessage: string | null;
 }
 
 export const useViewerState = (): ViewerState => {
+  const { t } = useLocale();
   const initialIdentifier = React.useMemo(() => {
     if (typeof window === "undefined") {
       return null;
@@ -32,10 +36,16 @@ export const useViewerState = (): ViewerState => {
   const [items, setItems] = React.useState<DocumentTreeItem[]>([]);
   const [siteName, setSiteName] = React.useState<string>("Doc Repo");
   const [selectedIdentifier, setSelectedIdentifier] = React.useState<string | null>(initialIdentifier);
-  const [title, setTitle] = React.useState<string>("Loading...");
+  const [title, setTitle] = React.useState<string>(() => t("loading"));
+  const [markdown, setMarkdown] = React.useState<string>("");
   const [html, setHtml] = React.useState<string>("");
-  const [statusMessage, setStatusMessage] = React.useState<string>("読み込み中...");
+  const [statusMessage, setStatusMessage] = React.useState<string>(() => t("loading"));
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const selectedIdentifierRef = React.useRef<string | null>(initialIdentifier);
+
+  React.useEffect(() => {
+    selectedIdentifierRef.current = selectedIdentifier;
+  }, [selectedIdentifier]);
 
   const loadDocuments = React.useCallback(async () => {
     try {
@@ -44,8 +54,10 @@ export const useViewerState = (): ViewerState => {
       setItems(nextItems);
       setErrorMessage(null);
 
-      const nextSelected = resolveSelectedIdentifier(selectedIdentifier, docs);
-      if (nextSelected !== selectedIdentifier) {
+      const currentSelected = selectedIdentifierRef.current;
+      const nextSelected = resolveSelectedIdentifier(currentSelected, docs);
+      if (nextSelected !== currentSelected) {
+        selectedIdentifierRef.current = nextSelected;
         setSelectedIdentifier(nextSelected);
         if (nextSelected && typeof window !== "undefined") {
           window.history.replaceState({}, "", identifierToPathname(nextSelected));
@@ -53,17 +65,17 @@ export const useViewerState = (): ViewerState => {
       }
 
       if (!docs.length) {
-        setStatusMessage("表示できるドキュメントがありません。");
+        setStatusMessage(t("noDocumentsStatus"));
         setTitle("No documents");
-        setHtml("<p>Markdown が見つかりませんでした。</p>");
+        setHtml(`<p>${t("markdownNotFound")}</p>`);
       } else {
         setStatusMessage("");
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
-      setStatusMessage("ドキュメント一覧の取得に失敗しました。");
+      setStatusMessage(t("documentsListLoadFailed"));
     }
-  }, [selectedIdentifier]);
+  }, [t]);
 
   const loadSiteConfig = React.useCallback(async () => {
     try {
@@ -74,24 +86,33 @@ export const useViewerState = (): ViewerState => {
     }
   }, []);
 
-  const loadSelectedDocument = React.useCallback(async () => {
-    if (!selectedIdentifier) {
+  const loadDocumentByIdentifier = React.useCallback(async (identifier: string | null) => {
+    if (!identifier) {
       return;
     }
 
     try {
-      const detail = await fetchDocument(selectedIdentifier);
+      const detail = await fetchDocument(identifier);
       setTitle(detail.title);
+      setMarkdown(detail.markdown);
       setHtml(detail.html);
       setErrorMessage(null);
       setStatusMessage("");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
-      setStatusMessage("文書の取得に失敗しました。");
+      setStatusMessage(t("documentLoadFailed"));
       setTitle("Not Found");
-      setHtml('<h1>Not Found</h1><p>文書が見つかりませんでした。</p><p><a href="/">トップへ戻る</a></p>');
+      setHtml(`<h1>Not Found</h1><p>${t("documentNotFound")}</p><p><a href="/">${t("backToTop")}</a></p>`);
     }
-  }, [selectedIdentifier]);
+  }, [t]);
+
+  const loadSelectedDocument = React.useCallback(async () => {
+    await loadDocumentByIdentifier(selectedIdentifierRef.current);
+  }, [loadDocumentByIdentifier]);
+
+  const reloadSelectedDocument = React.useCallback(() => {
+    void loadSelectedDocument();
+  }, [loadSelectedDocument]);
 
   React.useEffect(() => {
     void loadSiteConfig();
@@ -99,24 +120,66 @@ export const useViewerState = (): ViewerState => {
   }, [loadDocuments, loadSiteConfig]);
 
   React.useEffect(() => {
-    void loadSelectedDocument();
-  }, [loadSelectedDocument]);
+    void loadDocumentByIdentifier(selectedIdentifier);
+  }, [loadDocumentByIdentifier, selectedIdentifier]);
 
   React.useEffect(() => {
-    const handle = startSseClient({
-      onReload: () => {
-        void loadDocuments();
-        void loadSelectedDocument();
-      },
-      onError: () => {
-        setStatusMessage("自動更新の接続が一時的に不安定です。再接続を試行しています...");
-      },
-    });
+    const isActivePage = (): boolean =>
+      typeof document === "undefined" || (document.visibilityState !== "hidden" && document.hasFocus());
+    let handle: ReturnType<typeof startSseClient> | null = null;
+
+    const closeSse = (): void => {
+      handle?.close();
+      handle = null;
+    };
+
+    const openSse = (): void => {
+      if (handle || !isActivePage()) {
+        return;
+      }
+
+      handle = startSseClient({
+        onReload: () => {
+          void loadDocuments();
+          void loadSelectedDocument();
+        },
+        onError: () => {
+          setStatusMessage(t("reconnecting"));
+        },
+      });
+    };
+
+    const handlePageActivationChange = (): void => {
+      if (!isActivePage()) {
+        closeSse();
+        return;
+      }
+
+      openSse();
+      void loadDocuments();
+      void loadSelectedDocument();
+    };
+
+    const handlePageBlur = (): void => {
+      closeSse();
+    };
+
+    openSse();
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handlePageActivationChange);
+      window.addEventListener("focus", handlePageActivationChange);
+      window.addEventListener("blur", handlePageBlur);
+    }
 
     return () => {
-      handle.close();
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handlePageActivationChange);
+        window.removeEventListener("focus", handlePageActivationChange);
+        window.removeEventListener("blur", handlePageBlur);
+      }
+      closeSse();
     };
-  }, [loadDocuments, loadSelectedDocument]);
+  }, [loadDocuments, loadSelectedDocument, t]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") {
@@ -145,7 +208,9 @@ export const useViewerState = (): ViewerState => {
     siteName,
     selectedIdentifier,
     selectIdentifier,
+    reloadSelectedDocument,
     title,
+    markdown,
     html,
     statusMessage,
     errorMessage,

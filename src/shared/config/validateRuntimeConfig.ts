@@ -6,9 +6,9 @@ import { AppError } from "../errors.js";
 export const validateSiteName = (value: unknown): string => {
   if (typeof value !== "string" || value.trim() === "") {
     throw new AppError(
-      "name は空でない文字列で指定してください。",
+      "name must be a non-empty string.",
       "CONFIG_INVALID_NAME",
-      "name にはサイドメニューに表示する文字列を指定してください。",
+      "Specify the text to show in the sidebar menu as name.",
     );
   }
 
@@ -18,9 +18,9 @@ export const validateSiteName = (value: unknown): string => {
 export const validatePort = (value: unknown): number => {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 65535) {
     throw new AppError(
-      "port は 1-65535 の整数である必要があります。",
+      "port must be an integer from 1 to 65535.",
       "CONFIG_INVALID_PORT",
-      "port は 1 から 65535 の整数で指定してください。",
+      "Specify port as an integer from 1 to 65535.",
     );
   }
 
@@ -34,9 +34,9 @@ export const validatePathPatterns = (value: unknown, fieldName: "include" | "exc
 
   if (!Array.isArray(value) || value.some((x) => typeof x !== "string")) {
     throw new AppError(
-      `${fieldName} は文字列配列で指定してください。`,
+      `${fieldName} must be an array of strings.`,
       "CONFIG_INVALID_PATTERN",
-      `${fieldName} には文字列の配列を指定してください。例: ["docs/**"]`,
+      `Specify ${fieldName} as an array of strings, for example: ["docs/**"].`,
     );
   }
 
@@ -46,9 +46,9 @@ export const validatePathPatterns = (value: unknown, fieldName: "include" | "exc
 export const validateRootDir = async (value: unknown, configDir: string): Promise<string> => {
   if (typeof value !== "string") {
     throw new AppError(
-      "rootDir は文字列で指定してください。",
+      "rootDir must be a string.",
       "CONFIG_INVALID_ROOT_DIR",
-      "rootDir には文字列（パス）を指定してください。",
+      "Specify rootDir as a string path.",
     );
   }
 
@@ -56,18 +56,18 @@ export const validateRootDir = async (value: unknown, configDir: string): Promis
 
   if (!(await fs.pathExists(resolved))) {
     throw new AppError(
-      `rootDir が見つかりません: ${resolved}`,
+      `rootDir was not found: ${resolved}`,
       "CONFIG_ROOT_DIR_NOT_FOUND",
-      "rootDir に存在するディレクトリのパスを指定してください。",
+      "Specify the path to an existing directory as rootDir.",
     );
   }
 
   const stat = await fs.stat(resolved);
   if (!stat.isDirectory()) {
     throw new AppError(
-      `rootDir はディレクトリではありません: ${resolved}`,
+      `rootDir is not a directory: ${resolved}`,
       "CONFIG_ROOT_DIR_NOT_DIRECTORY",
-      "rootDir にはディレクトリのパスを指定してください。",
+      "Specify a directory path as rootDir.",
     );
   }
 

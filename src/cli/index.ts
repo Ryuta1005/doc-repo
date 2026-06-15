@@ -8,6 +8,10 @@ import { resolveServeOptions } from "./serve/resolveServeOptions.js";
 import { toServeUserGuidance } from "../shared/errors.js";
 import type { ServeSession, InitResult } from "../shared/types.js";
 
+const DEFAULT_COMMAND = "serve";
+
+const shouldUseDefaultServeCommand = (argv: string[]): boolean => argv.length <= 2;
+
 export const run = async (argv: string[] = process.argv, cwd: string = process.cwd()): Promise<void> => {
   const program = new Command();
 
@@ -15,33 +19,33 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
 
   program
     .command("init")
-    .description("doc-repo.config.json の雛形を生成する")
+    .description("Create a doc-repo.config.json template")
     .action(async () => {
       const result: InitResult = await createConfigFile(cwd);
 
       if (result.status === "created") {
-        console.log(`設定ファイルを作成しました: ${result.configPath}`);
+        console.log(`Created config file: ${result.configPath}`);
         process.exitCode = 0;
         return;
       }
 
       if (result.status === "already-exists") {
-        console.log(`設定ファイルは既に存在します: ${result.configPath}`);
+        console.log(`Config file already exists: ${result.configPath}`);
         process.exitCode = 0;
         return;
       }
 
-      console.error("エラー: 設定ファイルの作成に失敗しました。");
+      console.error("Error: Failed to create config file.");
       if (result.errorReason) {
-        console.error(`理由: ${result.errorReason}`);
+        console.error(`Reason: ${result.errorReason}`);
       }
       process.exitCode = 1;
     });
 
   program
     .command("serve")
-    .description("ブラウザワークスペースを起動する")
-    .option("--port <number>", "待受ポート", (value: string) => Number.parseInt(value, 10))
+    .description("Start the browser workspace")
+    .option("--port <number>", "Listening port", (value: string) => Number.parseInt(value, 10))
     .action(async (options?: { port?: number }) => {
       let result: ServeSession;
       try {
@@ -82,7 +86,8 @@ export const run = async (argv: string[] = process.argv, cwd: string = process.c
       process.exitCode = result.exitCode;
     });
 
-  await program.parseAsync(argv);
+  const normalizedArgv = shouldUseDefaultServeCommand(argv) ? [...argv, DEFAULT_COMMAND] : argv;
+  await program.parseAsync(normalizedArgv);
 };
 
 if (process.env.VITEST !== "true") {

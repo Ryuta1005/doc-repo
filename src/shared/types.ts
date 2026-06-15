@@ -82,3 +82,63 @@ export interface SseReloadPayload {
   reason: "regenerate-succeeded";
   occurredAt: string;
 }
+
+export type SaveNewlineStyle = "lf" | "crlf";
+
+export interface SaveRequestOptions {
+  newlineStyle: SaveNewlineStyle;
+  hasTrailingNewline: boolean;
+}
+
+export interface SaveRequest {
+  identifier: string;
+  markdownContent: string;
+  options: SaveRequestOptions;
+  proceed?: boolean;
+}
+
+export interface SaveWarning {
+  code: "UNSUPPORTED_SEGMENT_DETECTED";
+  message: string;
+}
+
+export interface SaveSuccessResponse {
+  status: "saved";
+  savedDocument: {
+    identifier: string;
+  };
+  warnings: SaveWarning[];
+}
+
+export interface SaveWarningResponse {
+  status: "warning";
+  warnings: SaveWarning[];
+  allowProceed: true;
+}
+
+export type SaveFailureCategory = "invalid-target" | "unwritable-target" | "transient-io";
+
+export interface SaveFailureResponse {
+  status: "failed";
+  error: {
+    category: SaveFailureCategory;
+    code: string;
+    message: string;
+    retryable: boolean;
+  };
+}
+
+export type SaveResponse = SaveSuccessResponse | SaveWarningResponse | SaveFailureResponse;
+
+export interface SaveValidationResult {
+  isValidTarget: boolean;
+  reasons: string[];
+  warningMessages: string[];
+}
+
+export interface SaveResult {
+  status: "saved" | "failed";
+  failureCategory: SaveFailureCategory | null;
+  message: string;
+  retryable: boolean;
+}

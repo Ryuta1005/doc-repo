@@ -9,6 +9,8 @@ import { mapToHttpError } from "./errors/httpErrorMapper.js";
 import { handleDocumentsDetailRoute } from "./routes/documentsDetailRoute.js";
 import { handleDocumentsListRoute } from "./routes/documentsListRoute.js";
 import { registerRoutes } from "./routes/index.js";
+import { handleDocumentSaveRoute } from "./routes/documentSaveRoute.js";
+import { handleDocumentImageUploadRoute } from "./routes/documentImageUploadRoute.js";
 import { startStaticServer } from "./server/startStaticServer.js";
 import type { SseWritableConnection } from "./sse/sseConnectionRegistry.js";
 import { validateDocumentPathQuery } from "./validation/documentRequestValidator.js";
@@ -48,6 +50,8 @@ export interface HttpBoundaryPipeline {
   getSiteConfig: () => Promise<unknown>;
   listDocuments: () => Promise<unknown>;
   getDocument: (rawPathQuery: string | null) => Promise<unknown>;
+  saveDocument: (payload: unknown) => Promise<unknown>;
+  uploadDocumentImage: (formData: FormData) => Promise<unknown>;
 }
 
 export const resolvePackageRoot = (): string => path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -82,7 +86,7 @@ export const resolveViewerStaticAssetOverrides = async (
 const buildViewerBundleIfPossible = async (packageRoot: string): Promise<void> => {
   const viewerEntryPath = path.join(packageRoot, "src/viewer/main.tsx");
   if (!(await fs.pathExists(viewerEntryPath))) {
-    throw new Error("React Viewer bundle が見つかりません。パッケージのビルド成果物を確認してください。");
+    throw new Error("React Viewer bundle was not found. Check the package build output.");
   }
 
   try {
@@ -92,7 +96,7 @@ const buildViewerBundleIfPossible = async (packageRoot: string): Promise<void> =
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(`React Viewer bundle の生成に失敗しました: ${detail}`);
+    throw new Error(`Failed to build React Viewer bundle: ${detail}`);
   }
 };
 
@@ -106,7 +110,7 @@ export const ensureViewerStaticAssetOverrides = async (packageRoot: string): Pro
   await buildViewerBundleIfPossible(packageRoot);
   const built = await resolveViewerStaticAssetOverrides(viewerDistDir);
   if (!built) {
-    throw new Error("React Viewer bundle の生成後も dist/viewer/app.js が見つかりません。");
+    throw new Error("dist/viewer/app.js was not found after building the React Viewer bundle.");
   }
 
   return built;
@@ -153,6 +157,28 @@ export const createHttpBoundaryPipeline = (input: HttpBoundaryPipelineInput): Ht
         throw toHttpError(error);
       }
     },
+    saveDocument: async (payload: unknown) => {
+      try {
+        return await handleDocumentSaveRoute({
+          rootDir: input.rootDir,
+          includePatterns: input.includePatterns,
+          excludePatterns: input.excludePatterns,
+          payload,
+        });
+      } catch (error) {
+        throw toHttpError(error);
+      }
+    },
+    uploadDocumentImage: async (formData: FormData) => {
+      try {
+        return await handleDocumentImageUploadRoute({
+          rootDir: input.rootDir,
+          formData,
+        });
+      } catch (error) {
+        throw toHttpError(error);
+      }
+    },
   };
 };
 
@@ -176,6 +202,8 @@ export const createServer = async (input: CreateServerInput): Promise<CreateServ
       onGetSiteConfig: async () => await pipeline.getSiteConfig(),
       onListDocuments: async () => await pipeline.listDocuments(),
       onGetDocument: async (rawPathQuery) => await pipeline.getDocument(rawPathQuery),
+      onSaveDocument: async (payload) => await pipeline.saveDocument(payload),
+      onUploadDocumentImage: async (formData) => await pipeline.uploadDocumentImage(formData),
     },
     sseHooks: input.sseHooks,
   });

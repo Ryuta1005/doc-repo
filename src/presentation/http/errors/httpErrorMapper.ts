@@ -27,6 +27,15 @@ export const mapToHttpError = (error: unknown): HttpError => {
     if (error.code === "DOCUMENT_NOT_FOUND") {
       return createHttpError(404, "DOCUMENT_NOT_FOUND", error.message);
     }
+    if (error.code === "SAVE_TARGET_INVALID") {
+      return createHttpError(400, "SAVE_TARGET_INVALID", error.message);
+    }
+    if (error.code === "SAVE_TARGET_UNWRITABLE") {
+      return createHttpError(404, "SAVE_TARGET_UNWRITABLE", error.message);
+    }
+    if (error.code === "SAVE_IO_TEMPORARY") {
+      return createHttpError(500, "SAVE_IO_TEMPORARY", error.message);
+    }
   }
 
   return createHttpError(500, "INTERNAL_ERROR", "Internal Server Error");

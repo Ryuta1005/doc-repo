@@ -69,6 +69,32 @@ describe("index.ts", () => {
     errSpy.mockRestore();
   });
 
+  it("引数なしの場合、serve と同じ処理を実行すること。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    runServeMock.mockResolvedValue({ status: "watching", exitCode: 0, publicUrl: "http://localhost:4000" });
+    formatResultMessageMock.mockReturnValue("serve ok");
+
+    const { run } = await import("./index.js");
+    await run(["node", "doc-repo"], "/tmp/repo");
+
+    expect(runServeMock).toHaveBeenCalledWith({
+      cwd: "/tmp/repo",
+      rootDir: "/tmp/repo",
+      siteName: "Doc Repo",
+      port: 4000,
+      includePatterns: [],
+      excludePatterns: [],
+    });
+    expect(logSpy).toHaveBeenCalledWith("serve ok");
+    expect(errSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+
+    logSpy.mockRestore();
+    errSpy.mockRestore();
+  });
+
   it("help で serve をブラウザワークスペース起動として説明すること。", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -81,8 +107,8 @@ describe("index.ts", () => {
     const helpText = writeSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
     expect(helpText).toContain("Serve browser workspace for repository Markdown.");
     expect(helpText).toContain("serve [options]");
-    expect(helpText).toContain("ブラウザワークスペースを起動する");
-    expect(helpText).not.toContain("生成済みサイトをローカルサーバーで起動する");
+    expect(helpText).toContain("Start the browser workspace");
+    expect(helpText).not.toContain("Start a local server for the generated site");
 
     logSpy.mockRestore();
     writeSpy.mockRestore();
@@ -122,14 +148,14 @@ describe("index.ts", () => {
       status: "failed",
       exitCode: 1,
       steps: [],
-      failures: [{ type: "port-conflict", message: "PORT_CONFLICT: port 4000 は既に使用されています。", exitCode: 1 }],
+      failures: [{ type: "port-conflict", message: "PORT_CONFLICT: port 4000 is already in use.", exitCode: 1 }],
     });
-    formatResultMessageMock.mockReturnValue("[doc-repo] error: PORT_CONFLICT: port 4000 は既に使用されています。");
+    formatResultMessageMock.mockReturnValue("[doc-repo] error: PORT_CONFLICT: port 4000 is already in use.");
 
     const { run } = await import("./index.js");
     await run(["node", "doc-repo", "serve"], "/tmp/repo");
 
-    expect(errSpy).toHaveBeenCalledWith("[doc-repo] error: PORT_CONFLICT: port 4000 は既に使用されています。");
+    expect(errSpy).toHaveBeenCalledWith("[doc-repo] error: PORT_CONFLICT: port 4000 is already in use.");
     expect(logSpy).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
 
@@ -142,7 +168,7 @@ describe("index.ts", () => {
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     resolveServeOptionsMock.mockRejectedValue(
-      Object.assign(new Error("port は 1-65535"), { code: "CONFIG_INVALID_PORT" }),
+      Object.assign(new Error("port must be from 1 to 65535"), { code: "CONFIG_INVALID_PORT" }),
     );
     formatResultMessageMock.mockReturnValue("[doc-repo] error: CONFIG_INVALID_PORT");
 
@@ -170,7 +196,7 @@ describe("index.ts", () => {
     await run(["node", "doc-repo", "init"], "/tmp/repo");
 
     expect(createConfigFileMock).toHaveBeenCalledWith("/tmp/repo");
-    expect(logSpy).toHaveBeenCalledWith("設定ファイルを作成しました: /tmp/repo/doc-repo.config.json");
+    expect(logSpy).toHaveBeenCalledWith("Created config file: /tmp/repo/doc-repo.config.json");
     expect(errSpy).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(0);
 
@@ -190,7 +216,7 @@ describe("index.ts", () => {
     const { run } = await import("./index.js");
     await run(["node", "doc-repo", "init"], "/tmp/repo");
 
-    expect(logSpy).toHaveBeenCalledWith("設定ファイルは既に存在します: /tmp/repo/doc-repo.config.json");
+    expect(logSpy).toHaveBeenCalledWith("Config file already exists: /tmp/repo/doc-repo.config.json");
     expect(errSpy).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(0);
 
@@ -212,8 +238,8 @@ describe("index.ts", () => {
     await run(["node", "doc-repo", "init"], "/tmp/repo");
 
     expect(logSpy).not.toHaveBeenCalled();
-    expect(errSpy).toHaveBeenCalledWith("エラー: 設定ファイルの作成に失敗しました。");
-    expect(errSpy).toHaveBeenCalledWith("理由: EACCES: permission denied");
+    expect(errSpy).toHaveBeenCalledWith("Error: Failed to create config file.");
+    expect(errSpy).toHaveBeenCalledWith("Reason: EACCES: permission denied");
     expect(process.exitCode).toBe(1);
 
     logSpy.mockRestore();

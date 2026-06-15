@@ -1,4 +1,10 @@
-export type HttpErrorCode = "INVALID_REQUEST" | "DOCUMENT_NOT_FOUND" | "INTERNAL_ERROR";
+export type HttpErrorCode =
+  | "INVALID_REQUEST"
+  | "DOCUMENT_NOT_FOUND"
+  | "SAVE_TARGET_INVALID"
+  | "SAVE_TARGET_UNWRITABLE"
+  | "SAVE_IO_TEMPORARY"
+  | "INTERNAL_ERROR";
 
 export interface HttpErrorPayload {
   error: {
