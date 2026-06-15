@@ -40,6 +40,27 @@ describe("createWatchTargetFilter", () => {
     expect(filter.isTargetPath("/repo/dist/notes.md")).toBe(true);
   });
 
+  it("watch 作成時に node_modules などの既定除外ディレクトリを無視すること。", () => {
+    const filter = createWatchTargetFilter({ rootDir: "/repo" });
+
+    expect(filter.isIgnoredWatchPath("/repo/node_modules", false)).toBe(true);
+    expect(filter.isIgnoredWatchPath("/repo/.git", false)).toBe(true);
+    expect(filter.isIgnoredWatchPath("/repo/.doc-repo", false)).toBe(true);
+  });
+
+  it("watch 作成時に通常ディレクトリは探索できること。", () => {
+    const filter = createWatchTargetFilter({ rootDir: "/repo" });
+
+    expect(filter.isIgnoredWatchPath("/repo/docs", false)).toBe(false);
+  });
+
+  it("watch 作成時に Markdown 以外のファイルを無視すること。", () => {
+    const filter = createWatchTargetFilter({ rootDir: "/repo" });
+
+    expect(filter.isIgnoredWatchPath("/repo/docs/guide.md", true)).toBe(false);
+    expect(filter.isIgnoredWatchPath("/repo/docs/image.png", true)).toBe(true);
+  });
+
   it("rootDir 外のパスは対象外になること。", () => {
     const filter = createWatchTargetFilter({ rootDir: "/repo" });
 
@@ -63,6 +84,7 @@ describe("createWatchTargetFilter", () => {
       });
 
       expect(filter.isTargetPath("/repo/drafts/wip.md")).toBe(false);
+      expect(filter.isIgnoredWatchPath("/repo/drafts/wip.md", true)).toBe(true);
     });
 
     it("includePatterns が空配列の場合、全 .md が対象になること。", () => {
@@ -83,6 +105,7 @@ describe("createWatchTargetFilter", () => {
       });
 
       expect(filter.isTargetPath("/repo/drafts/wip.md")).toBe(false);
+      expect(filter.isIgnoredWatchPath("/repo/drafts/wip.md", true)).toBe(true);
     });
 
     it("exclude は include より優先されること。", () => {

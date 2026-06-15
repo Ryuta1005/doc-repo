@@ -5,7 +5,11 @@ const onceHandlers = new Map<string, () => void>();
 
 const closeMock = vi.fn(async () => undefined);
 
-const watchMock = vi.fn(() => ({
+interface WatchMockOptions {
+  ignored: (watchPath: string, stats: { isFile: () => boolean } | undefined) => boolean;
+}
+
+const watchMock = vi.fn((_path: string, _options: WatchMockOptions) => ({
   on: (event: string, handler: (value: string) => void) => {
     handlers.set(event, handler);
     return undefined;
@@ -53,5 +57,28 @@ describe("startMarkdownWatcher", () => {
     expect(events).toEqual(["add", "change", "unlink"]);
     await watcher.close();
     expect(closeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes ignored watch paths to chokidar before events are emitted", async () => {
+    const { startMarkdownWatcher } = await import("./startMarkdownWatcher.js");
+    const isIgnoredWatchPath = vi.fn(() => true);
+
+    const startedPromise = startMarkdownWatcher({
+      rootDir: "/repo",
+      isTargetPath: () => true,
+      isIgnoredWatchPath,
+      onEvent: () => undefined,
+    });
+
+    onceHandlers.get("ready")?.();
+    await startedPromise;
+
+    const options = watchMock.mock.calls[0]?.[1];
+    if (!options) {
+      throw new Error("watch options were not passed");
+    }
+    options.ignored("/repo/node_modules", undefined);
+
+    expect(isIgnoredWatchPath).toHaveBeenCalledWith("/repo/node_modules", false);
   });
 });

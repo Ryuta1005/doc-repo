@@ -17,6 +17,30 @@ export const createWatchTargetFilter = (input: WatchTargetFilterInput) => {
   const excludes = (input.excludePatterns ?? []).map((p) => toPosixPath(p.replace(/^\.\//, "")));
 
   return {
+    isIgnoredWatchPath: (absolutePath: string, isFile: boolean): boolean => {
+      const resolved = path.resolve(absolutePath);
+      const relative = path.relative(rootDir, resolved);
+
+      if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+        return false;
+      }
+
+      const relPosix = toPosixPath(relative);
+      const segments = relPosix.split("/");
+      if (segments.some((s) => DEFAULT_EXCLUDE_SEGMENTS.has(s))) {
+        return true;
+      }
+
+      if (excludes.length > 0 && micromatch.isMatch(relPosix, excludes)) {
+        return true;
+      }
+
+      if (!isFile) {
+        return false;
+      }
+
+      return !relPosix.endsWith(".md") || (includes.length > 0 && !micromatch.isMatch(relPosix, includes));
+    },
     isTargetPath: (absolutePath: string): boolean => {
       const resolved = path.resolve(absolutePath);
       const relative = path.relative(rootDir, resolved);

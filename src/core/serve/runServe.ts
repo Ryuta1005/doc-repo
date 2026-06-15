@@ -88,6 +88,7 @@ export const runServe = async (input: RunServeInput): Promise<ServeSession> => {
     const watchHandle = await startMarkdownWatcher({
       rootDir,
       isTargetPath: (absolutePath) => targetFilter.isTargetPath(absolutePath),
+      isIgnoredWatchPath: (absolutePath, isFile) => targetFilter.isIgnoredWatchPath(absolutePath, isFile),
       onEvent: (event) => {
         coordinator.notifyChange(event);
       },

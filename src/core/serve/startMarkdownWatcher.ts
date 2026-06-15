@@ -6,6 +6,7 @@ import type { WatchEvent, WatchEventType, WatchHandle } from "../../shared/types
 interface StartMarkdownWatcherInput {
   rootDir: string;
   isTargetPath: (absolutePath: string) => boolean;
+  isIgnoredWatchPath?: (absolutePath: string, isFile: boolean) => boolean;
   onEvent: (event: WatchEvent) => void;
 }
 
@@ -15,6 +16,10 @@ export const startMarkdownWatcher = async (input: StartMarkdownWatcherInput): Pr
   const rootDir = path.resolve(input.rootDir);
   const watcher = chokidar.watch(rootDir, {
     ignoreInitial: true,
+    ignored: (watchPath, stats) => {
+      const absolutePath = path.isAbsolute(watchPath) ? path.resolve(watchPath) : path.resolve(rootDir, watchPath);
+      return input.isIgnoredWatchPath?.(absolutePath, stats?.isFile() ?? false) ?? false;
+    },
   });
 
   const onEvent = (eventType: WatchEventType) => (eventPath: string) => {
