@@ -1,136 +1,126 @@
 # doc-repo
 
-doc-repo is a local browser workspace for reading and editing Markdown files in a Git repository.
-It keeps Markdown files as the source of truth while making repository docs easier to browse, navigate by structure, and update from a browser.
+doc-repo is a local workspace for viewing and editing Markdown files in a Git repository from your browser.
+
+It lets you browse documents using the repository's existing directory structure and update them from the browser while keeping the Markdown files as the source of truth.
 
 > [!WARNING]
-> `doc-repo` is currently alpha software. CLI behavior, editing behavior, and generated runtime files may change in future releases.
+> doc-repo is currently in alpha. CLI behavior, editing features, and generated runtime files may change in future releases.
 
-![doc-repo screenshot placeholder](./docs/assets/screenshot-sample.png)
+![doc-repo Viewer](./docs/assets/screenshot-sample.png)
 
 ## Git and Markdown as the Source of Truth
 
-Managing specifications and design documents as Markdown in a Git repository makes it possible to track changes and review updates in the same way as source code. This approach also works well with spec-driven and AI-assisted development, allowing repository Markdown to serve as the **source of truth** for documentation.
+Managing specifications and design documents as Markdown files in a Git repository lets you track changes and review updates in the same way as source code. This approach also works well with specification-driven development and AI-assisted development, allowing the Markdown files in the repository to serve as the documentation **Source of Truth**.
 
-However, reading and updating Markdown files in a repository often requires opening an editor, navigating the file structure, and understanding Git-based workflows. This is not always convenient or accessible for everyone on a team.
+However, reading and updating Markdown files in a repository may require users to open an editor, locate files, and understand Git-based workflows. This may not be convenient for everyone on a team.
 
-Moving the same content to a service such as Notion or Confluence may make it easier to use, but it also creates a second copy that must be kept in sync with the repository. Over time, the two versions may diverge.
-
-doc-repo provides a browser-based workspace for reading and editing repository Markdown without moving it to a separate service. Users can navigate the existing directory structure, and edits are saved back to the original Markdown files. This keeps repository Markdown as the source of truth.
+doc-repo provides a browser-based workspace for viewing and editing Markdown without moving the content to a separate documentation service. Changes are saved to the original Markdown files, allowing the repository to remain the Source of Truth.
 
 ## Features
 
-- Recursively discovers `.md` files under the configured root
-- Shows repository documents in a two-pane browser workspace
-- Preserves directory structure in tree navigation
-- Supports browser editing and saves changes back to Markdown files
-- Watches Markdown files while the local workspace is running
-- Reloads the browser automatically when Markdown files change
-- Provides English and Japanese Viewer UI labels
-
-Running `doc-repo` without a command starts the local browser workspace. `doc-repo serve` is the explicit equivalent.
+- Browse Markdown documents in the browser while preserving the repository's directory structure
+- Edit Markdown documents using a rich-text editor in the browser
 
 ## Quick Start
 
-Prerequisite:
+### Prerequisites
 
-- Node.js 20+
+- Node.js 20 or later
+- A repository or directory containing Markdown files
 
-Run inside a repository:
+### Install and Start
 
-```bash
-npx doc-repo
-```
-
-If the package is published under an alpha tag, use:
+Install doc-repo in your project as a `devDependency`.
 
 ```bash
-npx doc-repo@alpha
+npm install --save-dev doc-repo@alpha
 ```
 
-Then open `http://localhost:4000` in your browser.
+Add doc-repo to the existing `scripts` section of your `package.json`.
+
+```json
+{
+  "scripts": {
+    "doc-repo": "doc-repo"
+  }
+}
+```
+
+Start doc-repo.
+
+```bash
+npm run doc-repo
+```
+
+Open the following URL in your browser:
+
+```text
+http://localhost:4000
+```
+
+The document tree appears on the left, and the selected Markdown document appears on the right.
+
+For detailed instructions, see [Getting Started](./docs/getting-started.md).
 
 ## Documentation
 
 - [Getting Started](./docs/getting-started.md)
 - [Configuration](./docs/config.md)
-- [Editing and Keyboard Shortcuts](./docs/editing.md)
+- [Editing Documents](./docs/editing.md)
 
-## CLI Overview
+## CLI
 
 ```bash
-doc-repo init
-doc-repo
-doc-repo serve [--port <number>]
+npm run doc-repo
+npm run doc-repo -- init
+npm run doc-repo -- serve --port 4100
 ```
 
-| Command / Option  | Description                                                |
-| ----------------- | ---------------------------------------------------------- |
-| `init`            | Create a `doc-repo.config.json` template                   |
-| `doc-repo`        | Start the local browser workspace and watch Markdown files |
-| `serve`           | Explicit form of the default workspace command             |
-| `--port <number>` | Override the configured/default serve port                 |
+| Command or option | Description                         |
+| ----------------- | ----------------------------------- |
+| `doc-repo`        | Start the local workspace           |
+| `init`            | Create `doc-repo.config.json`       |
+| `serve`           | Explicitly start the workspace      |
+| `--port <number>` | Specify the port used by the Viewer |
 
 ## Configuration
 
-Create `doc-repo.config.json` to configure the workspace. A minimal explicit configuration looks like this:
+doc-repo can run without a configuration file.
 
-```json
-{
-  "name": "Doc Repo",
-  "rootDir": ".",
-  "include": ["**/*.md"],
-  "exclude": [],
-  "port": 4000
-}
+To change settings such as the files to display or the port number, create `doc-repo.config.json` with the following command:
+
+```bash
+npm run doc-repo -- init
 ```
 
-For resolution rules, default excludes, validation behavior, and more examples, see [Configuration](./docs/config.md).
-
-## Viewer Language
-
-The Viewer UI is available in English and Japanese. Use the globe menu fixed at the bottom of the left sidebar to switch languages.
-
-The default language is English, and your selected language is restored when you reload the page. This changes only the Viewer UI; CLI messages, Markdown content, and repository structure are not translated.
+For details about each configuration option, see [Configuration](./docs/config.md).
 
 ## Editing
 
-Click **Edit** in the Viewer to switch the current document into rich-text edit mode. Saving writes the edited content back to the original Markdown file.
+Click **Edit** in the Viewer to edit the selected Markdown document. Saved changes are written directly to the original `.md` file in the repository.
 
-> [!CAUTION]
-> Browser edits are written directly to the original Markdown files.
-> Commit or back up your changes before editing, especially while rich-text editing is in alpha.
+The Viewer may display Markdown that the rich-text editor cannot safely edit or preserve.
 
-For supported formatting, save validation, unsupported Markdown warnings, save error categories, unsaved-change guards, and keyboard shortcuts, see [Editing and Keyboard Shortcuts](./docs/editing.md).
+For supported formatting and keyboard shortcuts, see [Editing Documents](./docs/editing.md).
 
-## Markdown Support
+## Runtime Files
 
-- Rendering uses `markdown-it`.
-- Raw HTML in Markdown is disabled.
-- `linkify` and `typographer` are enabled.
-- Relative images are rewritten to workspace-relative asset URLs and served by the local workspace.
-- GFM task lists are not currently supported as task-list UI.
-- Mermaid diagrams are not rendered as diagrams.
-- Syntax highlighting for fenced code blocks is not currently provided.
-- File attachments such as PDF, CSV, and ZIP files linked from Markdown may remain as links, but attachment copying/serving is not a dedicated feature yet.
+doc-repo creates runtime files in the `.doc-repo/` directory.
 
-Viewer rendering support and rich-text editor preservation are not the same thing. The editor supports a smaller set of formatting and may warn before saving when unsupported Markdown segments are detected.
+Add it to `.gitignore`:
 
-## Runtime Artifacts
+```gitignore
+.doc-repo/
+```
 
-The local workspace prepares runtime files under `.doc-repo/`.
+## Security
 
-Treat `.doc-repo/` as a generated runtime artifact and add it to `.gitignore`.
-
-## Security Notes
-
-- Use doc-repo with repositories you trust.
-- Raw HTML is disabled during Markdown rendering.
-- The local server serves workspace files needed by the Viewer, so avoid exposing it on untrusted networks.
+- Use doc-repo only with repositories you trust
+- Raw HTML in Markdown is not rendered
+- Do not expose the local server to an untrusted network
 
 ## Development
-
-For contributors:
 
 ```bash
 npm install
@@ -139,7 +129,7 @@ npm test
 npm run build
 ```
 
-Run the compiled CLI:
+To run the built CLI, use:
 
 ```bash
 node dist/cli/index.js serve
@@ -147,7 +137,7 @@ node dist/cli/index.js serve
 
 ## Issues / Feedback
 
-Please use GitHub Issues for bug reports and feature requests.
+Use GitHub Issues to report bugs or request features.
 
 ## License
 

@@ -1,127 +1,101 @@
 # Getting Started
 
-このガイドでは、初回起動から最初のブラウザ編集までを一通り確認します。
+このガイドでは、doc-repoをインストールし、ブラウザでMarkdownドキュメントを表示・編集するまでの手順を説明します。
 
-## Prerequisites
+## 前提
 
-- Node.js 20+
-- Markdown ファイルを含むリポジトリまたはディレクトリ
+- Node.js 20以降
+- Markdownファイルを含むリポジトリまたはディレクトリ
 
-## Start with `npx`
+## インストール・起動
 
-閲覧したいリポジトリで実行します。
-
-```bash
-npx doc-repo
-```
-
-パッケージが alpha タグで公開されている場合は、次を使います。
+Markdownファイルを管理しているプロジェクトに、doc-repoを`devDependencies`としてインストールします。
 
 ```bash
-npx doc-repo@alpha
+npm install --save-dev doc-repo@alpha
 ```
 
-その後、次の URL を開きます。
+`package.json`の`scripts`にdoc-repoを追加します。
+
+```json
+{
+  "scripts": {
+    "doc-repo": "doc-repo"
+  }
+}
+```
+
+次のコマンドでdoc-repoを起動します。
+
+```bash
+npm run doc-repo
+```
+
+起動後、ブラウザで次のURLを開きます。
 
 ```text
 http://localhost:4000
 ```
 
-Viewer には左側にドキュメントツリー、右側に選択した Markdown ドキュメントが表示されます。
+画面の左側にドキュメントツリー、右側に選択したMarkdownドキュメントが表示されます。
 
-## Start with a Local Install
+## ドキュメントの表示と編集
 
-`doc-repo` がプロジェクトにローカルインストールされている場合:
+1. 左側のドキュメントツリーからMarkdownファイルを選択します。
+2. ドキュメントを編集する場合は、画面右上の **Edit**をクリックします。
+3. 内容を編集し、**Save**をクリックします。
 
-```bash
-npx doc-repo
-```
+保存した内容は、元の`.md`ファイルへ直接反映されます。
 
-`npx doc-repo serve` は同じ処理を明示的に実行する形式です。
+編集内容を保存せずに終了する場合は、**Cancel**をクリックします。
 
-このリポジトリのソースから作業している場合:
+対応書式やキーボードショートカットについては、[ドキュメントの編集](./editing.ja.md)を参照してください。
 
-```bash
-npm install
-npm run dev -- serve
-```
+## Configuration
 
-## Create a Configuration File
+設定ファイルがなくてもdoc-repoを起動できます。
 
-テンプレートを作成します。
+表示するファイルやポート番号を変更する場合は、次のコマンドを実行します。
 
 ```bash
-npx doc-repo init
+npm run doc-repo -- init
 ```
 
-これにより、現在のディレクトリに `doc-repo.config.json` が書き出されます。
+カレントディレクトリに`doc-repo.config.json`が作成されます。設定を変更した後は、doc-repoを再起動してください。
 
-```json
-{
-  "name": "Doc Repo",
-  "rootDir": ".",
-  "include": ["**/*.md"],
-  "exclude": [],
-  "port": 4000
-}
-```
+各設定項目については、[Configuration](./config.ja.md)を参照してください。
 
-設定を変更した後は、`doc-repo` を再実行してください。
+## ランタイムファイル
 
-すべての設定ルールは [Configuration](./config.ja.md) を参照してください。
+doc-repoを実行すると、ランタイムファイルを保存する`.doc-repo/`ディレクトリが作成されます。
 
-## Browse Markdown Files
-
-1. `doc-repo` を起動します。
-2. `http://localhost:4000` を開きます。
-3. 左側のツリーから Markdown ファイルを選択します。
-4. メインペインでレンダリングされたドキュメントを読みます。
-
-ドキュメントが表示されない場合は、Markdown ファイルが `rootDir` 配下にあり、`include` / `exclude` 設定に一致しているか確認してください。
-
-## Edit and Save a Document
-
-1. Markdown ドキュメントを選択します。
-2. **Edit** をクリックします。
-3. エディタで小さな変更を加えます。
-4. **Save** をクリックします。
-5. リポジトリ内の元の `.md` ファイルを確認します。
-
-> [!CAUTION]
-> ブラウザでの編集内容は、元の Markdown ファイルへ直接書き込まれます。
-> 特にリッチテキスト編集が alpha の間は、編集前に変更をコミットするかバックアップしてください。
-
-対応書式、保存警告、キーボードショートカットは [Editing and Keyboard Shortcuts](./editing.ja.md) を参照してください。
-
-## Runtime Files
-
-ローカルワークスペースは `.doc-repo/` をランタイム成果物ディレクトリとして作成します。
-
-`.gitignore` に追加してください。
+`.gitignore`に追加してください。
 
 ```gitignore
 .doc-repo/
 ```
 
-## Common First-Run Issues
+## トラブルシューティング
 
-### Port already in use
+### ポートがすでに使用されている
 
-別のポートを使います。
+別のポートを指定して起動します。
 
 ```bash
-npx doc-repo serve --port 4100
+npm run doc-repo -- serve --port 4100
 ```
 
-### No Markdown files are shown
+### Markdownファイルが表示されない
 
-確認してください。
+次の点を確認してください。
 
-- Markdown ファイルが `rootDir` 配下に存在する。
-- `include` が期待するファイルに一致している。
-- `exclude` が対象ファイルを除外していない。
-- `node_modules/`, `.git/`, `.doc-repo/` 配下のファイルは常に除外される。
+- Markdownファイルが`rootDir`配下にある
+- `include`の条件に一致している
+- `exclude`によって除外されていない
+- `node_modules/`、`.git/`、`.doc-repo/`配下に置かれていない
 
-### Config is not being used
+### 設定ファイルが読み込まれない
 
-doc-repo は現在の作業ディレクトリから上位へ `doc-repo.config.json` を探します。リポジトリ、または設定ファイル配下のサブディレクトリからコマンドを実行してください。
+doc-repoは、カレントディレクトリから上位へ`doc-repo.config.json`を探索し、最初に見つかったファイルを使用します。
+
+設定ファイルがあるディレクトリ、またはその配下のディレクトリでコマンドを実行してください。

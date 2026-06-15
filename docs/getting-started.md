@@ -1,101 +1,73 @@
 # Getting Started
 
-This guide walks from first launch to the first browser edit.
+This guide explains how to install doc-repo and use it to view and edit Markdown documents in your browser.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 20 or later
 - A repository or directory containing Markdown files
 
-## Start with `npx`
+## Install and Start
 
-Run from the repository you want to browse:
-
-```bash
-npx doc-repo
-```
-
-If the package is published under an alpha tag, use:
+Install doc-repo in the project containing your Markdown files as a `devDependency`.
 
 ```bash
-npx doc-repo@alpha
+npm install --save-dev doc-repo@alpha
 ```
 
-Then open:
+Add doc-repo to the `scripts` section of your `package.json`.
+
+```json
+{
+  "scripts": {
+    "doc-repo": "doc-repo"
+  }
+}
+```
+
+Start doc-repo with the following command:
+
+```bash
+npm run doc-repo
+```
+
+After doc-repo starts, open the following URL in your browser:
 
 ```text
 http://localhost:4000
 ```
 
-The Viewer shows a document tree on the left and the selected Markdown document on the right.
+The document tree appears on the left, and the selected Markdown document appears on the right.
 
-## Start with a Local Install
+## View and Edit Documents
 
-If `doc-repo` is installed locally in a project:
+1. Select a Markdown file from the document tree on the left.
+2. To edit the document, click **Edit** in the upper-right corner.
+3. Edit the content, then click **Save**.
 
-```bash
-npx doc-repo
-```
+Saved changes are written directly to the original `.md` file.
 
-`npx doc-repo serve` is the explicit equivalent.
+To exit without saving your changes, click **Cancel**.
 
-If you are working in this repository from source:
+For supported formatting and keyboard shortcuts, see [Editing Documents](./editing.md).
 
-```bash
-npm install
-npm run dev -- serve
-```
+## Configuration
 
-## Create a Configuration File
+You can start doc-repo without a configuration file.
 
-To create a template:
+To change settings such as the files to display or the port number, run:
 
 ```bash
-npx doc-repo init
+npm run doc-repo -- init
 ```
 
-This writes `doc-repo.config.json` in the current directory:
+This creates `doc-repo.config.json` in the current directory. Restart doc-repo after changing the configuration.
 
-```json
-{
-  "name": "Doc Repo",
-  "rootDir": ".",
-  "include": ["**/*.md"],
-  "exclude": [],
-  "port": 4000
-}
-```
-
-Run `doc-repo` again after changing the config.
-
-For all configuration rules, see [Configuration](./config.md).
-
-## Browse Markdown Files
-
-1. Start `doc-repo`.
-2. Open `http://localhost:4000`.
-3. Select a Markdown file from the left tree.
-4. Read the rendered document in the main pane.
-
-If no document appears, check that your Markdown files are under `rootDir` and match your `include` / `exclude` settings.
-
-## Edit and Save a Document
-
-1. Select a Markdown document.
-2. Click **Edit**.
-3. Make a small change in the editor.
-4. Click **Save**.
-5. Check the original `.md` file in your repository.
-
-> [!CAUTION]
-> Browser edits are written directly to the original Markdown files.
-> Commit or back up your changes before editing, especially while rich-text editing is in alpha.
-
-For supported formatting, save warnings, and keyboard shortcuts, see [Editing and Keyboard Shortcuts](./editing.md).
+For details about each configuration option, see [Configuration](./config.md).
 
 ## Runtime Files
 
-The local workspace creates `.doc-repo/` as a runtime artifact directory.
+When doc-repo runs, it creates a `.doc-repo/` directory for runtime files.
 
 Add it to `.gitignore`:
 
@@ -103,25 +75,27 @@ Add it to `.gitignore`:
 .doc-repo/
 ```
 
-## Common First-Run Issues
+## Troubleshooting
 
-### Port already in use
+### Port Already in Use
 
-Use another port:
+Start doc-repo on another port:
 
 ```bash
-npx doc-repo serve --port 4100
+npm run doc-repo -- serve --port 4100
 ```
 
-### No Markdown files are shown
+### Markdown Files Are Not Displayed
 
-Check:
+Check the following:
 
-- Markdown files exist under `rootDir`.
-- `include` matches the files you expect.
-- `exclude` does not remove them.
-- Files under `node_modules/`, `.git/`, and `.doc-repo/` are always excluded.
+- The Markdown files are under `rootDir`.
+- The files match the `include` patterns.
+- The files are not excluded by the `exclude` patterns.
+- The files are not under `node_modules/`, `.git/`, or `.doc-repo/`.
 
-### Config is not being used
+### Configuration File Is Not Loaded
 
-doc-repo searches upward from the current working directory for `doc-repo.config.json`. Run the command from the repository or a subdirectory under the config file.
+doc-repo searches upward from the current directory for `doc-repo.config.json` and uses the first configuration file it finds.
+
+Run the command from the directory containing the configuration file or one of its subdirectories.
