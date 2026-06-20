@@ -1,50 +1,52 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# doc-repo Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Markdown Source of Truth
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- プロダクトは Markdown ファイルを唯一の Source of Truth として扱う。
+- 生成物や UI 状態は Markdown を置き換えてはならない。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Repository Structure Respect
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+- Git リポジトリ内の既存ファイル構造を尊重する。
+- 既存のディレクトリ設計や命名規約を、明示的な合意なしに破壊してはならない。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Safe File Boundary
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+- rootDir 外への書き込みを禁止する。
+- path traversal（`..` を含む外部脱出）を禁止する。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. No Implicit Overwrite
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- ユーザーの既存ファイルを暗黙に上書きしてはならない。
+- 上書き相当の操作は、明示的な確認または明示仕様がある場合のみ許可される。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. File Operation Test Coverage
+
+- 主要なファイル操作（作成・保存・削除・移動・検証）には、ユニットテストまたは統合テストを用意する。
+- 仕様に追加された新しい主要操作は、対応するテストを必須とする。
+
+### VI. UX Consistency
+
+- UI 変更は既存のサイドバー/エディタ体験と整合させる。
+- 既存フローを変更する場合は、既存ユーザーの操作期待を崩さない移行方針を明示する。
+
+## Additional Constraints
+
+- MVP では最小価値の達成を優先し、不要な機能拡張を避ける。
+- CLI/application/core/presentation/viewer の責務分離を維持する。
+
+## Workflow & Quality Gates
+
+- spec, plan, tasks の整合チェックを実装前に実施する。
+- Constitution 違反を含む状態で実装に進んではならない。
+- manual-tests の実測欄（判定/実行結果/補足）は人間が記録し、AI は事前入力しない。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Constitution は他ドキュメントより優先される。
+- 変更は PR または明示合意で行い、影響を受ける spec/plan/tasks を同時に更新する。
+- 各 feature の plan は Constitution Check で準拠状況を明示する。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-21

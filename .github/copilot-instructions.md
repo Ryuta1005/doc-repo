@@ -104,6 +104,8 @@ MVP は次の 3 つの Spec に分けて進める。
 - TypeScript（Node.js >= 20） + commander, fs-extra, fast-glob, markdown-it, chokidar, React, Hono（具体バージョンは実装時決定） (019-edit-workspace-react-hono)
 - TypeScript (Node.js >= 20) + React, Hono, commander, fs-extra, markdown-it, chokidar, 候補 WYSIWYG エディタ: Tiptap（ProseMirror 系） (010-richtext-markdown-save)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo` / 元 Markdown への保存） (010-richtext-markdown-save)
+- TypeScript (Node.js >= 20) + React, Hono, commander, fs-extra, fast-glob, chokidar (022-create-markdown-doc)
+- ファイルシステム（入力 Markdown / 出力 `.doc-repo` / rootDir 配下への新規 `.md` 作成） (022-create-markdown-doc)
 
 - TypeScript (Node.js >= 20) + commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証） (005-local-server-serve)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo`） (005-local-server-serve)
