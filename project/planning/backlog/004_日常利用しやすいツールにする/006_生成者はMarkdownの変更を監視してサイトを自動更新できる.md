@@ -5,9 +5,9 @@
 - 種別: Story
 - 番号: 006
 - Epic: 004
-- ステータス: Todo
+- ステータス: Done
 - 優先度: P1
-- Spec: -
+- Spec: 006-markdown-watch
 - Depends On: 005
 
 ## ユーザー価値

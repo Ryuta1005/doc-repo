@@ -5,9 +5,9 @@
 - 種別: Task
 - 番号: 014
 - Epic: 004
-- ステータス: Todo
+- ステータス: Done
 - 優先度: P1
-- Spec: 005-local-server-serve, 006-markdown-watch
+- Spec: 014-fix-serve-image-assets
 - Depends On: 005, 006
 
 ## バグの内容
