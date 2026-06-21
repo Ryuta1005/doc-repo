@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createRequire } from "node:module";
+
 import { Command } from "commander";
 
 import { runServe } from "../core/serve/runServe.js";
@@ -9,13 +11,15 @@ import { toServeUserGuidance } from "../shared/errors.js";
 import type { ServeSession, InitResult } from "../shared/types.js";
 
 const DEFAULT_COMMAND = "serve";
+const require = createRequire(import.meta.url);
+const packageJson = require("../../package.json") as { version: string };
 
 const shouldUseDefaultServeCommand = (argv: string[]): boolean => argv.length <= 2;
 
 export const run = async (argv: string[] = process.argv, cwd: string = process.cwd()): Promise<void> => {
   const program = new Command();
 
-  program.name("doc-repo").description("Serve browser workspace for repository Markdown.");
+  program.name("doc-repo").description("Serve browser workspace for repository Markdown.").version(packageJson.version);
 
   program
     .command("init")

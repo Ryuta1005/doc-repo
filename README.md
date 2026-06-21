@@ -76,6 +76,7 @@ For detailed instructions, see [Getting Started](./docs/getting-started.md).
 ```bash
 npm run doc-repo
 npm run doc-repo -- init
+npm run doc-repo -- --version
 npm run doc-repo -- serve --port 4100
 ```
 
@@ -84,6 +85,7 @@ npm run doc-repo -- serve --port 4100
 | `doc-repo`        | Start the local workspace              |
 | `init`            | Create `doc-repo.config.json`          |
 | `serve`           | Explicitly start the workspace         |
+| `--version`, `-V` | Print the installed doc-repo version   |
 | `--port <number>` | Specify the workspace HTTP server port |
 
 ## Configuration
