@@ -1,4 +1,9 @@
+import { createRequire } from "node:module";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const require = createRequire(import.meta.url);
+const packageJson = require("../../package.json") as { version: string };
 
 const runServeMock = vi.fn();
 const formatResultMessageMock = vi.fn();
@@ -109,6 +114,42 @@ describe("index.ts", () => {
     expect(helpText).toContain("serve [options]");
     expect(helpText).toContain("Start the browser workspace");
     expect(helpText).not.toContain("Start a local server for the generated site");
+
+    logSpy.mockRestore();
+    writeSpy.mockRestore();
+  });
+
+  it("--version で package.json のバージョンを標準出力へ出すこと。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+
+    const { run } = await import("./index.js");
+    await expect(run(["node", "doc-repo", "--version"], "/tmp/repo")).rejects.toThrow(
+      'process.exit unexpectedly called with "0"',
+    );
+
+    const versionText = writeSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
+    expect(versionText).toBe(`${packageJson.version}\n`);
+    expect(runServeMock).not.toHaveBeenCalled();
+    expect(resolveServeOptionsMock).not.toHaveBeenCalled();
+
+    logSpy.mockRestore();
+    writeSpy.mockRestore();
+  });
+
+  it("-V で package.json のバージョンを標準出力へ出すこと。", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+
+    const { run } = await import("./index.js");
+    await expect(run(["node", "doc-repo", "-V"], "/tmp/repo")).rejects.toThrow(
+      'process.exit unexpectedly called with "0"',
+    );
+
+    const versionText = writeSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
+    expect(versionText).toBe(`${packageJson.version}\n`);
+    expect(runServeMock).not.toHaveBeenCalled();
+    expect(resolveServeOptionsMock).not.toHaveBeenCalled();
 
     logSpy.mockRestore();
     writeSpy.mockRestore();

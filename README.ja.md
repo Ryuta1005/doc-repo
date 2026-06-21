@@ -76,15 +76,17 @@ http://localhost:4000
 ```bash
 npm run doc-repo
 npm run doc-repo -- init
+npm run doc-repo -- --version
 npm run doc-repo -- serve --port 4100
 ```
 
-| コマンド・オプション | 説明                                         |
-| -------------------- | -------------------------------------------- |
-| `doc-repo`           | ローカルワークスペースを起動する             |
-| `init`               | `doc-repo.config.json`を作成する             |
-| `serve`              | ワークスペースの起動を明示的に指定する       |
-| `--port <number>`    | ワークスペースのHTTPサーバーポートを指定する |
+| コマンド・オプション | 説明                                           |
+| -------------------- | ---------------------------------------------- |
+| `doc-repo`           | ローカルワークスペースを起動する               |
+| `init`               | `doc-repo.config.json`を作成する               |
+| `serve`              | ワークスペースの起動を明示的に指定する         |
+| `--version`, `-V`    | インストール済みdoc-repoのバージョンを表示する |
+| `--port <number>`    | ワークスペースのHTTPサーバーポートを指定する   |
 
 ## Configuration
 
