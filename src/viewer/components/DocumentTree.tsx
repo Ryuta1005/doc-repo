@@ -1,8 +1,8 @@
 import React from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Ellipsis, Plus, Trash2 } from "lucide-react";
 import { identifierToPathname, toSidebarLabel } from "../navigation.js";
 import { useLocale } from "../locale/index.js";
-import type { CreationAnchorContext } from "../state/viewerState.js";
+import type { CreationAnchorContext, DeleteTargetContext } from "../state/viewerState.js";
 
 export interface DocumentTreeItem {
   identifier: string;
@@ -67,6 +67,12 @@ export const renderNodes = (
   onToggleOpen: (path: string, open: boolean) => void,
   onSelect: (identifier: string) => void,
   onCreateRequest: (anchor: CreationAnchorContext) => void,
+  onDeleteRequest: (target: DeleteTargetContext) => void,
+  t: (key: "deleteAction") => string,
+  hoveredPath: string | null,
+  menuPath: string | null,
+  setHoveredPath: React.Dispatch<React.SetStateAction<string | null>>,
+  setMenuPath: React.Dispatch<React.SetStateAction<string | null>>,
 ): React.JSX.Element => {
   return (
     <ul>
@@ -78,9 +84,18 @@ export const renderNodes = (
           const identifier = node.item?.identifier ?? node.path;
           const selected = identifier === selectedIdentifier;
           const href = identifierToPathname(identifier);
+          const actionsVisible = hoveredPath === node.path || menuPath === node.path;
           return (
             <li key={node.path} className="viewer-tree-item">
-              <div className="viewer-tree-row">
+              <div
+                className="viewer-tree-row"
+                onMouseEnter={() => {
+                  setHoveredPath(node.path);
+                }}
+                onMouseLeave={() => {
+                  setHoveredPath((current) => (current === node.path ? null : current));
+                }}
+              >
                 <a
                   href={href}
                   onClick={(event) => {
@@ -93,12 +108,48 @@ export const renderNodes = (
                 >
                   {toSidebarLabel(identifier, node.item?.title ?? node.name)}
                 </a>
+                <div className="viewer-tree-actions">
+                  <button
+                    type="button"
+                    className={`viewer-tree-row-menu${actionsVisible ? " is-visible" : ""}`}
+                    aria-label="Row menu"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setMenuPath((current) => (current === node.path ? null : node.path));
+                    }}
+                  >
+                    <Ellipsis size={14} aria-hidden="true" />
+                  </button>
+                  {menuPath === node.path ? (
+                    <div className="viewer-tree-row-menu-popover" role="menu">
+                      <button
+                        type="button"
+                        className="viewer-tree-row-menu-item is-danger"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setMenuPath(null);
+                          onDeleteRequest({
+                            targetType: "file",
+                            path: identifier,
+                            displayName: toSidebarLabel(identifier, node.item?.title ?? node.name),
+                          });
+                        }}
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                        {t("deleteAction")}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </li>
           );
         }
 
         const isOpen = openPaths.has(node.path);
+        const actionsVisible = hoveredPath === node.path || menuPath === node.path;
         return (
           <li key={node.path} className="viewer-tree-item">
             <details
@@ -107,7 +158,14 @@ export const renderNodes = (
                 onToggleOpen(node.path, event.currentTarget.open);
               }}
             >
-              <summary>
+              <summary
+                onMouseEnter={() => {
+                  setHoveredPath(node.path);
+                }}
+                onMouseLeave={() => {
+                  setHoveredPath((current) => (current === node.path ? null : current));
+                }}
+              >
                 <span className="viewer-tree-folder-label">
                   {isOpen ? (
                     <ChevronDown className="viewer-tree-folder-icon" size={16} aria-hidden="true" />
@@ -116,18 +174,55 @@ export const renderNodes = (
                   )}
                   <span>{node.name}</span>
                 </span>
-                <button
-                  type="button"
-                  className="viewer-tree-create"
-                  aria-label="Create document"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onCreateRequest({ nodeType: "folder", nodePath: node.path });
-                  }}
-                >
-                  +
-                </button>
+                <div className="viewer-tree-folder-actions">
+                  <button
+                    type="button"
+                    className={`viewer-tree-create${actionsVisible ? " is-visible" : ""}`}
+                    aria-label="Create document"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onCreateRequest({ nodeType: "folder", nodePath: node.path });
+                    }}
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                  </button>
+                  <div className="viewer-tree-actions">
+                    <button
+                      type="button"
+                      className={`viewer-tree-row-menu${actionsVisible ? " is-visible" : ""}`}
+                      aria-label="Row menu"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setMenuPath((current) => (current === node.path ? null : node.path));
+                      }}
+                    >
+                      <Ellipsis size={16} aria-hidden="true" />
+                    </button>
+                    {menuPath === node.path ? (
+                      <div className="viewer-tree-row-menu-popover" role="menu">
+                        <button
+                          type="button"
+                          className="viewer-tree-row-menu-item is-danger"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setMenuPath(null);
+                            onDeleteRequest({
+                              targetType: "folder",
+                              path: node.path,
+                              displayName: node.name,
+                            });
+                          }}
+                        >
+                          <Trash2 size={14} aria-hidden="true" />
+                          {t("deleteAction")}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </summary>
               {renderNodes(
                 children,
@@ -136,6 +231,12 @@ export const renderNodes = (
                 onToggleOpen,
                 onSelect,
                 onCreateRequest,
+                onDeleteRequest,
+                t,
+                hoveredPath,
+                menuPath,
+                setHoveredPath,
+                setMenuPath,
               )}
             </details>
           </li>
@@ -150,6 +251,7 @@ interface DocumentTreeProps {
   selectedIdentifier: string | null;
   onSelect: (identifier: string) => void;
   onCreateRequest: (anchor: CreationAnchorContext) => void;
+  onDeleteRequest: (target: DeleteTargetContext) => void;
 }
 
 export function DocumentTree({
@@ -157,9 +259,39 @@ export function DocumentTree({
   selectedIdentifier,
   onSelect,
   onCreateRequest,
+  onDeleteRequest,
 }: DocumentTreeProps): React.JSX.Element {
   const { t } = useLocale();
   const [openPaths, setOpenPaths] = React.useState<Set<string>>(() => new Set(getAncestorPaths(selectedIdentifier)));
+  const [hoveredPath, setHoveredPath] = React.useState<string | null>(null);
+  const [menuPath, setMenuPath] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!menuPath) {
+      return;
+    }
+
+    const closeMenuOnOutsidePointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (target instanceof Element && target.closest(".viewer-tree-actions")) {
+        return;
+      }
+      setMenuPath(null);
+    };
+
+    const closeMenuOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        setMenuPath(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeMenuOnOutsidePointerDown);
+    document.addEventListener("keydown", closeMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenuOnOutsidePointerDown);
+      document.removeEventListener("keydown", closeMenuOnEscape);
+    };
+  }, [menuPath]);
 
   React.useEffect(() => {
     const ancestorPaths = getAncestorPaths(selectedIdentifier);
@@ -204,6 +336,12 @@ export function DocumentTree({
         toggleOpen,
         onSelect,
         onCreateRequest,
+        onDeleteRequest,
+        (key) => t(key),
+        hoveredPath,
+        menuPath,
+        setHoveredPath,
+        setMenuPath,
       )}
       <button
         type="button"

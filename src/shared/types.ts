@@ -193,3 +193,49 @@ export interface CreateDocumentFailureResponse {
 }
 
 export type CreateDocumentResponse = CreateDocumentSuccessResponse | CreateDocumentFailureResponse;
+
+export type DeleteDocumentTargetType = "file" | "folder";
+
+export interface DeleteDocumentTarget {
+  targetType: DeleteDocumentTargetType;
+  path: string;
+  displayName: string;
+}
+
+export interface DeleteDocumentRequest {
+  target: DeleteDocumentTarget;
+}
+
+export type DeleteFailureCode =
+  | "INVALID_TARGET"
+  | "OUT_OF_SCOPE"
+  | "NOT_FOUND"
+  | "CONTAINS_UNMANAGED_CONTENT"
+  | "TRANSIENT_IO";
+
+export type DeleteFailureReason =
+  | "target:invalid"
+  | "target:out-of-scope"
+  | "target:not-found"
+  | "folder:contains-unmanaged-content"
+  | "target:temporary-failure";
+
+export interface DeleteDocumentSuccessResponse {
+  status: "deleted";
+  removed: {
+    identifiers: string[];
+    directories: string[];
+  };
+}
+
+export interface DeleteDocumentFailureResponse {
+  status: "rejected";
+  error: {
+    code: DeleteFailureCode;
+    reason: DeleteFailureReason;
+    message: string;
+    retryable: boolean;
+  };
+}
+
+export type DeleteDocumentResponse = DeleteDocumentSuccessResponse | DeleteDocumentFailureResponse;

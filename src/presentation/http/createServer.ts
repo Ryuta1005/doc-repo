@@ -11,6 +11,7 @@ import { handleDocumentsListRoute } from "./routes/documentsListRoute.js";
 import { registerRoutes } from "./routes/index.js";
 import { handleDocumentSaveRoute } from "./routes/documentSaveRoute.js";
 import { handleDocumentCreateRoute } from "./routes/documentCreateRoute.js";
+import { handleDocumentDeleteRoute } from "./routes/documentDeleteRoute.js";
 import { handleDocumentImageUploadRoute } from "./routes/documentImageUploadRoute.js";
 import { startStaticServer } from "./server/startStaticServer.js";
 import type { SseWritableConnection } from "./sse/sseConnectionRegistry.js";
@@ -53,6 +54,7 @@ export interface HttpBoundaryPipeline {
   getDocument: (rawPathQuery: string | null) => Promise<unknown>;
   saveDocument: (payload: unknown) => Promise<unknown>;
   createDocument: (payload: unknown) => Promise<unknown>;
+  deleteDocument: (payload: unknown) => Promise<unknown>;
   uploadDocumentImage: (formData: FormData) => Promise<unknown>;
 }
 
@@ -183,6 +185,18 @@ export const createHttpBoundaryPipeline = (input: HttpBoundaryPipelineInput): Ht
         throw toHttpError(error);
       }
     },
+    deleteDocument: async (payload: unknown) => {
+      try {
+        return await handleDocumentDeleteRoute({
+          rootDir: input.rootDir,
+          includePatterns: input.includePatterns,
+          excludePatterns: input.excludePatterns,
+          payload,
+        });
+      } catch (error) {
+        throw toHttpError(error);
+      }
+    },
     uploadDocumentImage: async (formData: FormData) => {
       try {
         return await handleDocumentImageUploadRoute({
@@ -218,6 +232,7 @@ export const createServer = async (input: CreateServerInput): Promise<CreateServ
       onGetDocument: async (rawPathQuery) => await pipeline.getDocument(rawPathQuery),
       onSaveDocument: async (payload) => await pipeline.saveDocument(payload),
       onCreateDocument: async (payload) => await pipeline.createDocument(payload),
+      onDeleteDocument: async (payload) => await pipeline.deleteDocument(payload),
       onUploadDocumentImage: async (formData) => await pipeline.uploadDocumentImage(formData),
     },
     sseHooks: input.sseHooks,

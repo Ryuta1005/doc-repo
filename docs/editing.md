@@ -44,6 +44,21 @@ Notes:
 - `.md` is always appended to the entered name. For example, `doc.ja` becomes `doc.ja.md`, and `a.md` becomes `a.md.md`.
 - Path separators and path-like inputs are rejected.
 
+## Delete a Document or Folder
+
+1. Hover a file or folder row in the document tree.
+2. Click the ellipsis menu shown at the end of the row.
+3. Select **Delete** (trash icon).
+4. Confirm the target name and warning message in the confirmation dialog.
+5. Click **Delete** to execute, or **Cancel** to abort.
+
+Notes:
+
+- Delete is available for both files and folders.
+- Folder delete follows Policy B: deletion is rejected when any unmanaged or out-of-scope entry exists under the folder.
+- When unsaved edits exist, the unsaved-changes guard appears before the delete confirmation.
+- After a successful delete, the tree refreshes and selection falls back to a remaining document or empty state.
+
 ## Saving
 
 When you click **Save**, your changes are written to the currently open `.md` file.

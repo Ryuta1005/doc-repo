@@ -86,6 +86,39 @@ export interface CreateDocumentFailureResponse {
 
 export type CreateDocumentResponse = CreateDocumentSuccessResponse | CreateDocumentFailureResponse;
 
+export interface DeleteDocumentRequest {
+  target: {
+    targetType: "file" | "folder";
+    path: string;
+    displayName: string;
+  };
+}
+
+export interface DeleteDocumentSuccessResponse {
+  status: "deleted";
+  removed: {
+    identifiers: string[];
+    directories: string[];
+  };
+}
+
+export interface DeleteDocumentFailureResponse {
+  status: "rejected";
+  error: {
+    code: "INVALID_TARGET" | "OUT_OF_SCOPE" | "NOT_FOUND" | "CONTAINS_UNMANAGED_CONTENT" | "TRANSIENT_IO";
+    reason:
+      | "target:invalid"
+      | "target:out-of-scope"
+      | "target:not-found"
+      | "folder:contains-unmanaged-content"
+      | "target:temporary-failure";
+    message: string;
+    retryable: boolean;
+  };
+}
+
+export type DeleteDocumentResponse = DeleteDocumentSuccessResponse | DeleteDocumentFailureResponse;
+
 export type SaveDocumentResponse = SaveWarningResponse | SaveSuccessResponse | SaveFailureResponse;
 
 export class SaveDocumentError extends Error {
@@ -126,6 +159,25 @@ export class CreateDocumentError extends Error {
   }
 }
 
+export class DeleteDocumentError extends Error {
+  public readonly code: DeleteDocumentFailureResponse["error"]["code"];
+  public readonly reason: DeleteDocumentFailureResponse["error"]["reason"];
+  public readonly retryable: boolean;
+
+  public constructor(input: {
+    message: string;
+    code: DeleteDocumentFailureResponse["error"]["code"];
+    reason: DeleteDocumentFailureResponse["error"]["reason"];
+    retryable: boolean;
+  }) {
+    super(input.message);
+    this.name = "DeleteDocumentError";
+    this.code = input.code;
+    this.reason = input.reason;
+    this.retryable = input.retryable;
+  }
+}
+
 export interface SiteConfigResponse {
   name: string;
 }
@@ -137,7 +189,10 @@ const ensureOk = async (response: Response): Promise<Response> => {
 
   const text = await response.text();
   let parsed:
-    | { error?: { code?: string; reason?: string; message?: string; category?: string; retryable?: boolean }; status?: string }
+    | {
+        error?: { code?: string; reason?: string; message?: string; category?: string; retryable?: boolean };
+        status?: string;
+      }
     | undefined;
   try {
     parsed = JSON.parse(text) as {
@@ -228,13 +283,21 @@ export const uploadDocumentImage = async (identifier: string, file: File): Promi
 };
 
 export const createDocument = async (request: CreateDocumentRequest): Promise<CreateDocumentResponse> => {
-  const response = await ensureOk(
-    await fetch("/api/document/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
-    }),
-  );
+  const response = await fetch("/api/document/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
 
   return (await response.json()) as CreateDocumentResponse;
+};
+
+export const deleteDocument = async (request: DeleteDocumentRequest): Promise<DeleteDocumentResponse> => {
+  const response = await fetch("/api/document/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  return (await response.json()) as DeleteDocumentResponse;
 };

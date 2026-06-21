@@ -48,6 +48,15 @@ export const mapToHttpError = (error: unknown): HttpError => {
     if (error.code === "UNWRITABLE_TARGET") {
       return createHttpError(404, "UNWRITABLE_TARGET", error.message);
     }
+    if (error.code === "INVALID_TARGET") {
+      return createHttpError(400, "INVALID_TARGET", error.message);
+    }
+    if (error.code === "NOT_FOUND") {
+      return createHttpError(404, "NOT_FOUND", error.message);
+    }
+    if (error.code === "CONTAINS_UNMANAGED_CONTENT") {
+      return createHttpError(409, "CONTAINS_UNMANAGED_CONTENT", error.message);
+    }
     if (error.code === "TRANSIENT_IO") {
       return createHttpError(500, "TRANSIENT_IO", error.message);
     }

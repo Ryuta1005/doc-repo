@@ -1,5 +1,6 @@
 import path from "node:path";
 import MarkdownIt from "markdown-it";
+import Token from "markdown-it/lib/token.mjs";
 
 import { assetHref, docHref, viewerAssetHref } from "../../shared/sitePaths.js";
 
@@ -168,6 +169,30 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   return linkOpenRule ? linkOpenRule(tokens, idx, options, env, self) : self.renderToken(tokens, idx, options);
 };
 
+const preserveRepeatedBlankLines = (tokens: Token[]): Token[] => {
+  const nextTokens: Token[] = [];
+  let previousTopLevelEndLine: number | null = null;
+
+  for (const token of tokens) {
+    if (token.level === 0 && token.map && token.nesting !== -1) {
+      if (previousTopLevelEndLine !== null) {
+        const extraBlankLines = Math.max(0, token.map[0] - previousTopLevelEndLine - 1);
+        for (let count = 0; count < extraBlankLines; count += 1) {
+          const spacer = new Token("html_block", "", 0);
+          spacer.content = '<div class="viewer-blank-line" aria-hidden="true"></div>\n';
+          nextTokens.push(spacer);
+        }
+      }
+
+      previousTopLevelEndLine = token.map[1];
+    }
+
+    nextTokens.push(token);
+  }
+
+  return nextTokens;
+};
+
 const findTitle = (source: string, relativePath: string): string => {
   const heading = source.match(/^#\s+(.+)$/m);
   if (heading?.[1]) {
@@ -184,7 +209,9 @@ export const convertMarkdown = (
 ): { title: string; html: string; referencedImages: string[] } => {
   const title = findTitle(source, relativePath);
   const referencedImages = new Set<string>();
-  const html = md.render(source, { relativePath, knownIds, referencedImages } satisfies RenderEnv);
+  const env = { relativePath, knownIds, referencedImages } satisfies RenderEnv;
+  const tokens = preserveRepeatedBlankLines(md.parse(source, env));
+  const html = md.renderer.render(tokens, md.options, env);
 
   return { title, html, referencedImages: Array.from(referencedImages) };
 };

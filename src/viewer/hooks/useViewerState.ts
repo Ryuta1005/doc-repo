@@ -3,7 +3,7 @@ import React from "react";
 import { fetchDocument, fetchDocuments, fetchSiteConfig } from "../services/apiClient.js";
 import { pathnameToIdentifier, identifierToPathname } from "../navigation.js";
 import { startSseClient } from "../services/sseClient.js";
-import { resolveSelectedIdentifier } from "../state/viewerState.js";
+import { resolveSelectedIdentifier, resolveSelectedIdentifierAfterDelete } from "../state/viewerState.js";
 import { useLocale } from "../locale/index.js";
 
 interface DocumentTreeItem {
@@ -16,7 +16,7 @@ interface ViewerState {
   siteName: string;
   selectedIdentifier: string | null;
   selectIdentifier: (identifier: string) => void;
-  refreshDocuments: () => Promise<void>;
+  refreshDocuments: (options?: { fallbackMissingSelection?: boolean }) => Promise<DocumentTreeItem[]>;
   reloadSelectedDocument: () => void;
   title: string;
   markdown: string;
@@ -48,7 +48,7 @@ export const useViewerState = (): ViewerState => {
     selectedIdentifierRef.current = selectedIdentifier;
   }, [selectedIdentifier]);
 
-  const loadDocuments = React.useCallback(async () => {
+  const loadDocuments = React.useCallback(async (options?: { fallbackMissingSelection?: boolean }) => {
     try {
       const docs = await fetchDocuments();
       const nextItems = docs.map((doc) => ({ identifier: doc.identifier, title: doc.title }));
@@ -56,12 +56,14 @@ export const useViewerState = (): ViewerState => {
       setErrorMessage(null);
 
       const currentSelected = selectedIdentifierRef.current;
-      const nextSelected = resolveSelectedIdentifier(currentSelected, docs);
+      const nextSelected = options?.fallbackMissingSelection
+        ? resolveSelectedIdentifierAfterDelete(currentSelected, docs)
+        : resolveSelectedIdentifier(currentSelected, docs);
       if (nextSelected !== currentSelected) {
         selectedIdentifierRef.current = nextSelected;
         setSelectedIdentifier(nextSelected);
-        if (nextSelected && typeof window !== "undefined") {
-          window.history.replaceState({}, "", identifierToPathname(nextSelected));
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, "", nextSelected ? identifierToPathname(nextSelected) : "/");
         }
       }
 
@@ -72,9 +74,12 @@ export const useViewerState = (): ViewerState => {
       } else {
         setStatusMessage("");
       }
+
+      return nextItems;
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
       setStatusMessage(t("documentsListLoadFailed"));
+      return [];
     }
   }, [t]);
 
@@ -118,8 +123,8 @@ export const useViewerState = (): ViewerState => {
     void loadSelectedDocument();
   }, [loadSelectedDocument]);
 
-  const refreshDocuments = React.useCallback(async () => {
-    await loadDocuments();
+  const refreshDocuments = React.useCallback(async (options?: { fallbackMissingSelection?: boolean }) => {
+    return await loadDocuments(options);
   }, [loadDocuments]);
 
   React.useEffect(() => {
