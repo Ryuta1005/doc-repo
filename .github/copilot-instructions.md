@@ -70,6 +70,7 @@ MVP は次の 3 つの Spec に分けて進める。
 - 実装と同時に、必要なドキュメント更新も提案または実施する
 - 不明点は質問で解消する。質問は選択式を優先する
   - 例: A/B/C 形式
+- 明示的な依頼がない限り、`git commit` や `git push` を実行しない
 
 ## 手動テストケースの取り扱い
 
@@ -98,6 +99,7 @@ MVP は次の 3 つの Spec に分けて進める。
 必要になったら、ロードマップの Phase 2 以降として扱う。
 
 ## Active Technologies
+
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo` / `doc-repo.config.json`） (007-config-file-settings)
 - TypeScript (Node.js >= 20) + `commander`（CLI引数）、`fs-extra`（ファイル操作） (008-config-file-init)
 - ファイルシステム（`doc-repo.config.json` をカレントディレクトリに生成） (008-config-file-init)

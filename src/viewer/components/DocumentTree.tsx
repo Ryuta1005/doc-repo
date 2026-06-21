@@ -1,13 +1,15 @@
 import React from "react";
-import { identifierToPathname } from "../navigation.js";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { identifierToPathname, toSidebarLabel } from "../navigation.js";
 import { useLocale } from "../locale/index.js";
+import type { CreationAnchorContext } from "../state/viewerState.js";
 
 export interface DocumentTreeItem {
   identifier: string;
   title: string;
 }
 
-interface TreeNode {
+export interface TreeNode {
   name: string;
   path: string;
   item?: DocumentTreeItem;
@@ -20,7 +22,7 @@ const makeNode = (name: string, path: string): TreeNode => ({
   children: new Map<string, TreeNode>(),
 });
 
-const buildTree = (items: DocumentTreeItem[]): TreeNode => {
+export const buildTree = (items: DocumentTreeItem[]): TreeNode => {
   const root = makeNode("", "");
   const sorted = [...items].sort((a, b) => a.identifier.localeCompare(b.identifier));
 
@@ -58,12 +60,13 @@ const getAncestorPaths = (identifier: string | null): string[] => {
   return parts.slice(0, -1).map((_, index) => parts.slice(0, index + 1).join("/"));
 };
 
-const renderNodes = (
+export const renderNodes = (
   nodes: TreeNode[],
   selectedIdentifier: string | null,
   openPaths: Set<string>,
   onToggleOpen: (path: string, open: boolean) => void,
   onSelect: (identifier: string) => void,
+  onCreateRequest: (anchor: CreationAnchorContext) => void,
 ): React.JSX.Element => {
   return (
     <ul>
@@ -77,32 +80,63 @@ const renderNodes = (
           const href = identifierToPathname(identifier);
           return (
             <li key={node.path} className="viewer-tree-item">
-              <a
-                href={href}
-                onClick={(event) => {
-                  event.preventDefault();
-                  onSelect(identifier);
-                }}
-                aria-current={selected ? "page" : undefined}
-                className={`viewer-tree-button${selected ? " is-selected" : ""}`}
-                title={identifier}
-              >
-                {node.item?.title ?? node.name}
-              </a>
+              <div className="viewer-tree-row">
+                <a
+                  href={href}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onSelect(identifier);
+                  }}
+                  aria-current={selected ? "page" : undefined}
+                  className={`viewer-tree-button${selected ? " is-selected" : ""}`}
+                  title={identifier}
+                >
+                  {toSidebarLabel(identifier, node.item?.title ?? node.name)}
+                </a>
+              </div>
             </li>
           );
         }
 
+        const isOpen = openPaths.has(node.path);
         return (
           <li key={node.path} className="viewer-tree-item">
             <details
-              open={openPaths.has(node.path)}
+              open={isOpen}
               onToggle={(event) => {
                 onToggleOpen(node.path, event.currentTarget.open);
               }}
             >
-              <summary>{node.name}</summary>
-              {renderNodes(children, selectedIdentifier, openPaths, onToggleOpen, onSelect)}
+              <summary>
+                <span className="viewer-tree-folder-label">
+                  {isOpen ? (
+                    <ChevronDown className="viewer-tree-folder-icon" size={16} aria-hidden="true" />
+                  ) : (
+                    <ChevronRight className="viewer-tree-folder-icon" size={16} aria-hidden="true" />
+                  )}
+                  <span>{node.name}</span>
+                </span>
+                <button
+                  type="button"
+                  className="viewer-tree-create"
+                  aria-label="Create document"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onCreateRequest({ nodeType: "folder", nodePath: node.path });
+                  }}
+                >
+                  +
+                </button>
+              </summary>
+              {renderNodes(
+                children,
+                selectedIdentifier,
+                openPaths,
+                onToggleOpen,
+                onSelect,
+                onCreateRequest,
+              )}
             </details>
           </li>
         );
@@ -115,9 +149,15 @@ interface DocumentTreeProps {
   items: DocumentTreeItem[];
   selectedIdentifier: string | null;
   onSelect: (identifier: string) => void;
+  onCreateRequest: (anchor: CreationAnchorContext) => void;
 }
 
-export function DocumentTree({ items, selectedIdentifier, onSelect }: DocumentTreeProps): React.JSX.Element {
+export function DocumentTree({
+  items,
+  selectedIdentifier,
+  onSelect,
+  onCreateRequest,
+}: DocumentTreeProps): React.JSX.Element {
   const { t } = useLocale();
   const [openPaths, setOpenPaths] = React.useState<Set<string>>(() => new Set(getAncestorPaths(selectedIdentifier)));
 
@@ -157,7 +197,24 @@ export function DocumentTree({ items, selectedIdentifier, onSelect }: DocumentTr
 
   return (
     <nav aria-label={t("navDocuments")} className="viewer-tree">
-      {renderNodes(nodes, selectedIdentifier, openPaths, toggleOpen, onSelect)}
+      {renderNodes(
+        nodes,
+        selectedIdentifier,
+        openPaths,
+        toggleOpen,
+        onSelect,
+        onCreateRequest,
+      )}
+      <button
+        type="button"
+        className="viewer-tree-create-root"
+        onClick={() => {
+          onCreateRequest({ nodeType: "folder", nodePath: "." });
+        }}
+      >
+        <span aria-hidden="true">+</span>
+        {t("createDocument")}
+      </button>
     </nav>
   );
 }

@@ -11,9 +11,9 @@
 
 **Purpose**: 新規作成 feature の実装準備を整える
 
-- [ ] T001 Create create-document fixture workspace in tests/fixtures/create-document/ (supports FR-012, FR-015, FR-020)
-- [ ] T002 Add create-document API contract document reference in specs/022-create-markdown-doc/contracts/http-document-create-contract.md (supports FR-016, SC-003)
-- [ ] T003 [P] Add viewer sidebar create UX verification notes in specs/022-create-markdown-doc/quickstart.md (supports SC-001, SC-007)
+- [x] T001 Create create-document fixture workspace in tests/fixtures/create-document/ (supports FR-012, FR-015, FR-020)
+- [x] T002 Add create-document API contract document reference in specs/022-create-markdown-doc/contracts/http-document-create-contract.md (supports FR-016, SC-003)
+- [x] T003 [P] Add viewer sidebar create UX verification notes in specs/022-create-markdown-doc/quickstart.md (supports SC-001, SC-007)
 
 ---
 
@@ -23,14 +23,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Define document-create request/response domain types in src/shared/types.ts
-- [ ] T005 [P] Add document-create error categories and mapper inputs in src/shared/errors.ts
-- [ ] T006 Implement create-target resolution and scope validation utility in src/core/document/resolveCreateTarget.ts
-- [ ] T007 [P] Implement safe markdown file creation utility (no overwrite) in src/core/document/createMarkdownDocument.ts
-- [ ] T008 Implement create document application use case skeleton in src/application/documents/createDocument.ts
-- [ ] T009 Wire create document use case export in src/application/documents/index.ts
-- [ ] T010 Add create request validator in src/presentation/http/validation/createDocumentRequestValidator.ts
-- [ ] T011 Add create route registration placeholder in src/presentation/http/routes/index.ts
+- [x] T004 Define document-create request/response domain types in src/shared/types.ts
+- [x] T005 [P] Add document-create error categories and mapper inputs in src/shared/errors.ts
+- [x] T006 Implement create-target resolution and scope validation utility in src/core/document/resolveCreateTarget.ts
+- [x] T007 [P] Implement safe markdown file creation utility (no overwrite) in src/core/document/createMarkdownDocument.ts
+- [x] T008 Implement create document application use case skeleton in src/application/documents/createDocument.ts
+- [x] T009 Wire create document use case export in src/application/documents/index.ts
+- [x] T010 Add create request validator in src/presentation/http/validation/createDocumentRequestValidator.ts
+- [x] T011 Add create route registration placeholder in src/presentation/http/routes/index.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -44,16 +44,16 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Add sidebar hover action rendering for per-node `+` button in src/viewer/components/DocumentTree.tsx
-- [ ] T013 [US1] Add create-screen/dialog component for filename-only input in src/viewer/components/CreateDocumentDialog.tsx
-- [ ] T014 [P] [US1] Add createDocument API client method in src/viewer/services/apiClient.ts
-- [ ] T015 [US1] Implement create document HTTP route handler in src/presentation/http/routes/documentCreateRoute.ts
-- [ ] T016 [US1] Connect create route into route registry in src/presentation/http/routes/index.ts
-- [ ] T017 [US1] Implement create document use case orchestration in src/application/documents/createDocument.ts
-- [ ] T018 [US1] Add create flow state (anchor context, pending, result) in src/viewer/state/viewerState.ts
-- [ ] T019 [US1] Integrate hover `+` -> create dialog -> submit flow in src/viewer/App.tsx
-- [ ] T020 [US1] Refresh document tree and auto-select created document in src/viewer/hooks/useViewerState.ts
-- [ ] T021 [US1] Ensure sidebar label mapping displays extensionless names for all Markdown documents (existing + newly created) in src/viewer/navigation.ts and src/viewer/components/DocumentTree.tsx
+- [x] T012 [P] [US1] Add sidebar hover action rendering for per-node `+` button in src/viewer/components/DocumentTree.tsx
+- [x] T013 [US1] Add create-screen/dialog component for filename-only input in src/viewer/components/CreateDocumentDialog.tsx
+- [x] T014 [P] [US1] Add createDocument API client method in src/viewer/services/apiClient.ts
+- [x] T015 [US1] Implement create document HTTP route handler in src/presentation/http/routes/documentCreateRoute.ts
+- [x] T016 [US1] Connect create route into route registry in src/presentation/http/routes/index.ts
+- [x] T017 [US1] Implement create document use case orchestration in src/application/documents/createDocument.ts
+- [x] T018 [US1] Add create flow state (anchor context, pending, result) in src/viewer/state/viewerState.ts
+- [x] T019 [US1] Integrate hover `+` -> create dialog -> submit flow in src/viewer/App.tsx
+- [x] T020 [US1] Refresh document tree and auto-select created document in src/viewer/hooks/useViewerState.ts
+- [x] T021 [US1] Ensure sidebar label mapping displays extensionless names for all Markdown documents (existing + newly created) in src/viewer/navigation.ts and src/viewer/components/DocumentTree.tsx
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
 
@@ -67,13 +67,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Enforce filename-only and extension auto-append/reject rules in src/presentation/http/validation/createDocumentRequestValidator.ts
-- [ ] T023 [US2] Implement include/exclude/rootDir/traversal policy checks in src/core/document/resolveCreateTarget.ts
-- [ ] T024 [US2] Implement duplicate-file rejection without overwrite in src/core/document/createMarkdownDocument.ts
-- [ ] T025 [P] [US2] Map create validation failures to HTTP error payloads in src/presentation/http/errors/httpErrorMapper.ts
-- [ ] T026 [US2] Return user-readable rejection reasons from create route in src/presentation/http/routes/documentCreateRoute.ts
-- [ ] T027 [US2] Surface create failure messages and retry guidance in src/viewer/components/ErrorBanner.tsx
-- [ ] T028 [US2] Keep internal `.md` identifier and extensionless sidebar label consistency in src/viewer/state/viewerState.ts
+- [x] T022 [US2] Enforce filename-only and extension auto-append/reject rules in src/presentation/http/validation/createDocumentRequestValidator.ts
+- [x] T023 [US2] Implement include/exclude/rootDir/traversal policy checks in src/core/document/resolveCreateTarget.ts
+- [x] T024 [US2] Implement duplicate-file rejection without overwrite in src/core/document/createMarkdownDocument.ts
+- [x] T025 [P] [US2] Map create validation failures to HTTP error payloads in src/presentation/http/errors/httpErrorMapper.ts
+- [x] T026 [US2] Return user-readable rejection reasons from create route in src/presentation/http/routes/documentCreateRoute.ts
+- [x] T027 [US2] Surface create failure messages and retry guidance in src/viewer/components/ErrorBanner.tsx
+- [x] T028 [US2] Keep internal `.md` identifier and extensionless sidebar label consistency in src/viewer/state/viewerState.ts
 
 **Checkpoint**: User Stories 1 and 2 should both work independently
 
@@ -87,10 +87,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T029 [US3] Extend unsaved-changes guard transitions for create entry action in src/viewer/state/viewerState.ts
-- [ ] T030 [P] [US3] Reuse unsaved changes dialog for create confirmation branch in src/viewer/components/UnsavedChangesDialog.tsx
-- [ ] T031 [US3] Integrate create-entry guard handling in app-level interaction flow in src/viewer/App.tsx
-- [ ] T032 [US3] Ensure create dialog opening is blocked/unblocked by guard decision in src/viewer/components/CreateDocumentDialog.tsx
+- [x] T029 [US3] Extend unsaved-changes guard transitions for create entry action in src/viewer/state/viewerState.ts
+- [x] T030 [P] [US3] Reuse unsaved changes dialog for create confirmation branch in src/viewer/components/UnsavedChangesDialog.tsx
+- [x] T031 [US3] Integrate create-entry guard handling in app-level interaction flow in src/viewer/App.tsx
+- [x] T032 [US3] Ensure create dialog opening is blocked/unblocked by guard decision in src/viewer/components/CreateDocumentDialog.tsx
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -100,11 +100,11 @@
 
 **Purpose**: 仕様整合、手順整備、最終検証を実施する
 
-- [ ] T033 [P] Update create feature usage documentation in README.md and README.ja.md (cross-cutting support for FR-001-FR-021)
-- [ ] T034 [P] Update editing guide for sidebar hover `+` flow in docs/editing.md and docs/editing.ja.md (supports SC-001)
+- [x] T033 [P] Update create feature usage documentation in README.md and README.ja.md (cross-cutting support for FR-001-FR-021)
+- [x] T034 [P] Update editing guide for sidebar hover `+` flow in docs/editing.md and docs/editing.ja.md (supports SC-001)
 - [ ] T035 Run quickstart scenario verification and record outcomes guidance in specs/022-create-markdown-doc/quickstart.md (supports SC-001-SC-007)
-- [ ] T036 Execute focused regression verification references for create flow in tests/contract/http-errors.test.ts and src/viewer/navigation.test.ts (supports FR-010-FR-016, FR-021)
-- [ ] T037 Add explicit SC-005 latency verification task (create success to tree reflect/select <= 2s) in specs/022-create-markdown-doc/quickstart.md and tests/regression/create-sidebar-latency.md
+- [x] T036 Execute focused regression verification references for create flow in tests/contract/http-errors.test.ts and src/viewer/navigation.test.ts (supports FR-010-FR-016, FR-021)
+- [x] T037 Add explicit SC-005 latency verification task (create success to tree reflect/select <= 2s) in specs/022-create-markdown-doc/quickstart.md and tests/regression/create-sidebar-latency.md
 
 ---
 
@@ -197,3 +197,18 @@ Task: "Reuse unsaved changes dialog for create confirmation branch in src/viewer
 - [US1]-[US3] labels map tasks to spec user stories
 - Keep Story 022 scope limited to create flow; delete behavior is Story 023
 - Preserve internal `.md` filenames while keeping sidebar display extensionless
+
+---
+
+## Phase 7: UX Revision - インラインファイル名入力 + Save時作成
+
+**Purpose**: 2026-06-21 改訂仕様（モーダル廃止、インライン入力、Save時作成）へ整合させる
+
+- [x] T038 Update create flow spec/contract references for editor-inline filename and save-triggered creation in specs/022-create-markdown-doc/spec.md and contracts/
+- [x] T039 Implement editor inline filename input field (underline-only + placeholder `ページタイトル`) between toolbar and body in src/viewer/components/DocumentEditor.tsx
+- [x] T040 Update sidebar row layout so label-left and create-button-right are aligned at opposite ends in src/viewer/components/DocumentTree.tsx and viewer styles
+- [x] T041 Remove modal-first create entry and transition directly to editor create state in src/viewer/App.tsx and src/viewer/components/CreateDocumentDialog.tsx
+- [x] T042 Implement deferred file creation at save timing (no file creation immediately after `+`) in src/viewer/App.tsx, src/application/documents/createDocument.ts, and save/create boundary modules
+- [x] T043 Ensure create-on-save keeps unsaved-changes guard behavior and anchor context resolution in src/viewer/state/viewerState.ts and src/viewer/hooks/useViewerState.ts
+- [x] T044 Add/adjust regression tests for inline filename UX, right-aligned `+`, and save-triggered create timing in src/viewer/_.test.ts and tests/contract/_.test.ts
+- [x] T045 Update quickstart and editing docs for revised create UX in specs/022-create-markdown-doc/quickstart.md and docs/editing\*.md

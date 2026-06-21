@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   beginSave,
+  beginCreate,
+  clearCreateFlow,
+  createCreateFlowState,
   createViewerEditSessionState,
   enterEditMode,
+  markCreateRejected,
+  markCreateSucceeded,
   markSaveFailed,
   markSaveSucceeded,
   markSaveWarning,
@@ -49,6 +54,25 @@ describe("viewerState", () => {
   it("does not require confirmation when there are no unsaved edits", () => {
     const state = updateUnsavedChanges(enterEditMode(createViewerEditSessionState()), false);
     expect(shouldPromptUnsavedChanges(state, "switch-document")).toBe(false);
+  });
+
+  it("requires confirmation when creating from unsaved edit session", () => {
+    const state = updateUnsavedChanges(enterEditMode(createViewerEditSessionState()), true);
+    expect(shouldPromptUnsavedChanges(state, "create-document")).toBe(true);
+  });
+
+  it("tracks create flow transitions", () => {
+    const initial = createCreateFlowState();
+    const creating = beginCreate(initial, { nodeType: "folder", nodePath: "docs" });
+    const created = markCreateSucceeded(creating);
+    const rejected = markCreateRejected(created);
+    const cleared = clearCreateFlow(rejected);
+
+    expect(creating.pending).toBe(true);
+    expect(created.result).toBe("created");
+    expect(rejected.result).toBe("rejected");
+    expect(cleared.anchor).toBeNull();
+    expect(cleared.pending).toBe(false);
   });
 
   it("tracks save lifecycle transitions", () => {

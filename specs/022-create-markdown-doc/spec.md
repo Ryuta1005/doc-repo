@@ -13,22 +13,28 @@
 - Q: 新規作成画面で相対サブパス入力を許可するか？ → A: A（ファイル名のみ入力可、`/` を含む入力は不可）
 - Q: サイドバー表示は拡張子を表示するか？ → A: A（内部ファイル名は `.md` を保持し、サイドバー表示では拡張子なし）
 
+### Session 2026-06-21 (Revision)
+
+- Q: 新規作成時のファイル名入力はモーダルで行うか？ → A: B（編集画面の本文直前にインライン入力する）
+- Q: `+` 押下直後にファイル実体を作成するか？ → A: B（遷移時は作成しない。保存時に初めて作成する）
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - ワークスペース内で文書を新規作成する (Priority: P1)
 
-利用者はサイドバーの文書ツリーでファイルまたはフォルダにマウスホバーすると表示される `+` 操作から、新しい Markdown 文書作成を開始できる。作成後はその文書をすぐ開いて編集を開始できる。
+利用者はサイドバーの文書ツリーでファイルまたはフォルダにマウスホバーすると表示される `+` 操作から、新しい Markdown 文書作成を開始できる。`+` 押下後は即時に編集画面へ遷移し、編集画面内のファイル名入力欄と本文編集を使って保存時に新規文書を作成できる。
 
 **Why this priority**: 文書を増やせないと編集ワークスペース単体で運用が完結しないため、最優先の価値である。
 
-**Independent Test**: 利用者がサイドバーで任意ノードへホバーし、表示された `+` を押して作成画面に遷移し、作成直後に文書ツリー更新と新規文書選択まで完了できれば独立して価値を検証できる。
+**Independent Test**: 利用者がサイドバーで任意ノードへホバーし、表示された `+` を押して編集画面へ遷移し、保存前に実体ファイルが存在しないこと、保存後に文書作成・ツリー更新・新規文書選択まで完了することを確認できれば独立して価値を検証できる。
 
 **Acceptance Scenarios**:
 
-1. **Given** 利用者が編集ワークスペースを開いている, **When** サイドバー上のファイルまたはフォルダにホバーする, **Then** ホバー中ノードの右側に `+` ボタンが表示される。
-2. **Given** 利用者がホバー表示された `+` ボタンをクリックする, **When** 作成フローを開始する, **Then** 新規作成画面へ遷移し、クリック元ノードを基準にした作成先が設定される。
-3. **Given** 利用者が拡張子なしのファイル名で作成を確定する, **When** 作成処理が成功する, **Then** システムは自動的に `.md` を補完して新規文書を作成し、文書ツリーには拡張子なし名称で反映し、その文書を選択状態にする。
-4. **Given** 利用者が既存の Markdown 文書を含む文書ツリーを表示している, **When** サイドバーを確認する, **Then** 新規作成文書だけでなく既存文書も拡張子なし表示で統一される。
+1. **Given** 利用者が編集ワークスペースを開いている, **When** サイドバー上のファイルまたはフォルダにホバーする, **Then** ファイル名は左寄せ、`+` ボタンは右寄せで行の両端に表示される。
+2. **Given** 利用者がホバー表示された `+` ボタンをクリックする, **When** 作成フローを開始する, **Then** 新規作成専用モーダルではなく編集画面へ遷移し、ツールバーと本文入力欄の間にファイル名入力欄が表示される。
+3. **Given** 利用者が `+` 押下直後の編集画面にいる, **When** まだ保存していない, **Then** 新規ファイル実体は作成されない。
+4. **Given** 利用者が拡張子なしのファイル名で保存を実行する, **When** 保存処理が成功する, **Then** システムは自動的に `.md` を補完して新規文書を作成し、文書ツリーには拡張子なし名称で反映し、その文書を選択状態にする。
+5. **Given** 利用者が既存の Markdown 文書を含む文書ツリーを表示している, **When** サイドバーを確認する, **Then** 新規作成文書だけでなく既存文書も拡張子なし表示で統一される。
 
 ---
 
@@ -38,15 +44,15 @@
 
 **Why this priority**: 誤操作や悪意のある入力で既存ファイルや rootDir 外に影響を与えないことが、運用上の安全性に直結するため。
 
-**Independent Test**: `.md` 以外、`..` を含むパス、include/exclude 条件外、既存同名ファイルへの作成要求を個別に実施し、すべて安全に拒否され理由が提示されることを確認できる。あわせてクリック元ノードに応じた作成先解決が一貫することを確認できる。
+**Independent Test**: `..` を含むパス、include/exclude 条件外、既存同名ファイルへの作成要求を個別に実施し、すべて安全に拒否され理由が提示されることを確認できる。あわせてクリック元ノードに応じた作成先解決が一貫することを確認できる。
 
 **Acceptance Scenarios**:
 
-1. **Given** 利用者が作成先に `.md` 以外の拡張子または rootDir 外を示すパスを入力する, **When** 作成を確定する, **Then** 作成は拒否され、拒否理由が表示される。
+1. **Given** 利用者が作成先に rootDir 外を示すパスを入力する, **When** 作成を確定する, **Then** 作成は拒否され、拒否理由が表示される。
 2. **Given** 利用者が既存同名ファイルのパスで作成を試みる, **When** 作成を確定する, **Then** 既存ファイルは上書きされず、重複エラーが表示される。
 3. **Given** 利用者がフォルダノードの `+` から作成を開始する, **When** 作成先が解決される, **Then** 新規文書はそのフォルダ直下に作成される。
 4. **Given** 利用者がファイルノードの `+` から作成を開始する, **When** 作成先が解決される, **Then** 新規文書はそのファイルと同じ階層（親フォルダ直下）に作成される。
-5. **Given** 利用者が拡張子なしのファイル名を入力する, **When** 作成を確定する, **Then** `.md` が自動付与される。
+5. **Given** 利用者が任意のファイル名本文を入力する, **When** 作成を確定する, **Then** 入力値の末尾に `.md` が自動付与される。
 6. **Given** 利用者が `/` を含む相対サブパスを入力する, **When** 作成を確定する, **Then** 入力は拒否され、ファイル名のみ入力可能であることが表示される。
 7. **Given** 利用者が `example` を入力して作成する, **When** 文書ツリーが更新される, **Then** 内部ファイルは `example.md` として保存され、サイドバー表示は `example` となる。
 
@@ -73,8 +79,9 @@
 - ルート直下ノードで `+` を押した場合でも、rootDir 外に解決されない。
 - 同一ノードを連続ホバーしても `+` ボタンが重複表示されない。
 - ホバー解除後は `+` ボタンが非表示に戻り、誤クリックを誘発しない。
-- 利用者が `example.md` と入力した場合、`.md` が二重付与されず `example.md` のまま作成される。
-- 利用者が `example.txt` のように `.md` 以外の拡張子を明示した場合は自動変換せず拒否される。
+- 新規作成遷移直後のファイル名入力欄は下線のみ表示され、空欄時にグレーのプレースホルダー「ページタイトル」を表示する。
+- 利用者が `example.md` と入力した場合、入力値をファイル名本文として扱い `example.md.md` として作成される。
+- 利用者が `example.txt` のようにドットを含む名前を入力した場合、ドット以降もファイル名本文として扱われ `example.txt.md` として作成される。
 - 利用者が `child/example` のような `/` を含む入力を行った場合は拒否される。
 - 同一階層に `example.md` が存在する状態で `example` を入力した場合、同一ファイルとして重複判定される。
 
@@ -84,14 +91,14 @@
 
 - **FR-001**: System MUST display a creation `+` button on the right side of a sidebar node only while a file or folder node is hovered.
 - **FR-002**: System MUST allow users to start new document creation by clicking the hovered node's `+` button.
-- **FR-003**: System MUST transition users to a dedicated new-document creation screen after `+` button click.
+- **FR-003**: System MUST transition users to the editor screen after `+` button click, and MUST NOT open a dedicated creation modal.
 - **FR-004**: System MUST derive the creation base location from the clicked node context.
 - **FR-005**: System MUST create the new document directly under the clicked folder when the clicked node is a folder.
 - **FR-006**: System MUST create the new document in the clicked file's parent folder (same level as the clicked file) when the clicked node is a file.
-- **FR-007**: System MUST require users to provide only a filename for the new document within the derived base location.
-- **FR-008**: System MUST automatically append `.md` to the filename when users input a name without extension.
-- **FR-009**: System MUST NOT append a second `.md` when users input a name that already ends with `.md`.
-- **FR-010**: System MUST reject creation when users explicitly provide a non-`.md` extension.
+- **FR-007**: System MUST require users to provide only a filename for the new document within the derived base location, using an inline filename field between the editor toolbar and body input.
+- **FR-008**: System MUST always append `.md` to the filename text entered by users.
+- **FR-009**: System MUST treat an entered `.md` suffix as filename text and still append the storage `.md` suffix.
+- **FR-010**: System MUST allow filename text that contains dots such as `doc.ja` or `example.txt` and persist it by appending `.md`.
 - **FR-011**: System MUST reject filename inputs containing path separators such as `/` and `\\`.
 - **FR-012**: System MUST allow creation only when the resolved target is a `.md` file under rootDir.
 - **FR-013**: System MUST reject path traversal attempts (including `..`-based traversal) and any target outside rootDir.
@@ -103,6 +110,9 @@
 - **FR-019**: System MUST preserve existing unsaved-change confirmation behavior when users perform create actions during an unsaved state.
 - **FR-020**: System MUST persist created document filenames with a `.md` extension in the underlying file system.
 - **FR-021**: System MUST display all Markdown document names in the sidebar without the `.md` extension (both existing and newly created documents), while preserving `.md` in internal filenames.
+- **FR-022**: System MUST defer physical file creation until users press save in the editor after entering a filename.
+- **FR-023**: System MUST render the inline filename field as underline-only style, and MUST show gray placeholder text `ページタイトル` when empty.
+- **FR-024**: System MUST align sidebar row label to the left and `+` button to the right so they appear at opposite ends on hover.
 
 ### Key Entities _(include if feature involves data)_
 
@@ -132,5 +142,6 @@
 - ファイルノード起点の「直下」は、ファイルシステム上の制約に合わせて「対象ファイルの親フォルダ直下（同階層）」として扱う。
 - 新規作成時の初期本文は常に空本文とする。
 - 新規作成画面の入力欄はファイル名のみを受け付け、相対サブパス入力は受け付けない。
+- 新規作成モーダルは採用せず、編集画面の共通コンポーネントで新規作成導線を成立させる。
 - サイドバーの文書名表示は拡張子なしを正とし、内部ファイル名は `.md` を保持する。
 - include/exclude 設定は既存機能で有効化済みであり、本 feature はその判定結果を利用する。

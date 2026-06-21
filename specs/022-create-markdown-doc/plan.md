@@ -5,7 +5,7 @@
 
 ## Summary
 
-サイドバーのファイル/フォルダ行に対するホバー時 `+` 操作を起点に、新規 Markdown 文書作成フローを追加する。作成先はクリック元ノード文脈で決定し、入力はファイル名のみ、拡張子省略時は `.md` を自動補完する。内部ファイル名は `.md` を保持しつつ、サイドバー表示は拡張子なしへ統一する。既存の rootDir 制約、include/exclude 判定、未保存変更ガードを維持したまま実装する。
+サイドバーのファイル/フォルダ行に対するホバー時 `+` 操作を起点に、新規 Markdown 文書作成フローを追加する。`+` 押下後は専用モーダルではなく編集画面に遷移し、ツールバーと本文入力欄の間にインラインファイル名入力欄を表示する。ファイル実体は遷移時に作成せず、保存ボタン押下時に初めて作成する。作成先はクリック元ノード文脈で決定し、入力値をファイル名本文として扱って末尾に常に `.md` を自動補完する。内部ファイル名は `.md` を保持しつつ、サイドバー表示は最後の `.md` なしへ統一する。
 
 ## Technical Context
 
@@ -16,7 +16,7 @@
 **Target Platform**: macOS/Linux/Windows 上の Node.js 実行環境 + ブラウザ（serve UI）
 **Project Type**: npm CLI パッケージ（serve 中の React Viewer + Hono HTTP API）  
 **Performance Goals**: 新規作成成功時、文書ツリー反映と選択完了を p95 2 秒以内  
-**Constraints**: ファイル名のみ入力、`/` `\\` を拒否、`.md` 自動補完、パストラバーサル拒否、重複上書き禁止、既存未保存変更ガードを維持  
+**Constraints**: ファイル名のみ入力、`/` `\\` を拒否、`.md` 自動補完、パストラバーサル拒否、重複上書き禁止、既存未保存変更ガードを維持、作成前は実体ファイル非生成、ファイル名入力欄は下線+`ページタイトル` プレースホルダー  
 **Scale/Scope**: Story 022（新規作成）に限定。削除機能は Story 023 で扱う
 
 ## Constitution Check
@@ -35,7 +35,7 @@ Phase 1 後の再チェック:
 - Post-Design Gate-2: PASS（create API 契約を HTTP 境界へ限定し、内部実装詳細を露出しない）
 - Post-Design Gate-3: PASS（contracts/quickstart/tasks の追跡で安全性・性能・表示整合を確認可能）
 
-## Design Focus: Hover Anchor Driven Creation
+## Design Focus: Hover Anchor Driven Create-on-Save
 
 本 feature の中心は「どこに作るか」の誤解をなくすことにある。作成先解決は常に `CreationAnchorContext` を起点に行う。
 
@@ -44,13 +44,15 @@ Sidebar Hover Node
   ↓
 Hover + Button Click
   ↓
-CreationAnchorContext (file/folder, basePath)
+CreationAnchorContext (file/folder, basePath) + DraftCreateSession
   ↓
-Create Screen (filename only)
+Editor Screen (inline filename field + body editor)
+  ↓
+No physical file yet
   ↓ normalize + validate
 Resolved Target (.md under rootDir)
   ↓
-Create + Tree Refresh + Select + Display without extension
+Save pressed -> Create + Tree Refresh + Select + Display without extension
 ```
 
 ## Validation Strategy
@@ -99,11 +101,11 @@ src/
 │           └── (create request validation を追加)
 ├── viewer/
 │   ├── components/
-│   │   └── (sidebar hover action + create screen UI を追加)
+│   │   └── (sidebar hover action + inline filename UI を追加)
 │   ├── services/
 │   │   └── (create API client を追加)
 │   ├── state/
-│   │   └── (creation flow state を追加)
+│   │   └── (draft create session + create timing state を追加)
 │   └── navigation.ts
 └── shared/
   └── (create result/error 型を追加)
@@ -117,7 +119,7 @@ tests/
   └── (layer violation がないことを確認)
 ```
 
-**Structure Decision**: 既存の層分離を維持し、UI 仕様（ホバー `+`、作成画面、拡張子なし表示）は `src/viewer` に閉じる。作成先決定・安全性検証・ファイル作成は `src/application` / `src/core/document` に閉じ、`src/presentation/http` は契約変換とエラーマッピングのみ担当する。
+**Structure Decision**: 既存の層分離を維持し、UI 仕様（ホバー `+`、インラインファイル名入力、拡張子なし表示）は `src/viewer` に閉じる。作成先決定・安全性検証・ファイル作成は `src/application` / `src/core/document` に閉じ、`src/presentation/http` は契約変換とエラーマッピングのみ担当する。作成トリガーは `+` ではなく保存操作に統一する。
 
 ## Complexity Tracking
 

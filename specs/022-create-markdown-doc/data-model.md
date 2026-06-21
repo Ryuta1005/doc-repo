@@ -22,8 +22,8 @@
 - Validation Rules:
   - rawFilename は空文字/空白のみを許容しない
   - rawFilename は `/` `\\` を含まない
-  - normalizedFilename は `.md` 自動補完ルールを適用した結果である
-  - `.md` 以外の明示拡張子は拒否する
+  - normalizedFilename は rawFilename の末尾に `.md` を付与した結果である
+  - rawFilename 内のドットや `.md` はファイル名本文として扱う
 
 ## Entity: ResolvedCreateTarget
 

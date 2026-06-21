@@ -52,7 +52,7 @@ body {
 
 .viewer-layout {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: var(--viewer-sidebar-width, 320px) 8px minmax(0, 1fr);
   height: 100vh;
 }
 
@@ -64,6 +64,43 @@ body {
   padding: 20px 18px;
   background: linear-gradient(170deg, #f2f7ef 0%, #e8f0e8 100%);
   overflow: hidden;
+}
+
+.viewer-sidebar-resizer {
+  position: relative;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-left: 1px solid transparent;
+  background: linear-gradient(180deg, #eef5ed 0%, #e2ece4 100%);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.viewer-sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 2px;
+  height: 42px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  transform: translate(-50%, -50%);
+}
+
+.viewer-sidebar-resizer:hover,
+.viewer-sidebar-resizer:focus-visible {
+  background: #dcefe4;
+  outline: none;
+}
+
+.viewer-sidebar-resizer:hover::after,
+.viewer-sidebar-resizer:focus-visible::after {
+  background: var(--accent-strong);
+}
+
+.is-resizing-sidebar {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .viewer-brand {
@@ -129,18 +166,37 @@ body {
 }
 
 .viewer-tree details > ul {
-  padding-left: 1rem;
+  padding-left: 1.35rem;
 }
 
 .viewer-tree summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--muted);
   line-height: 1.35;
   overflow-wrap: anywhere;
+  padding: 2px 6px;
   word-break: break-word;
 }
 
 .viewer-tree summary:hover {
+  background: #e8f2ea;
+  color: var(--accent-strong);
+}
+
+.viewer-tree-folder-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.viewer-tree-folder-icon {
+  flex: 0 0 auto;
   color: var(--accent-strong);
 }
 
@@ -165,6 +221,60 @@ body {
   color: #0b3022;
   background: #dcefe4;
   font-weight: 700;
+}
+
+.viewer-tree-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.viewer-tree-create {
+  opacity: 0;
+  pointer-events: none;
+  border: none;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px 6px;
+  flex: 0 0 auto;
+}
+
+.viewer-tree summary:hover .viewer-tree-create,
+.viewer-tree summary:focus-within .viewer-tree-create {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.viewer-tree-create:hover {
+  background: #e8f2ea;
+}
+
+.viewer-tree-create-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(100% - 1rem);
+  border: none;
+  border-radius: 8px;
+  margin-left: 1rem;
+  padding: 6px;
+  background: transparent;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 400;
+  text-align: left;
+}
+
+.viewer-tree-create-root:hover,
+.viewer-tree-create-root:focus-visible {
+  background: #e8f2ea;
+  outline: none;
 }
 
 .viewer-content {
@@ -419,6 +529,40 @@ body {
   color: #9e3950;
 }
 
+.editor-filename-row {
+  padding: 8px 14px 2px;
+  background: #ffffff;
+}
+
+.editor-filename-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #c7d4ca;
+  background: #ffffff;
+  background-color: #ffffff;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none;
+  -webkit-box-shadow: none;
+  color: var(--ink);
+  font-size: 2.5rem;
+  line-height: 1.2;
+  padding: 4px 0;
+}
+
+.editor-filename-input::placeholder {
+  color: #90a39a;
+}
+
+.editor-filename-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent-strong);
+}
+
+.editor-filename-input[readonly] {
+  color: var(--muted);
+}
+
 .editor-panel {
   display: flex;
   flex-direction: column;
@@ -461,9 +605,10 @@ body {
 
 .editor-surface {
   min-height: 100%;
-  max-width: 80ch;
-  margin: 0 auto;
-  padding: 32px 24px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0.25rem 2rem;
   outline: none;
   line-height: 1.7;
   color: #1a1a1a;
@@ -756,6 +901,10 @@ body {
     min-height: 100vh;
   }
 
+  .viewer-sidebar-resizer {
+    display: none;
+  }
+
   .viewer-sidebar {
     border-right: none;
     border-bottom: 1px solid var(--line);
@@ -778,6 +927,6 @@ body {
 
   .editor-surface {
     min-height: 48vh;
-    padding: 14px;
+    padding: 0.25rem 2rem;
   }
 }

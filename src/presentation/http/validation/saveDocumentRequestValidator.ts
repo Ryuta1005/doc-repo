@@ -15,10 +15,14 @@ export const validateSaveDocumentRequest = (
     return { ok: false, reason: "request body must be a JSON object" };
   }
 
-  const { identifier, markdownContent, options, proceed } = payload;
+  const { identifier, originalIdentifier, markdownContent, options, proceed } = payload;
 
   if (typeof identifier !== "string" || !identifier.trim()) {
     return { ok: false, reason: "identifier is required" };
+  }
+
+  if (originalIdentifier !== undefined && (typeof originalIdentifier !== "string" || !originalIdentifier.trim())) {
+    return { ok: false, reason: "originalIdentifier must be a non-empty string when provided" };
   }
 
   if (typeof markdownContent !== "string") {
@@ -45,6 +49,7 @@ export const validateSaveDocumentRequest = (
     ok: true,
     value: {
       identifier,
+      originalIdentifier,
       markdownContent,
       options: {
         newlineStyle: options.newlineStyle,

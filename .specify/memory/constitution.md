@@ -47,6 +47,8 @@
 
 - Constitution は他ドキュメントより優先される。
 - 変更は PR または明示合意で行い、影響を受ける spec/plan/tasks を同時に更新する。
+- 明示的な依頼がない限り、AI は `git commit` や `git push` を実行してはならない。
+- 変更を共有したい場合は、コミットやプッシュを行わず、差分と検証結果をユーザーへ報告する。
 - 各 feature の plan は Constitution Check で準拠状況を明示する。
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-21
+**Version**: 1.0.1 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-21

@@ -23,6 +23,10 @@ export interface DocumentEditorSnapshot {
 
 interface DocumentEditorProps {
   documentIdentifier: string;
+  filename: string;
+  filenamePlaceholder: string;
+  filenameReadOnly: boolean;
+  onFilenameChange: (filename: string) => void;
   sourceMarkdown: string;
   onSnapshotChange: (snapshot: DocumentEditorSnapshot) => void;
   onSaveRequest: (snapshot: DocumentEditorSnapshot) => void;
@@ -82,6 +86,10 @@ const buildSnapshot = (
 
 export function DocumentEditor({
   documentIdentifier,
+  filename,
+  filenamePlaceholder,
+  filenameReadOnly,
+  onFilenameChange,
   sourceMarkdown,
   onSnapshotChange,
   onSaveRequest,
@@ -198,6 +206,19 @@ export function DocumentEditor({
           isSaving={isSaving}
           onUploadImage={handleUploadImage}
         />
+        <div className="editor-filename-row">
+          <input
+            type="text"
+            className="editor-filename-input"
+            aria-label={t("editorFilenameLabel")}
+            value={filename}
+            placeholder={filenamePlaceholder}
+            readOnly={filenameReadOnly}
+            onChange={(event) => {
+              onFilenameChange(event.target.value);
+            }}
+          />
+        </div>
         <div className="editor-content-wrapper">
           <EditorContent editor={editor} />
         </div>
