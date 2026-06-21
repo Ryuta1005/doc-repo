@@ -6,7 +6,50 @@ export type ViewerMode = "view" | "edit";
 
 export type SaveLifecycleStatus = "idle" | "saving" | "warning" | "saved" | "failed";
 
-export type UnsavedChangesTrigger = "switch-document" | "exit-edit" | "browser-leave";
+export type UnsavedChangesTrigger = "switch-document" | "exit-edit" | "browser-leave" | "create-document";
+
+export interface CreationAnchorContext {
+  nodeType: "file" | "folder";
+  nodePath: string;
+}
+
+export interface CreateFlowState {
+  anchor: CreationAnchorContext | null;
+  pending: boolean;
+  result: "idle" | "created" | "rejected";
+}
+
+export const createCreateFlowState = (): CreateFlowState => ({
+  anchor: null,
+  pending: false,
+  result: "idle",
+});
+
+export const beginCreate = (state: CreateFlowState, anchor: CreationAnchorContext): CreateFlowState => ({
+  ...state,
+  anchor,
+  pending: true,
+  result: "idle",
+});
+
+export const markCreateSucceeded = (state: CreateFlowState): CreateFlowState => ({
+  ...state,
+  pending: false,
+  result: "created",
+});
+
+export const markCreateRejected = (state: CreateFlowState): CreateFlowState => ({
+  ...state,
+  pending: false,
+  result: "rejected",
+});
+
+export const clearCreateFlow = (state: CreateFlowState): CreateFlowState => ({
+  ...state,
+  anchor: null,
+  pending: false,
+  result: "idle",
+});
 
 export interface ViewerEditSessionState {
   mode: ViewerMode;

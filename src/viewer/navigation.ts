@@ -1,3 +1,5 @@
+import { normalizeMarkdownFilenameInput, type NormalizeMarkdownFilenameResult } from "../shared/documentFilename.js";
+
 const decodeSegmentSafe = (value: string): string => {
   try {
     return decodeURIComponent(value);
@@ -106,4 +108,28 @@ export const resolveIdentifierAfterSave = (
   currentIdentifier: string | null,
 ): string | null => {
   return savedIdentifier ?? currentIdentifier;
+};
+
+export const toSidebarLabel = (identifier: string, fallbackTitle?: string | null): string => {
+  const lastSegment = identifier.split("/").pop() ?? identifier;
+  const base = (fallbackTitle && fallbackTitle.trim()) || lastSegment;
+  return base.replace(/\.md$/i, "");
+};
+
+export const resolveEditableDocumentIdentifier = (currentIdentifier: string, filename: string): string | null => {
+  const normalized = normalizeMarkdownFilenameInput(filename);
+  if (!normalized.ok) {
+    return null;
+  }
+
+  const parentSegments = currentIdentifier.split("/");
+  parentSegments.pop();
+  const parentPath = parentSegments.filter((segment) => segment.length > 0).join("/");
+  return parentPath
+    ? `${parentPath}/${normalized.value.filenameWithExtension}`
+    : normalized.value.filenameWithExtension;
+};
+
+export const validateEditableDocumentFilename = (filename: string): NormalizeMarkdownFilenameResult => {
+  return normalizeMarkdownFilenameInput(filename);
 };

@@ -5,7 +5,7 @@ doc-repo is a local workspace for viewing and editing Markdown files in a Git re
 It lets you browse documents using the repository's existing directory structure and update them from the browser while keeping the Markdown files as the source of truth.
 
 > [!WARNING]
-> doc-repo is currently in alpha. CLI behavior, editing features, and generated runtime files may change in future releases.
+> doc-repo is currently in alpha. Workspace behavior and editing features may change in future releases.
 
 ![doc-repo Viewer](./docs/assets/screenshot-sample.png)
 
@@ -21,6 +21,7 @@ doc-repo provides a browser-based workspace for viewing and editing Markdown wit
 
 - Browse Markdown documents in the browser while preserving the repository's directory structure
 - Edit Markdown documents using a rich-text editor in the browser
+- Create new Markdown documents from the sidebar hover `+` action
 
 ## Quick Start
 
@@ -69,7 +70,7 @@ For detailed instructions, see [Getting Started](./docs/getting-started.md).
 - [Configuration](./docs/config.md)
 - [Editing Documents](./docs/editing.md)
 
-## CLI
+## Workspace Commands
 
 ```bash
 npm run doc-repo
@@ -77,12 +78,12 @@ npm run doc-repo -- init
 npm run doc-repo -- serve --port 4100
 ```
 
-| Command or option | Description                         |
-| ----------------- | ----------------------------------- |
-| `doc-repo`        | Start the local workspace           |
-| `init`            | Create `doc-repo.config.json`       |
-| `serve`           | Explicitly start the workspace      |
-| `--port <number>` | Specify the port used by the Viewer |
+| Command or option | Description                            |
+| ----------------- | -------------------------------------- |
+| `doc-repo`        | Start the local workspace              |
+| `init`            | Create `doc-repo.config.json`          |
+| `serve`           | Explicitly start the workspace         |
+| `--port <number>` | Specify the workspace HTTP server port |
 
 ## Configuration
 
@@ -100,19 +101,11 @@ For details about each configuration option, see [Configuration](./docs/config.m
 
 Click **Edit** in the Viewer to edit the selected Markdown document. Saved changes are written directly to the original `.md` file in the repository.
 
+To create a new document, hover a file or folder row in the left sidebar and click `+`. Enter a filename only. doc-repo always appends `.md` to the entered name and keeps sidebar labels without the final `.md`.
+
 The Viewer may display Markdown that the rich-text editor cannot safely edit or preserve.
 
 For supported formatting and keyboard shortcuts, see [Editing Documents](./docs/editing.md).
-
-## Runtime Files
-
-doc-repo creates runtime files in the `.doc-repo/` directory.
-
-Add it to `.gitignore`:
-
-```gitignore
-.doc-repo/
-```
 
 ## Security
 
@@ -129,7 +122,7 @@ npm test
 npm run build
 ```
 
-To run the built CLI, use:
+To run the built command, use:
 
 ```bash
 node dist/cli/index.js serve

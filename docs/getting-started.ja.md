@@ -65,16 +65,6 @@ npm run doc-repo -- init
 
 各設定項目については、[Configuration](./config.ja.md)を参照してください。
 
-## ランタイムファイル
-
-doc-repoを実行すると、ランタイムファイルを保存する`.doc-repo/`ディレクトリが作成されます。
-
-`.gitignore`に追加してください。
-
-```gitignore
-.doc-repo/
-```
-
 ## トラブルシューティング
 
 ### ポートがすでに使用されている

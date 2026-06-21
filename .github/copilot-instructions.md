@@ -70,6 +70,7 @@ MVP は次の 3 つの Spec に分けて進める。
 - 実装と同時に、必要なドキュメント更新も提案または実施する
 - 不明点は質問で解消する。質問は選択式を優先する
   - 例: A/B/C 形式
+- 明示的な依頼がない限り、`git commit` や `git push` を実行しない
 
 ## 手動テストケースの取り扱い
 
@@ -98,12 +99,15 @@ MVP は次の 3 つの Spec に分けて進める。
 必要になったら、ロードマップの Phase 2 以降として扱う。
 
 ## Active Technologies
+
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo` / `doc-repo.config.json`） (007-config-file-settings)
 - TypeScript (Node.js >= 20) + `commander`（CLI引数）、`fs-extra`（ファイル操作） (008-config-file-init)
 - ファイルシステム（`doc-repo.config.json` をカレントディレクトリに生成） (008-config-file-init)
 - TypeScript（Node.js >= 20） + commander, fs-extra, fast-glob, markdown-it, chokidar, React, Hono（具体バージョンは実装時決定） (019-edit-workspace-react-hono)
 - TypeScript (Node.js >= 20) + React, Hono, commander, fs-extra, markdown-it, chokidar, 候補 WYSIWYG エディタ: Tiptap（ProseMirror 系） (010-richtext-markdown-save)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo` / 元 Markdown への保存） (010-richtext-markdown-save)
+- TypeScript (Node.js >= 20) + React, Hono, commander, fs-extra, fast-glob, chokidar (022-create-markdown-doc)
+- ファイルシステム（入力 Markdown / 出力 `.doc-repo` / rootDir 配下への新規 `.md` 作成） (022-create-markdown-doc)
 
 - TypeScript (Node.js >= 20) + commander (CLI), fs-extra (ファイル操作), 既存 core 生成処理、Node.js `http`/`node:net` 標準機能（配信とポート検証） (005-local-server-serve)
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo`） (005-local-server-serve)

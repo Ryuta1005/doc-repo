@@ -4,6 +4,11 @@ export type HttpErrorCode =
   | "SAVE_TARGET_INVALID"
   | "SAVE_TARGET_UNWRITABLE"
   | "SAVE_IO_TEMPORARY"
+  | "INVALID_INPUT"
+  | "OUT_OF_SCOPE"
+  | "ALREADY_EXISTS"
+  | "UNWRITABLE_TARGET"
+  | "TRANSIENT_IO"
   | "INTERNAL_ERROR";
 
 export interface HttpErrorPayload {

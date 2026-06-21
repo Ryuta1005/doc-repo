@@ -30,7 +30,7 @@ If the configuration file already exists, it is not overwritten.
 | `rootDir` | `string`   | The directory containing the configuration file | The root directory used to collect and save Markdown files |
 | `include` | `string[]` | `["**/*.md"]`                                   | Glob patterns for Markdown files to include                |
 | `exclude` | `string[]` | `[]`                                            | Additional glob patterns for files to exclude              |
-| `port`    | `number`   | `4000`                                          | The port used to start the Viewer                          |
+| `port`    | `number`   | `4000`                                          | The workspace HTTP server port                             |
 
 All options are optional.
 
@@ -38,7 +38,7 @@ All options are optional.
 - If `include` is an empty array, the default value `["**/*.md"]` is used.
 - `exclude` takes precedence over `include`.
 - `node_modules/**`, `.git/**`, and `.doc-repo/**` are always excluded.
-- The `--port` CLI option takes precedence over the `port` value in the configuration file.
+- The `--port` command-line option takes precedence over the `port` value in the configuration file.
 - `port` must be an integer between `1` and `65535`.
 
 ## Configuration File Discovery

@@ -55,6 +55,16 @@ describe("http error contract", () => {
     expect(transientIo).toMatchObject({ status: 500, code: "SAVE_IO_TEMPORARY" });
   });
 
+  it("maps create-document app errors to create failure codes", () => {
+    const invalidInput = mapToHttpError(new AppError("bad filename", "INVALID_INPUT", "fix filename"));
+    const outOfScope = mapToHttpError(new AppError("outside root", "OUT_OF_SCOPE", "fix path"));
+    const alreadyExists = mapToHttpError(new AppError("duplicate", "ALREADY_EXISTS", "rename"));
+
+    expect(invalidInput).toMatchObject({ status: 400, code: "INVALID_INPUT" });
+    expect(outOfScope).toMatchObject({ status: 400, code: "OUT_OF_SCOPE" });
+    expect(alreadyExists).toMatchObject({ status: 409, code: "ALREADY_EXISTS" });
+  });
+
   it("rejects save when include/exclude rules are not satisfied", async () => {
     const rootDir = await makeTempDir();
     await fs.outputFile(path.join(rootDir, "docs", "note.md"), "# note\n");
@@ -86,6 +96,28 @@ describe("http error contract", () => {
     ).resolves.toMatchObject({
       status: "failed",
       error: { category: "invalid-target", code: "SAVE_TARGET_INVALID", retryable: false },
+    });
+  });
+
+  it("rejects create when include/exclude rules are not satisfied", async () => {
+    const rootDir = await makeTempDir();
+    await fs.outputFile(path.join(rootDir, "docs", "guide.md"), "# guide\n");
+    await fs.ensureDir(path.join(rootDir, "docs", "draft"));
+
+    const pipeline = createHttpBoundaryPipeline({
+      rootDir,
+      includePatterns: ["docs/**/*.md"],
+      excludePatterns: ["**/draft/**"],
+    });
+
+    await expect(
+      pipeline.createDocument({
+        anchor: { nodeType: "folder", nodePath: "docs/draft" },
+        filename: "blocked",
+      }),
+    ).resolves.toMatchObject({
+      status: "rejected",
+      error: { code: "OUT_OF_SCOPE", retryable: false },
     });
   });
 });

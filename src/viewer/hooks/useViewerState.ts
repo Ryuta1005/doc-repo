@@ -16,6 +16,7 @@ interface ViewerState {
   siteName: string;
   selectedIdentifier: string | null;
   selectIdentifier: (identifier: string) => void;
+  refreshDocuments: () => Promise<void>;
   reloadSelectedDocument: () => void;
   title: string;
   markdown: string;
@@ -86,25 +87,28 @@ export const useViewerState = (): ViewerState => {
     }
   }, []);
 
-  const loadDocumentByIdentifier = React.useCallback(async (identifier: string | null) => {
-    if (!identifier) {
-      return;
-    }
+  const loadDocumentByIdentifier = React.useCallback(
+    async (identifier: string | null) => {
+      if (!identifier) {
+        return;
+      }
 
-    try {
-      const detail = await fetchDocument(identifier);
-      setTitle(detail.title);
-      setMarkdown(detail.markdown);
-      setHtml(detail.html);
-      setErrorMessage(null);
-      setStatusMessage("");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-      setStatusMessage(t("documentLoadFailed"));
-      setTitle("Not Found");
-      setHtml(`<h1>Not Found</h1><p>${t("documentNotFound")}</p><p><a href="/">${t("backToTop")}</a></p>`);
-    }
-  }, [t]);
+      try {
+        const detail = await fetchDocument(identifier);
+        setTitle(detail.title);
+        setMarkdown(detail.markdown);
+        setHtml(detail.html);
+        setErrorMessage(null);
+        setStatusMessage("");
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : String(error));
+        setStatusMessage(t("documentLoadFailed"));
+        setTitle("Not Found");
+        setHtml(`<h1>Not Found</h1><p>${t("documentNotFound")}</p><p><a href="/">${t("backToTop")}</a></p>`);
+      }
+    },
+    [t],
+  );
 
   const loadSelectedDocument = React.useCallback(async () => {
     await loadDocumentByIdentifier(selectedIdentifierRef.current);
@@ -113,6 +117,10 @@ export const useViewerState = (): ViewerState => {
   const reloadSelectedDocument = React.useCallback(() => {
     void loadSelectedDocument();
   }, [loadSelectedDocument]);
+
+  const refreshDocuments = React.useCallback(async () => {
+    await loadDocuments();
+  }, [loadDocuments]);
 
   React.useEffect(() => {
     void loadSiteConfig();
@@ -208,6 +216,7 @@ export const useViewerState = (): ViewerState => {
     siteName,
     selectedIdentifier,
     selectIdentifier,
+    refreshDocuments,
     reloadSelectedDocument,
     title,
     markdown,

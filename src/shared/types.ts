@@ -92,6 +92,7 @@ export interface SaveRequestOptions {
 
 export interface SaveRequest {
   identifier: string;
+  originalIdentifier?: string;
   markdownContent: string;
   options: SaveRequestOptions;
   proceed?: boolean;
@@ -142,3 +143,53 @@ export interface SaveResult {
   message: string;
   retryable: boolean;
 }
+
+export type CreateAnchorNodeType = "file" | "folder";
+
+export interface CreateDocumentAnchor {
+  nodeType: CreateAnchorNodeType;
+  nodePath: string;
+}
+
+export interface CreateDocumentRequest {
+  anchor: CreateDocumentAnchor;
+  filename: string;
+}
+
+export type CreateFailureCode =
+  | "INVALID_INPUT"
+  | "OUT_OF_SCOPE"
+  | "ALREADY_EXISTS"
+  | "UNWRITABLE_TARGET"
+  | "TRANSIENT_IO";
+
+export type CreateFailureReason =
+  | "filename:required"
+  | "filename:path-segment"
+  | "filename:path-separator"
+  | "filename:empty-display-name"
+  | "filename:invalid"
+  | "target:out-of-scope"
+  | "target:already-exists"
+  | "target:unavailable"
+  | "target:temporary-failure";
+
+export interface CreateDocumentSuccessResponse {
+  status: "created";
+  document: {
+    identifier: string;
+    displayName: string;
+  };
+}
+
+export interface CreateDocumentFailureResponse {
+  status: "rejected";
+  error: {
+    code: CreateFailureCode;
+    reason: CreateFailureReason;
+    message: string;
+    retryable: boolean;
+  };
+}
+
+export type CreateDocumentResponse = CreateDocumentSuccessResponse | CreateDocumentFailureResponse;

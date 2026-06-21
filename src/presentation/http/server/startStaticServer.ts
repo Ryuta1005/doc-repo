@@ -23,6 +23,7 @@ interface StartStaticServerInput {
     onListDocuments: () => Promise<unknown>;
     onGetDocument: (rawPathQuery: string | null) => Promise<unknown>;
     onSaveDocument: (payload: unknown) => Promise<unknown>;
+    onCreateDocument?: (payload: unknown) => Promise<unknown>;
     onUploadDocumentImage: (formData: FormData) => Promise<unknown>;
   };
   sseHooks?: SseHooks;
@@ -160,6 +161,34 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
     }
 
     return c.json(result);
+  });
+
+  app.post("/api/document/create", async (c) => {
+    if (!input.apiHooks?.onCreateDocument) {
+      return c.text("Not Found", 404);
+    }
+
+    const payload = await c.req.json().catch(() => undefined);
+    const result = await input.apiHooks.onCreateDocument(payload);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "status" in result &&
+      (result as { status?: string }).status === "rejected"
+    ) {
+      const code = (result as { error?: { code?: string } }).error?.code;
+      const status =
+        code === "INVALID_INPUT" || code === "OUT_OF_SCOPE"
+          ? 400
+          : code === "ALREADY_EXISTS"
+            ? 409
+            : code === "UNWRITABLE_TARGET"
+              ? 404
+              : 500;
+      return c.json(result, status);
+    }
+
+    return c.json(result, 201);
   });
 
   app.post("/api/document/image", async (c) => {
