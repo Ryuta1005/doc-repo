@@ -36,6 +36,30 @@ export const mapToHttpError = (error: unknown): HttpError => {
     if (error.code === "SAVE_IO_TEMPORARY") {
       return createHttpError(500, "SAVE_IO_TEMPORARY", error.message);
     }
+    if (error.code === "INVALID_INPUT") {
+      return createHttpError(400, "INVALID_INPUT", error.message);
+    }
+    if (error.code === "OUT_OF_SCOPE") {
+      return createHttpError(400, "OUT_OF_SCOPE", error.message);
+    }
+    if (error.code === "ALREADY_EXISTS") {
+      return createHttpError(409, "ALREADY_EXISTS", error.message);
+    }
+    if (error.code === "UNWRITABLE_TARGET") {
+      return createHttpError(404, "UNWRITABLE_TARGET", error.message);
+    }
+    if (error.code === "INVALID_TARGET") {
+      return createHttpError(400, "INVALID_TARGET", error.message);
+    }
+    if (error.code === "NOT_FOUND") {
+      return createHttpError(404, "NOT_FOUND", error.message);
+    }
+    if (error.code === "CONTAINS_UNMANAGED_CONTENT") {
+      return createHttpError(409, "CONTAINS_UNMANAGED_CONTENT", error.message);
+    }
+    if (error.code === "TRANSIENT_IO") {
+      return createHttpError(500, "TRANSIENT_IO", error.message);
+    }
   }
 
   return createHttpError(500, "INTERNAL_ERROR", "Internal Server Error");

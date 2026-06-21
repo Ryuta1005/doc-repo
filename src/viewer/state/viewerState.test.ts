@@ -2,11 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import {
   beginSave,
+  beginCreate,
+  clearCreateFlow,
+  createCreateFlowState,
   createViewerEditSessionState,
   enterEditMode,
+  markCreateRejected,
+  markCreateSucceeded,
   markSaveFailed,
   markSaveSucceeded,
   markSaveWarning,
+  resolveSelectedIdentifierAfterDelete,
   resolveSelectedIdentifier,
   shouldPromptUnsavedChanges,
   updateUnsavedChanges,
@@ -31,6 +37,14 @@ describe("viewerState", () => {
     expect(resolveSelectedIdentifier("docs/missing.md", [])).toBeNull();
   });
 
+  it("selects first remaining document after delete when current selection is gone", () => {
+    expect(resolveSelectedIdentifierAfterDelete("docs/missing.md", documents)).toBe("docs/a.md");
+  });
+
+  it("returns null after delete when no documents remain", () => {
+    expect(resolveSelectedIdentifierAfterDelete("docs/missing.md", [])).toBeNull();
+  });
+
   it("requires confirmation on document switch when editing and dirty", () => {
     const state = updateUnsavedChanges(enterEditMode(createViewerEditSessionState()), true);
     expect(shouldPromptUnsavedChanges(state, "switch-document")).toBe(true);
@@ -49,6 +63,25 @@ describe("viewerState", () => {
   it("does not require confirmation when there are no unsaved edits", () => {
     const state = updateUnsavedChanges(enterEditMode(createViewerEditSessionState()), false);
     expect(shouldPromptUnsavedChanges(state, "switch-document")).toBe(false);
+  });
+
+  it("requires confirmation when creating from unsaved edit session", () => {
+    const state = updateUnsavedChanges(enterEditMode(createViewerEditSessionState()), true);
+    expect(shouldPromptUnsavedChanges(state, "create-document")).toBe(true);
+  });
+
+  it("tracks create flow transitions", () => {
+    const initial = createCreateFlowState();
+    const creating = beginCreate(initial, { nodeType: "folder", nodePath: "docs" });
+    const created = markCreateSucceeded(creating);
+    const rejected = markCreateRejected(created);
+    const cleared = clearCreateFlow(rejected);
+
+    expect(creating.pending).toBe(true);
+    expect(created.result).toBe("created");
+    expect(rejected.result).toBe("rejected");
+    expect(cleared.anchor).toBeNull();
+    expect(cleared.pending).toBe(false);
   });
 
   it("tracks save lifecycle transitions", () => {

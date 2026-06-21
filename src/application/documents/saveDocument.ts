@@ -102,19 +102,51 @@ export const saveDocument = async (input: SaveDocumentInput): Promise<SaveRespon
     throw createSaveError("invalid-target", validation.reasons.join(", "));
   }
 
+  const originalIdentifier = input.request.originalIdentifier?.trim();
+  const originalValidation =
+    originalIdentifier && originalIdentifier !== validation.normalizedIdentifier
+      ? validateSaveTarget({
+          rootDir: input.rootDir,
+          identifier: originalIdentifier,
+          includePatterns: input.includePatterns,
+          excludePatterns: input.excludePatterns,
+        })
+      : null;
+
+  if (
+    originalValidation &&
+    (!originalValidation.isValidTarget || !originalValidation.normalizedIdentifier || !originalValidation.absolutePath)
+  ) {
+    throw createSaveError("invalid-target", originalValidation.reasons.join(", "));
+  }
+
   const filePath = validation.absolutePath;
-  const exists = await fs.pathExists(filePath);
-  if (!exists) {
+  const sourcePath = originalValidation?.absolutePath ?? filePath;
+  const shouldRename = Boolean(
+    originalValidation && originalValidation.normalizedIdentifier !== validation.normalizedIdentifier,
+  );
+
+  const sourceExists = await fs.pathExists(sourcePath);
+  if (!sourceExists) {
     throw createSaveError("unwritable-target", "Target document was not found.");
   }
 
+  if (shouldRename) {
+    const targetExists = await fs.pathExists(filePath);
+    if (targetExists) {
+      throw createSaveError("unwritable-target", "Target document already exists.");
+    }
+  }
+
+  const fileReadablePath = shouldRename ? sourcePath : filePath;
+
   try {
-    await fs.access(filePath, fs.constants.W_OK);
+    await fs.access(fileReadablePath, fs.constants.W_OK);
   } catch (error) {
     toWritableError(error);
   }
 
-  const source = await fs.readFile(filePath, "utf8");
+  const source = await fs.readFile(fileReadablePath, "utf8");
   const sourceDetection = detectUnsupportedElements(source);
   const parsedEditable = parseEditableMarkdown(input.request.markdownContent);
   const warnings = parsedEditable.warnings.length > 0 ? parsedEditable.warnings : sourceDetection.warnings;
@@ -134,6 +166,10 @@ export const saveDocument = async (input: SaveDocumentInput): Promise<SaveRespon
   });
 
   try {
+    if (shouldRename) {
+      await fs.move(sourcePath, filePath, { overwrite: false });
+    }
+
     await writeMarkdownDocumentAtomically({
       filePath: path.resolve(filePath),
       markdownContent: serializedMarkdown,
@@ -141,6 +177,10 @@ export const saveDocument = async (input: SaveDocumentInput): Promise<SaveRespon
       hasTrailingNewline: input.request.options.hasTrailingNewline,
     });
   } catch (error) {
+    if (shouldRename) {
+      await fs.move(filePath, sourcePath, { overwrite: false }).catch(() => undefined);
+    }
+
     if (error instanceof Error && error.name === "AppError" && "code" in error) {
       throw error;
     }

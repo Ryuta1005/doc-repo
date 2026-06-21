@@ -4,7 +4,7 @@
 
 - 種別: Epic
 - 番号: 004
-- ステータス: Todo
+- ステータス: Done
 - 優先度: P1
 - Spec: -
 - Depends On: -

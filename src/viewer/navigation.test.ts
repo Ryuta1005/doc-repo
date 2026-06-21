@@ -6,6 +6,9 @@ import {
   pathnameToIdentifier,
   resolveDocumentSwitchDecision,
   resolveIdentifierAfterSave,
+  resolveEditableDocumentIdentifier,
+  toSidebarLabel,
+  validateEditableDocumentFilename,
 } from "./navigation.js";
 
 describe("viewer navigation", () => {
@@ -71,5 +74,31 @@ describe("viewer navigation", () => {
 
     const pathname = identifierToPathname(savedIdentifier ?? "");
     expect(pathnameToIdentifier(pathname)).toBe("docs/guide/getting-started.md");
+  });
+
+  it("maps sidebar labels to extensionless names", () => {
+    expect(toSidebarLabel("docs/guide/getting-started.md")).toBe("getting-started");
+    expect(toSidebarLabel("docs/guide/getting-started.md", "Custom.md")).toBe("Custom");
+  });
+
+  it("resolves edited filenames within the current document directory", () => {
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "updated")).toBe("docs/guide/updated.md");
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "updated.md")).toBe(
+      "docs/guide/updated.md.md",
+    );
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "doc.ja")).toBe("docs/guide/doc.ja.md");
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "example.txt")).toBe(
+      "docs/guide/example.txt.md",
+    );
+  });
+
+  it("rejects invalid editable filenames", () => {
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "")).toBeNull();
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "nested/name")).toBeNull();
+    expect(resolveEditableDocumentIdentifier("docs/guide/getting-started.md", "..")).toBeNull();
+  });
+
+  it("returns detailed editable filename validation reasons", () => {
+    expect(validateEditableDocumentFilename("nested/name")).toEqual({ ok: false, reason: "path-separator" });
   });
 });

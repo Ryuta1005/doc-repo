@@ -33,6 +33,8 @@ describe("createServer boundary pipeline", () => {
       "/api/documents",
       "/api/document",
       "/api/document/save",
+      "/api/document/create",
+      "/api/document/delete",
       "/api/document/image",
       "/api/site-config",
       "/events",

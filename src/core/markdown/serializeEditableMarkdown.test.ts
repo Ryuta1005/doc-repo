@@ -39,6 +39,48 @@ describe("serializeEditableMarkdown", () => {
     expect(serialized).toBe("");
   });
 
+  it("preserves empty paragraphs created in the editor as intentional blank lines", () => {
+    const serialized = serializeEditableMarkdown(
+      {
+        type: "doc",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: "あああ" }] },
+          { type: "paragraph", content: [] },
+          { type: "paragraph", content: [] },
+          { type: "paragraph", content: [] },
+          { type: "paragraph", content: [{ type: "text", text: "あああ" }] },
+        ],
+      },
+      { newlineStyle: "lf", hasTrailingNewline: false },
+    );
+
+    expect(serialized).toBe(["あああ", "", "", "", "", "あああ"].join("\n"));
+  });
+
+  it("preserves repeated blank lines from existing markdown on round-trip", () => {
+    const source = ["あああ", "", "", "", "", "あああ"].join("\n");
+    const parsed = parseEditableMarkdown(source);
+
+    const serialized = serializeEditableMarkdown(parsed.document, {
+      newlineStyle: parsed.newlineStyle,
+      hasTrailingNewline: parsed.hasTrailingNewline,
+    });
+
+    expect(serialized).toBe(source);
+  });
+
+  it("does not turn an empty editor document into blank markdown", () => {
+    const serialized = serializeEditableMarkdown(
+      {
+        type: "doc",
+        content: [{ type: "paragraph", content: [] }],
+      },
+      { newlineStyle: "lf", hasTrailingNewline: false },
+    );
+
+    expect(serialized).toBe("");
+  });
+
   it("does not duplicate unsupported blocks on round-trip", () => {
     const source = [
       "# doc-repo",

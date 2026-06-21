@@ -39,6 +39,29 @@ describe("http-document-save contract", () => {
     expect(await fs.readFile(targetPath, "utf8")).toBe("# Getting Started\n\nUpdated body\n");
   });
 
+  it("filename を変更した場合は同じ階層でリネームして保存できること。", async () => {
+    const rootDir = await makeTempDir();
+    const sourcePath = path.join(rootDir, "docs", "guide", "getting-started.md");
+    const targetPath = path.join(rootDir, "docs", "guide", "updated.md");
+    await fs.outputFile(sourcePath, "# Getting Started\n\nBody\n");
+
+    const pipeline = createHttpBoundaryPipeline({ rootDir });
+    const result = await pipeline.saveDocument({
+      identifier: "docs/guide/updated.md",
+      originalIdentifier: "docs/guide/getting-started.md",
+      markdownContent: "# Getting Started\n\nUpdated body\n",
+      options: { newlineStyle: "lf", hasTrailingNewline: true },
+    });
+
+    expect(result).toMatchObject({
+      status: "saved",
+      savedDocument: { identifier: "docs/guide/updated.md" },
+      warnings: [],
+    });
+    expect(await fs.pathExists(sourcePath)).toBe(false);
+    expect(await fs.readFile(targetPath, "utf8")).toBe("# Getting Started\n\nUpdated body\n");
+  });
+
   it("未対応要素がある場合は warning を返すこと。", async () => {
     const rootDir = await makeTempDir();
     const targetPath = path.join(rootDir, "docs", "guide", "getting-started.md");

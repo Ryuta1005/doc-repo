@@ -3,9 +3,10 @@
   "compilerOptions": {
     "noEmit": true,
     "declaration": false,
+    "jsx": "react-jsx",
     "rootDir": ".",
     "types": ["vitest/globals", "node", "jsdom"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
   "exclude": ["dist", "node_modules"]
 }

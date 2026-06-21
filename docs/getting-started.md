@@ -65,16 +65,6 @@ This creates `doc-repo.config.json` in the current directory. Restart doc-repo a
 
 For details about each configuration option, see [Configuration](./config.md).
 
-## Runtime Files
-
-When doc-repo runs, it creates a `.doc-repo/` directory for runtime files.
-
-Add it to `.gitignore`:
-
-```gitignore
-.doc-repo/
-```
-
 ## Troubleshooting
 
 ### Port Already in Use

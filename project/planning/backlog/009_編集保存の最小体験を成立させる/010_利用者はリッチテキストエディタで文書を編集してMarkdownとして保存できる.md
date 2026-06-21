@@ -5,9 +5,9 @@
 - 種別: Story
 - 番号: 010
 - Epic: 009
-- ステータス: Todo
+- ステータス: Done
 - 優先度: P1
-- Spec: -
+- Spec: 010-richtext-markdown-save
 - Depends On: 020
 
 ## ユーザー価値

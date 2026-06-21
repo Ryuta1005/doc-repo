@@ -87,6 +87,18 @@ describe("convertMarkdown.ts", () => {
     expect(result.html).toContain('href="#intro"');
   });
 
+  it("連続する空行を表示用スペーサーとして保持すること。", () => {
+    const result = convertMarkdown(["あああ", "", "", "", "", "あああ"].join("\n"), "docs/page.md");
+
+    expect((result.html.match(/viewer-blank-line/g) ?? []).length).toBe(3);
+  });
+
+  it("通常の段落区切りには表示用スペーサーを追加しないこと。", () => {
+    const result = convertMarkdown(["あああ", "", "あああ"].join("\n"), "docs/page.md");
+
+    expect(result.html).not.toContain("viewer-blank-line");
+  });
+
   // T008: 相対画像参照の URL 変換と除外ルィールのテスト
   describe("T008: 相対画像 URL 変換と除外ルール", () => {
     it("相対画像パスがページ深さに応じた相対パスへリベースされること。", () => {

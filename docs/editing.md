@@ -27,13 +27,43 @@ For more information about starting and configuring doc-repo, see [Getting Start
 1. Select the file you want to edit from the document tree on the left.
 2. Click **Edit** in the upper-right corner.
 3. Edit the document.
-4. Click **Save** when you are finished.
+4. If needed, change the filename in the field above the body.
+5. Click **Save** when you are finished.
 
 To exit without saving your changes, click **Cancel**.
+
+## Create a Document
+
+1. Hover a file or folder row in the document tree.
+2. Click the `+` button shown on the hovered row.
+3. The editor opens directly with an inline filename field between the toolbar and body input.
+4. Enter a filename and click **Save**. The file is created at this point.
+
+Notes:
+
+- `.md` is always appended to the entered name. For example, `doc.ja` becomes `doc.ja.md`, and `a.md` becomes `a.md.md`.
+- Path separators and path-like inputs are rejected.
+
+## Delete a Document or Folder
+
+1. Hover a file or folder row in the document tree.
+2. Click the ellipsis menu shown at the end of the row.
+3. Select **Delete** (trash icon).
+4. Confirm the target name and warning message in the confirmation dialog.
+5. Click **Delete** to execute, or **Cancel** to abort.
+
+Notes:
+
+- Delete is available for both files and folders.
+- Folder delete follows Policy B: deletion is rejected when any unmanaged or out-of-scope entry exists under the folder.
+- When unsaved edits exist, the unsaved-changes guard appears before the delete confirmation.
+- After a successful delete, the tree refreshes and selection falls back to a remaining document or empty state.
 
 ## Saving
 
 When you click **Save**, your changes are written to the currently open `.md` file.
+
+If you change the filename in edit mode, doc-repo saves the content to the new `.md` filename in the same folder and removes the old name.
 
 Before saving, doc-repo verifies that the target meets the following conditions:
 

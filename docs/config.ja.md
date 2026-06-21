@@ -30,7 +30,7 @@ npm run doc-repo -- init
 | `rootDir` | `string`   | 設定ファイルのあるディレクトリ | Markdownファイルの収集と保存に使用するルートディレクトリ |
 | `include` | `string[]` | `["**/*.md"]`                  | 対象とするMarkdownファイルのglobパターン                 |
 | `exclude` | `string[]` | `[]`                           | 追加で除外するファイルのglobパターン                     |
-| `port`    | `number`   | `4000`                         | Viewerを起動するポート番号                               |
+| `port`    | `number`   | `4000`                         | ワークスペースのHTTPサーバーポート                       |
 
 すべての項目は省略できます。
 
@@ -38,7 +38,7 @@ npm run doc-repo -- init
 - `include`に空配列を指定した場合は、デフォルトの`["**/*.md"]`が使用されます。
 - `exclude`は`include`より優先されます。
 - `node_modules/**`、`.git/**`、`.doc-repo/**`は常に除外されます。
-- CLIオプションの`--port`は、設定ファイルの`port`より優先されます。
+- コマンドラインオプションの`--port`は、設定ファイルの`port`より優先されます。
 - `port`には`1`から`65535`までの整数を指定できます。
 
 ## 設定ファイルの探索
