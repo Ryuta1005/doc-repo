@@ -1,4 +1,4 @@
-import type { CreateDocumentError, SaveDocumentError } from "./services/apiClient.js";
+import type { CreateDocumentError, DeleteDocumentError, SaveDocumentError } from "./services/apiClient.js";
 import type { MessageKey } from "./locale/index.js";
 import type { FilenameValidationReason } from "../shared/documentFilename.js";
 
@@ -9,10 +9,7 @@ export interface ViewerErrorMessage {
   hint?: string;
 }
 
-export const formatFilenameValidationReason = (
-  reason: FilenameValidationReason,
-  t: Translate,
-): ViewerErrorMessage => {
+export const formatFilenameValidationReason = (reason: FilenameValidationReason, t: Translate): ViewerErrorMessage => {
   if (reason === "path-separator") {
     return { message: t("createFilenamePathSeparator") };
   }
@@ -72,6 +69,26 @@ export const formatSaveDocumentError = (error: SaveDocumentError, t: Translate):
 
   return {
     message: t("saveTemporaryFailure"),
+    hint: t("appRetryableSaveHint"),
+  };
+};
+
+export const formatDeleteDocumentError = (error: DeleteDocumentError, t: Translate): ViewerErrorMessage => {
+  if (error.reason === "target:invalid") {
+    return { message: t("deleteInvalidTarget") };
+  }
+  if (error.reason === "target:out-of-scope") {
+    return { message: t("deleteOutOfScope") };
+  }
+  if (error.reason === "target:not-found") {
+    return { message: t("deleteNotFound") };
+  }
+  if (error.reason === "folder:contains-unmanaged-content") {
+    return { message: t("deleteContainsUnmanagedContent") };
+  }
+
+  return {
+    message: t("deleteTemporaryFailure"),
     hint: t("appRetryableSaveHint"),
   };
 };

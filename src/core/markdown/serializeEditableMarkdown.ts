@@ -118,16 +118,46 @@ const trimBoundaryNewlines = (value: string): string => {
   return value.replace(/^(?:\r?\n)+/, "").replace(/(?:\r?\n)+$/, "");
 };
 
+const isEmptyParagraph = (node: MarkdownEditorBlockNode): boolean => {
+  return node.type === "paragraph" && (!node.content || node.content.length === 0);
+};
+
+const serializeBlocks = (blocks: MarkdownEditorBlockNode[], newline: string): string => {
+  const meaningfulStart = blocks.findIndex((node) => !isEmptyParagraph(node));
+  if (meaningfulStart < 0) {
+    return "";
+  }
+
+  let meaningfulEnd = blocks.length - 1;
+  while (meaningfulEnd > meaningfulStart && isEmptyParagraph(blocks[meaningfulEnd])) {
+    meaningfulEnd -= 1;
+  }
+
+  let content = trimBoundaryNewlines(serializeBlock(blocks[meaningfulStart]));
+  let pendingEmptyParagraphs = 0;
+
+  for (let index = meaningfulStart + 1; index <= meaningfulEnd; index += 1) {
+    const block = blocks[index];
+
+    if (isEmptyParagraph(block)) {
+      pendingEmptyParagraphs += 1;
+      continue;
+    }
+
+    content += `${newline.repeat(2 + pendingEmptyParagraphs)}${trimBoundaryNewlines(serializeBlock(block))}`;
+    pendingEmptyParagraphs = 0;
+  }
+
+  return content;
+};
+
 export const serializeEditableMarkdown = (
   document: MarkdownEditorDocument,
   options: SerializeEditableMarkdownOptions,
 ): string => {
   const newline = options.newlineStyle === "crlf" ? "\r\n" : "\n";
   const blocks = document.content ?? [];
-  const content = blocks
-    .map((node) => trimBoundaryNewlines(serializeBlock(node)))
-    .filter((node) => node.length > 0)
-    .join(`${newline}${newline}`);
+  const content = serializeBlocks(blocks, newline);
 
   if (options.hasTrailingNewline) {
     return content.endsWith(newline) ? content : `${content}${newline}`;

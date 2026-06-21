@@ -24,6 +24,7 @@ interface StartStaticServerInput {
     onGetDocument: (rawPathQuery: string | null) => Promise<unknown>;
     onSaveDocument: (payload: unknown) => Promise<unknown>;
     onCreateDocument?: (payload: unknown) => Promise<unknown>;
+    onDeleteDocument?: (payload: unknown) => Promise<unknown>;
     onUploadDocumentImage: (formData: FormData) => Promise<unknown>;
   };
   sseHooks?: SseHooks;
@@ -189,6 +190,34 @@ export const startStaticServer = async (input: StartStaticServerInput): Promise<
     }
 
     return c.json(result, 201);
+  });
+
+  app.post("/api/document/delete", async (c) => {
+    if (!input.apiHooks?.onDeleteDocument) {
+      return c.text("Not Found", 404);
+    }
+
+    const payload = await c.req.json().catch(() => undefined);
+    const result = await input.apiHooks.onDeleteDocument(payload);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "status" in result &&
+      (result as { status?: string }).status === "rejected"
+    ) {
+      const code = (result as { error?: { code?: string } }).error?.code;
+      const status =
+        code === "INVALID_TARGET" || code === "OUT_OF_SCOPE"
+          ? 400
+          : code === "NOT_FOUND"
+            ? 404
+            : code === "CONTAINS_UNMANAGED_CONTENT"
+              ? 409
+              : 500;
+      return c.json(result, status);
+    }
+
+    return c.json(result);
   });
 
   app.post("/api/document/image", async (c) => {

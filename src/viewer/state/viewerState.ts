@@ -6,7 +6,85 @@ export type ViewerMode = "view" | "edit";
 
 export type SaveLifecycleStatus = "idle" | "saving" | "warning" | "saved" | "failed";
 
-export type UnsavedChangesTrigger = "switch-document" | "exit-edit" | "browser-leave" | "create-document";
+export type UnsavedChangesTrigger =
+  | "switch-document"
+  | "exit-edit"
+  | "browser-leave"
+  | "create-document"
+  | "delete-document";
+
+export interface DeleteTargetContext {
+  targetType: "file" | "folder";
+  path: string;
+  displayName: string;
+}
+
+export interface DeleteFlowState {
+  menuTarget: DeleteTargetContext | null;
+  confirmTarget: DeleteTargetContext | null;
+  pending: boolean;
+  result: "idle" | "deleted" | "rejected";
+}
+
+export const createDeleteFlowState = (): DeleteFlowState => ({
+  menuTarget: null,
+  confirmTarget: null,
+  pending: false,
+  result: "idle",
+});
+
+export const openDeleteMenu = (state: DeleteFlowState, target: DeleteTargetContext): DeleteFlowState => ({
+  ...state,
+  menuTarget: target,
+  result: "idle",
+});
+
+export const closeDeleteMenu = (state: DeleteFlowState): DeleteFlowState => ({
+  ...state,
+  menuTarget: null,
+});
+
+export const openDeleteConfirmation = (state: DeleteFlowState, target: DeleteTargetContext): DeleteFlowState => ({
+  ...state,
+  confirmTarget: target,
+  menuTarget: null,
+  pending: false,
+  result: "idle",
+});
+
+export const closeDeleteConfirmation = (state: DeleteFlowState): DeleteFlowState => ({
+  ...state,
+  confirmTarget: null,
+  pending: false,
+});
+
+export const beginDelete = (state: DeleteFlowState): DeleteFlowState => ({
+  ...state,
+  pending: true,
+  result: "idle",
+});
+
+export const markDeleteSucceeded = (state: DeleteFlowState): DeleteFlowState => ({
+  ...state,
+  pending: false,
+  result: "deleted",
+  confirmTarget: null,
+  menuTarget: null,
+});
+
+export const markDeleteRejected = (state: DeleteFlowState): DeleteFlowState => ({
+  ...state,
+  pending: false,
+  result: "rejected",
+});
+
+export const clearDeleteFlow = (state: DeleteFlowState): DeleteFlowState => ({
+  ...state,
+  menuTarget: null,
+  confirmTarget: null,
+  pending: false,
+  result: "idle",
+});
 
 export interface CreationAnchorContext {
   nodeType: "file" | "folder";
@@ -133,4 +211,20 @@ export const resolveSelectedIdentifier = (
   }
 
   return selectedIdentifier;
+};
+
+export const resolveSelectedIdentifierAfterDelete = (
+  selectedIdentifier: string | null,
+  documents: ViewerDocumentSummary[],
+): string | null => {
+  if (!documents.length) {
+    return null;
+  }
+
+  if (!selectedIdentifier) {
+    return documents[0]?.identifier ?? null;
+  }
+
+  const stillExists = documents.some((document) => document.identifier === selectedIdentifier);
+  return stillExists ? selectedIdentifier : (documents[0]?.identifier ?? null);
 };

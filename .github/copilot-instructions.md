@@ -80,6 +80,14 @@ MVP は次の 3 つの Spec に分けて進める。
 - `Pass` / `Fail` / `Blocked` を AI が決定・記入することは厳禁
 - テストケースを新規作成・更新する場合も、実測欄は必ず空欄にする
 
+## UI 実装の注意
+
+- 同じ行に出る hover/focus 操作（例: `+` とミートボール）は、別々の CSS 条件や別々の state で表示制御しない。必ず同じ active 状態から同時に表示/非表示を決める。
+- ツリーやリストの行 hover は、親 `li` 全体ではなく実際の操作行に限定する。親行の子孫へマウスが移っただけで親行アクションが残る実装は禁止。
+- メニューやポップオーバーは、トリガー/メニュー外の pointer down、Escape、操作完了で閉じる挙動を実装し、回帰テストで確認する。
+- UI の「HTML 上の見出しレベル」と「見た目のサイズ/太さ」は別物として扱う。見た目指定がある場合は CSS で明示する。
+- アイコンボタンを横並びにする場合は、幅・高さ・padding・align-items・gap を揃え、片方だけ高さや余白がずれないようにする。
+
 ## Done の定義
 
 次をすべて満たしたら完了とする。
@@ -99,6 +107,8 @@ MVP は次の 3 つの Spec に分けて進める。
 必要になったら、ロードマップの Phase 2 以降として扱う。
 
 ## Active Technologies
+- TypeScript (Node.js >= 20) + React, Hono, commander, fs-extra, fast-glob, chokidar, lucide-reac (023-delete-markdown-doc)
+- ファイルシステム（rootDir 配下の Markdown / フォルダ削除、`.doc-repo` serve runtime） (023-delete-markdown-doc)
 
 - ファイルシステム（入力 Markdown / 出力 `.doc-repo` / `doc-repo.config.json`） (007-config-file-settings)
 - TypeScript (Node.js >= 20) + `commander`（CLI引数）、`fs-extra`（ファイル操作） (008-config-file-init)

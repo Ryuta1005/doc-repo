@@ -219,6 +219,7 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
   const document: MarkdownEditorDocument = { type: "doc", content: [] };
   const unsupportedSegments: UnsupportedSegment[] = [];
   const consumedRanges: Array<{ startLine: number; endLine: number }> = [];
+  let previousBlockEndLine: number | null = null;
 
   const claimRange = (startLine: number, endLine: number): boolean => {
     const overlaps = consumedRanges.some((range) => startLine < range.endLine && endLine > range.startLine);
@@ -227,6 +228,24 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
     }
     consumedRanges.push({ startLine, endLine });
     return true;
+  };
+
+  const appendBlock = (
+    block: MarkdownEditorBlockNode,
+    sourceRange?: { startLine: number; endLine: number },
+  ): void => {
+    if (sourceRange && previousBlockEndLine !== null) {
+      const emptyParagraphCount = Math.max(0, sourceRange.startLine - previousBlockEndLine - 1);
+      for (let count = 0; count < emptyParagraphCount; count += 1) {
+        document.content.push({ type: "paragraph", content: [] });
+      }
+    }
+
+    document.content.push(block);
+
+    if (sourceRange) {
+      previousBlockEndLine = sourceRange.endLine;
+    }
   };
 
   const findMatchingCloseIndex = (startIndex: number): number => {
@@ -282,13 +301,16 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
         rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
         preservationMode: "pass-through",
       });
-      document.content.push({
-        type: "rawMarkdown",
-        attrs: {
-          rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
-          segmentId: `segment-${unsupportedSegments.length}`,
+      appendBlock(
+        {
+          type: "rawMarkdown",
+          attrs: {
+            rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
+            segmentId: `segment-${unsupportedSegments.length}`,
+          },
         },
-      });
+        { startLine, endLine },
+      );
       continue;
     }
 
@@ -347,14 +369,17 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
 
       if (supported && items.length > 0) {
         if (token.type === "bullet_list_open") {
-          document.content.push({ type: "bulletList", content: items });
+          appendBlock({ type: "bulletList", content: items }, { startLine, endLine });
         } else {
           const startAttr = Number(token.attrGet("start") ?? "1");
-          document.content.push({
-            type: "orderedList",
-            attrs: Number.isNaN(startAttr) ? undefined : { start: startAttr },
-            content: items,
-          });
+          appendBlock(
+            {
+              type: "orderedList",
+              attrs: Number.isNaN(startAttr) ? undefined : { start: startAttr },
+              content: items,
+            },
+            { startLine, endLine },
+          );
         }
       } else {
         unsupportedSegments.push({
@@ -363,13 +388,16 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
           rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
           preservationMode: "pass-through",
         });
-        document.content.push({
-          type: "rawMarkdown",
-          attrs: {
-            rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
-            segmentId: `segment-${unsupportedSegments.length}`,
+        appendBlock(
+          {
+            type: "rawMarkdown",
+            attrs: {
+              rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
+              segmentId: `segment-${unsupportedSegments.length}`,
+            },
           },
-        });
+          { startLine, endLine },
+        );
       }
 
       index = closeIndex;
@@ -380,7 +408,10 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
       if (token.map && !claimRange(token.map[0], token.map[1])) {
         continue;
       }
-      document.content.push({ type: "horizontalRule" });
+      appendBlock(
+        { type: "horizontalRule" },
+        token.map ? { startLine: token.map[0], endLine: token.map[1] } : undefined,
+      );
       continue;
     }
 
@@ -411,7 +442,7 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
       }
 
       if (supported && paragraphs.length > 0) {
-        document.content.push({ type: "blockquote", content: paragraphs });
+        appendBlock({ type: "blockquote", content: paragraphs }, { startLine, endLine });
       } else {
         unsupportedSegments.push({
           segmentId: `segment-${unsupportedSegments.length + 1}`,
@@ -419,13 +450,16 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
           rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
           preservationMode: "pass-through",
         });
-        document.content.push({
-          type: "rawMarkdown",
-          attrs: {
-            rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
-            segmentId: `segment-${unsupportedSegments.length}`,
+        appendBlock(
+          {
+            type: "rawMarkdown",
+            attrs: {
+              rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
+              segmentId: `segment-${unsupportedSegments.length}`,
+            },
           },
-        });
+          { startLine, endLine },
+        );
       }
 
       index = closeIndex;
@@ -440,11 +474,14 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
       }
 
       const language = token.info?.trim().split(/\s+/)[0] || null;
-      document.content.push({
-        type: "codeBlock",
-        attrs: { language },
-        content: token.content ? [{ type: "text", text: token.content }] : [],
-      });
+      appendBlock(
+        {
+          type: "codeBlock",
+          attrs: { language },
+          content: token.content ? [{ type: "text", text: token.content }] : [],
+        },
+        { startLine, endLine },
+      );
       continue;
     }
 
@@ -457,11 +494,14 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
         if (token.map && !claimRange(token.map[0], token.map[1])) {
           continue;
         }
-        document.content.push({
-          type: "heading",
-          attrs: { level },
-          content: parsedInline,
-        });
+        appendBlock(
+          {
+            type: "heading",
+            attrs: { level },
+            content: parsedInline,
+          },
+          token.map ? { startLine: token.map[0], endLine: token.map[1] } : undefined,
+        );
       } else if (token.map) {
         const startLine = token.map[0];
         const endLine = token.map[1];
@@ -474,13 +514,16 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
           rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
           preservationMode: "pass-through",
         });
-        document.content.push({
-          type: "rawMarkdown",
-          attrs: {
-            rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
-            segmentId: `segment-${unsupportedSegments.length}`,
+        appendBlock(
+          {
+            type: "rawMarkdown",
+            attrs: {
+              rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
+              segmentId: `segment-${unsupportedSegments.length}`,
+            },
           },
-        });
+          { startLine, endLine },
+        );
       }
       continue;
     }
@@ -493,10 +536,13 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
         if (token.map && !claimRange(token.map[0], token.map[1])) {
           continue;
         }
-        document.content.push({
-          type: "paragraph",
-          content: parsedInline,
-        });
+        appendBlock(
+          {
+            type: "paragraph",
+            content: parsedInline,
+          },
+          token.map ? { startLine: token.map[0], endLine: token.map[1] } : undefined,
+        );
       } else if (token.map) {
         const startLine = token.map[0];
         const endLine = token.map[1];
@@ -509,13 +555,16 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
           rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
           preservationMode: "pass-through",
         });
-        document.content.push({
-          type: "rawMarkdown",
-          attrs: {
-            rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
-            segmentId: `segment-${unsupportedSegments.length}`,
+        appendBlock(
+          {
+            type: "rawMarkdown",
+            attrs: {
+              rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
+              segmentId: `segment-${unsupportedSegments.length}`,
+            },
           },
-        });
+          { startLine, endLine },
+        );
       }
       continue;
     }
@@ -536,13 +585,16 @@ export const parseEditableMarkdown = (source: string): ParseEditableMarkdownResu
         rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
         preservationMode: "pass-through",
       });
-      document.content.push({
-        type: "rawMarkdown",
-        attrs: {
-          rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
-          segmentId: `segment-${unsupportedSegments.length}`,
+      appendBlock(
+        {
+          type: "rawMarkdown",
+          attrs: {
+            rawMarkdown: sliceLines(source, startLine, endLine, lineOffsets),
+            segmentId: `segment-${unsupportedSegments.length}`,
+          },
         },
-      });
+        { startLine, endLine },
+      );
     }
   }
 

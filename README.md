@@ -22,6 +22,7 @@ doc-repo provides a browser-based workspace for viewing and editing Markdown wit
 - Browse Markdown documents in the browser while preserving the repository's directory structure
 - Edit Markdown documents using a rich-text editor in the browser
 - Create new Markdown documents from the sidebar hover `+` action
+- Delete Markdown documents/folders from the sidebar hover ellipsis menu with confirmation
 
 ## Quick Start
 
@@ -102,6 +103,8 @@ For details about each configuration option, see [Configuration](./docs/config.m
 Click **Edit** in the Viewer to edit the selected Markdown document. Saved changes are written directly to the original `.md` file in the repository.
 
 To create a new document, hover a file or folder row in the left sidebar and click `+`. Enter a filename only. doc-repo always appends `.md` to the entered name and keeps sidebar labels without the final `.md`.
+
+To delete a document or folder, hover a row in the left sidebar, open the ellipsis menu, and choose **Delete**. Folder deletion follows Policy B: if unmanaged or out-of-scope entries are found under the folder, deletion is rejected to avoid partial removal.
 
 The Viewer may display Markdown that the rich-text editor cannot safely edit or preserve.
 

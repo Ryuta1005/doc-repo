@@ -12,6 +12,7 @@ import {
   markSaveFailed,
   markSaveSucceeded,
   markSaveWarning,
+  resolveSelectedIdentifierAfterDelete,
   resolveSelectedIdentifier,
   shouldPromptUnsavedChanges,
   updateUnsavedChanges,
@@ -34,6 +35,14 @@ describe("viewerState", () => {
 
   it("returns null when there are no documents", () => {
     expect(resolveSelectedIdentifier("docs/missing.md", [])).toBeNull();
+  });
+
+  it("selects first remaining document after delete when current selection is gone", () => {
+    expect(resolveSelectedIdentifierAfterDelete("docs/missing.md", documents)).toBe("docs/a.md");
+  });
+
+  it("returns null after delete when no documents remain", () => {
+    expect(resolveSelectedIdentifierAfterDelete("docs/missing.md", [])).toBeNull();
   });
 
   it("requires confirmation on document switch when editing and dirty", () => {

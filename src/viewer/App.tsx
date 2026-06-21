@@ -2,19 +2,33 @@ import React from "react";
 import { Globe, Pencil } from "lucide-react";
 
 import { parseEditableMarkdown } from "../core/markdown/index.js";
-import { CreateDocumentError, createDocument, SaveDocumentError, saveDocument } from "./services/apiClient.js";
+import {
+  CreateDocumentError,
+  DeleteDocumentError,
+  createDocument,
+  deleteDocument,
+  SaveDocumentError,
+  saveDocument,
+} from "./services/apiClient.js";
 import {
   beginSave,
   beginCreate,
+  beginDelete,
+  clearDeleteFlow,
+  closeDeleteConfirmation,
   createViewerEditSessionState,
   createCreateFlowState,
+  createDeleteFlowState,
   enterEditMode as enterEditSession,
+  markDeleteRejected,
+  markDeleteSucceeded,
   markCreateRejected,
   markCreateSucceeded,
   markSaveFailed,
   markSaveSucceeded,
   shouldPromptUnsavedChanges,
   type CreationAnchorContext,
+  type DeleteTargetContext,
   updateUnsavedChanges,
 } from "./state/viewerState.js";
 import { DocumentTree } from "./components/DocumentTree.js";
@@ -22,10 +36,16 @@ import { DocumentViewer } from "./components/DocumentViewer.js";
 import { ErrorBanner } from "./components/ErrorBanner.js";
 import { DocumentEditor, type DocumentEditorSnapshot } from "./components/DocumentEditor.js";
 import { UnsavedChangesDialog } from "./components/UnsavedChangesDialog.js";
+import { DeleteConfirmationDialog } from "./components/DeleteConfirmationDialog.js";
 import { useViewerState } from "./hooks/useViewerState.js";
 import { useUnsavedChangesGuard } from "./hooks/useUnsavedChangesGuard.js";
 import { LocaleProvider, type Locale, useLocale } from "./locale/index.js";
-import { formatCreateDocumentError, formatFilenameValidationReason, formatSaveDocumentError } from "./errorMessages.js";
+import {
+  formatCreateDocumentError,
+  formatDeleteDocumentError,
+  formatFilenameValidationReason,
+  formatSaveDocumentError,
+} from "./errorMessages.js";
 import {
   resolveDocumentSwitchDecision,
   resolveEditableDocumentIdentifier,
@@ -39,8 +59,7 @@ const MIN_SIDEBAR_WIDTH = 240;
 const MAX_SIDEBAR_WIDTH = 1000;
 const SIDEBAR_KEYBOARD_STEP = 16;
 
-const clampSidebarWidth = (width: number): number =>
-  Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
+const clampSidebarWidth = (width: number): number => Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
 
 const resolveInitialSidebarWidth = (): number => {
   if (typeof window === "undefined") {
@@ -56,8 +75,7 @@ const getCreateDraftTitle = (anchor: CreationAnchorContext | null, createLabel: 
     return createLabel;
   }
 
-  const basePath =
-    anchor.nodeType === "folder" ? anchor.nodePath : anchor.nodePath.split("/").slice(0, -1).join("/");
+  const basePath = anchor.nodeType === "folder" ? anchor.nodePath : anchor.nodePath.split("/").slice(0, -1).join("/");
   const normalizedBasePath = basePath === "." ? "" : basePath.replace(/\/+$/u, "");
 
   return normalizedBasePath ? `${normalizedBasePath}/${createLabel}` : createLabel;
@@ -100,8 +118,12 @@ function AppContent(): React.JSX.Element {
   const [showUnsavedDialog, setShowUnsavedDialog] = React.useState(false);
   const [createErrorMessage, setCreateErrorMessage] = React.useState<string | null>(null);
   const [createErrorHint, setCreateErrorHint] = React.useState<string | null>(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = React.useState<string | null>(null);
+  const [deleteErrorHint, setDeleteErrorHint] = React.useState<string | null>(null);
+  const [pendingDeleteTarget, setPendingDeleteTarget] = React.useState<DeleteTargetContext | null>(null);
   const [editSession, setEditSession] = React.useState(() => createViewerEditSessionState());
   const [createFlow, setCreateFlow] = React.useState(() => createCreateFlowState());
+  const [deleteFlow, setDeleteFlow] = React.useState(() => createDeleteFlowState());
   const [sidebarWidth, setSidebarWidth] = React.useState(resolveInitialSidebarWidth);
   const isCreateDraft = createAnchor !== null;
 
@@ -212,6 +234,30 @@ function AppContent(): React.JSX.Element {
       openCreateDraftEditor(anchor);
     },
     [isDirty, mode, openCreateDraftEditor],
+  );
+
+  const requestDeleteDocument = React.useCallback(
+    (target: DeleteTargetContext) => {
+      setDeleteErrorMessage(null);
+      setDeleteErrorHint(null);
+
+      if (shouldPromptUnsavedChanges({ mode, hasUnsavedChanges: isDirty }, "delete-document")) {
+        setPendingSelection(null);
+        setPendingCreateAnchor(null);
+        setPendingDeleteTarget(target);
+        setShowUnsavedDialog(true);
+        return;
+      }
+
+      setDeleteFlow((current) => ({
+        ...current,
+        confirmTarget: target,
+        menuTarget: null,
+        pending: false,
+        result: "idle",
+      }));
+    },
+    [isDirty, mode],
   );
 
   const handleSaveRequest = React.useCallback(
@@ -343,6 +389,49 @@ function AppContent(): React.JSX.Element {
     ],
   );
 
+  const handleDeleteConfirm = React.useCallback(async () => {
+    const target = deleteFlow.confirmTarget;
+    if (!target) {
+      return;
+    }
+
+    setDeleteErrorMessage(null);
+    setDeleteErrorHint(null);
+    setDeleteFlow((current) => beginDelete(current));
+
+    try {
+      const response = await deleteDocument({
+        target: {
+          targetType: target.targetType,
+          path: target.path,
+          displayName: target.displayName,
+        },
+      });
+
+      if (response.status !== "deleted") {
+        throw new DeleteDocumentError({
+          message: response.error.message,
+          code: response.error.code,
+          reason: response.error.reason,
+          retryable: response.error.retryable,
+        });
+      }
+
+      await refreshDocuments({ fallbackMissingSelection: true });
+      setDeleteFlow((current) => markDeleteSucceeded(current));
+    } catch (error) {
+      setDeleteFlow((current) => markDeleteRejected(current));
+      if (error instanceof DeleteDocumentError) {
+        const formatted = formatDeleteDocumentError(error, t);
+        setDeleteErrorMessage(formatted.message);
+        setDeleteErrorHint(formatted.hint ?? null);
+      } else {
+        setDeleteErrorMessage(error instanceof Error ? error.message : String(error));
+        setDeleteErrorHint(null);
+      }
+    }
+  }, [deleteFlow.confirmTarget, refreshDocuments, t]);
+
   const confirmDiscard = React.useCallback(() => {
     setShowUnsavedDialog(false);
     if (pendingSelection) {
@@ -356,13 +445,33 @@ function AppContent(): React.JSX.Element {
       return;
     }
 
+    if (pendingDeleteTarget) {
+      setDeleteFlow((current) => ({
+        ...current,
+        confirmTarget: pendingDeleteTarget,
+        menuTarget: null,
+        pending: false,
+        result: "idle",
+      }));
+      setPendingDeleteTarget(null);
+      return;
+    }
+
     leaveEditMode();
-  }, [leaveEditMode, openCreateDraftEditor, pendingCreateAnchor, pendingSelection, selectIdentifier]);
+  }, [
+    leaveEditMode,
+    openCreateDraftEditor,
+    pendingCreateAnchor,
+    pendingDeleteTarget,
+    pendingSelection,
+    selectIdentifier,
+  ]);
 
   const continueEditing = React.useCallback(() => {
     setShowUnsavedDialog(false);
     setPendingSelection(null);
     setPendingCreateAnchor(null);
+    setPendingDeleteTarget(null);
   }, []);
 
   const updateSidebarWidth = React.useCallback((nextWidth: number): void => {
@@ -424,10 +533,7 @@ function AppContent(): React.JSX.Element {
   );
 
   return (
-    <main
-      className="viewer-layout"
-      style={{ "--viewer-sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}
-    >
+    <main className="viewer-layout" style={{ "--viewer-sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}>
       <aside className="viewer-sidebar" id="tree" aria-label={t("appDocumentSidebar")}>
         <h1 className="viewer-brand">
           <a href="/">{siteName}</a>
@@ -438,6 +544,7 @@ function AppContent(): React.JSX.Element {
             selectedIdentifier={selectedIdentifier}
             onSelect={requestSelectIdentifier}
             onCreateRequest={requestCreateDocument}
+            onDeleteRequest={requestDeleteDocument}
           />
         </div>
         <label className="viewer-locale-switcher">
@@ -471,6 +578,7 @@ function AppContent(): React.JSX.Element {
         {statusMessage ? <p className="viewer-muted">{statusMessage}</p> : null}
         {saveErrorMessage ? <ErrorBanner message={saveErrorMessage} hint={saveErrorHint ?? undefined} /> : null}
         {createErrorMessage ? <ErrorBanner message={createErrorMessage} hint={createErrorHint ?? undefined} /> : null}
+        {deleteErrorMessage ? <ErrorBanner message={deleteErrorMessage} hint={deleteErrorHint ?? undefined} /> : null}
         {mode === "view" ? (
           <section className="viewer-shell">
             <div className="viewer-shell-header">
@@ -483,7 +591,7 @@ function AppContent(): React.JSX.Element {
             <DocumentViewer identifier={selectedIdentifier} html={html} onNavigate={requestSelectIdentifier} />
           </section>
         ) : (
-          <section className="viewer-shell">
+          <section className="viewer-shell viewer-shell-editor">
             <div className="viewer-shell-header">
               <h2 className="viewer-shell-title">
                 {isCreateDraft ? getCreateDraftTitle(createAnchor, t("appCreateDocument")) : selectedIdentifier}
@@ -491,7 +599,11 @@ function AppContent(): React.JSX.Element {
             </div>
             {editorSnapshot && editSourceMarkdown !== null ? (
               <DocumentEditor
-                key={isCreateDraft ? `create:${createAnchor.nodeType}:${createAnchor.nodePath}` : `edit:${selectedIdentifier}`}
+                key={
+                  isCreateDraft
+                    ? `create:${createAnchor.nodeType}:${createAnchor.nodePath}`
+                    : `edit:${selectedIdentifier}`
+                }
                 documentIdentifier={selectedIdentifier ?? ""}
                 filename={editorFilename}
                 filenamePlaceholder={t("editorFilenamePlaceholder")}
@@ -517,6 +629,17 @@ function AppContent(): React.JSX.Element {
         open={showUnsavedDialog}
         onContinueEditing={continueEditing}
         onDiscardChanges={confirmDiscard}
+      />
+      <DeleteConfirmationDialog
+        open={Boolean(deleteFlow.confirmTarget)}
+        targetName={deleteFlow.confirmTarget?.displayName ?? ""}
+        pending={deleteFlow.pending}
+        onCancel={() => {
+          setDeleteFlow((current) => closeDeleteConfirmation(current));
+        }}
+        onConfirm={() => {
+          void handleDeleteConfirm();
+        }}
       />
     </main>
   );

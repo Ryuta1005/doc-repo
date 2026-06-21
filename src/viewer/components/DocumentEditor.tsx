@@ -219,7 +219,15 @@ export function DocumentEditor({
             }}
           />
         </div>
-        <div className="editor-content-wrapper">
+        <div
+          className="editor-content-wrapper"
+          onMouseDown={(event) => {
+            const target = event.target;
+            if (target instanceof Element && !target.closest(".editor-surface")) {
+              editor.chain().focus("end").run();
+            }
+          }}
+        >
           <EditorContent editor={editor} />
         </div>
       </div>
