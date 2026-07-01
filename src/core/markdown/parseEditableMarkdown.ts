@@ -33,9 +33,14 @@ export interface MarkdownEditorParagraphNode {
   content: MarkdownEditorInlineNode[];
 }
 
+export type MarkdownEditorListItemContentNode =
+  | MarkdownEditorParagraphNode
+  | MarkdownEditorBulletListNode
+  | MarkdownEditorOrderedListNode;
+
 export interface MarkdownEditorListItemNode {
   type: "listItem";
-  content: MarkdownEditorParagraphNode[];
+  content: MarkdownEditorListItemContentNode[];
 }
 
 export interface MarkdownEditorBulletListNode {

@@ -31,6 +31,12 @@ npm install --save-dev doc-repo@alpha
 npm run doc-repo
 ```
 
+インストール済みのdoc-repoバージョンを確認する場合は、どちらかのバージョンオプションを実行します。
+
+```bash
+npm run doc-repo -- --version
+```
+
 起動後、ブラウザで次のURLを開きます。
 
 ```text

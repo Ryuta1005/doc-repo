@@ -31,6 +31,12 @@ Start doc-repo with the following command:
 npm run doc-repo
 ```
 
+To check the installed doc-repo version, run either version option:
+
+```bash
+npm run doc-repo -- --version
+```
+
 After doc-repo starts, open the following URL in your browser:
 
 ```text
