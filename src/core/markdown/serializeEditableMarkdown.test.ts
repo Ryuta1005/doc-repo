@@ -218,6 +218,77 @@ describe("serializeEditableMarkdown", () => {
     expect(serialized).toContain("1. first");
   });
 
+  it("serializes nested bullet lists created by editor indentation", () => {
+    const serialized = serializeEditableMarkdown(
+      {
+        type: "doc",
+        content: [
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "parent" }] },
+                  {
+                    type: "bulletList",
+                    content: [
+                      {
+                        type: "listItem",
+                        content: [{ type: "paragraph", content: [{ type: "text", text: "child" }] }],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [{ type: "paragraph", content: [{ type: "text", text: "sibling" }] }],
+              },
+            ],
+          },
+        ],
+      },
+      { newlineStyle: "lf", hasTrailingNewline: false },
+    );
+
+    expect(serialized).toBe(["- parent", "  - child", "- sibling"].join("\n"));
+  });
+
+  it("serializes nested ordered lists created by editor indentation", () => {
+    const serialized = serializeEditableMarkdown(
+      {
+        type: "doc",
+        content: [
+          {
+            type: "orderedList",
+            attrs: { start: 3 },
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "third" }] },
+                  {
+                    type: "orderedList",
+                    content: [
+                      {
+                        type: "listItem",
+                        content: [{ type: "paragraph", content: [{ type: "text", text: "nested" }] }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      { newlineStyle: "lf", hasTrailingNewline: false },
+    );
+
+    expect(serialized).toBe(["3. third", "  1. nested"].join("\n"));
+  });
+
   it("supports horizontal rule", () => {
     const source = ["before", "", "---", "", "after"].join("\n");
 

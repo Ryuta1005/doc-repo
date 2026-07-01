@@ -2,6 +2,8 @@ import type {
   MarkdownEditorBlockNode,
   MarkdownEditorInlineNode,
   MarkdownEditorDocument,
+  MarkdownEditorListItemContentNode,
+  MarkdownEditorListItemNode,
   MarkdownEditorMarkType,
 } from "./parseEditableMarkdown.js";
 
@@ -58,6 +60,10 @@ const serializeInline = (nodes: MarkdownEditorInlineNode[] | undefined): string 
         return "  \n";
       }
 
+      if (node.type !== "text" || typeof node.text !== "string") {
+        return "";
+      }
+
       const marks = node.marks?.map((mark) => mark.type) ?? [];
       if (marks.includes("code")) {
         return wrapMarks(node.text, marks);
@@ -65,6 +71,55 @@ const serializeInline = (nodes: MarkdownEditorInlineNode[] | undefined): string 
       return wrapMarks(escapeText(node.text), marks);
     })
     .join("");
+};
+
+const indentLines = (value: string, indent: string): string => {
+  return value
+    .split(/\r?\n/)
+    .map((line) => `${indent}${line}`)
+    .join("\n");
+};
+
+const serializeListItemContent = (node: MarkdownEditorListItemContentNode, depth: number): string => {
+  if (node.type === "paragraph") {
+    return indentLines(serializeInline(node.content), "  ".repeat(depth + 1));
+  }
+
+  if (node.type === "bulletList" || node.type === "orderedList") {
+    return serializeList(node, depth + 1);
+  }
+
+  return "";
+};
+
+const serializeListItem = (item: MarkdownEditorListItemNode, marker: string, depth: number): string => {
+  const content = item.content ?? [];
+  const firstParagraphIndex = content.findIndex((node) => node.type === "paragraph");
+  const firstParagraph = firstParagraphIndex >= 0 ? content[firstParagraphIndex] : null;
+  const indent = "  ".repeat(depth);
+  const firstLine = `${indent}${marker} ${
+    firstParagraph?.type === "paragraph" ? serializeInline(firstParagraph.content) : ""
+  }`.trimEnd();
+
+  const rest = content
+    .filter((_, index) => index !== firstParagraphIndex)
+    .map((node) => serializeListItemContent(node, depth))
+    .filter((text) => text.length > 0);
+
+  return [firstLine, ...rest].join("\n");
+};
+
+const serializeList = (
+  node: Extract<MarkdownEditorBlockNode, { type: "bulletList" | "orderedList" }>,
+  depth = 0,
+): string => {
+  const start = node.type === "orderedList" ? (node.attrs?.start ?? 1) : 1;
+  return node.content
+    .map((item, index) => {
+      const marker = node.type === "orderedList" ? `${start + index}.` : "-";
+      return serializeListItem(item, marker, depth);
+    })
+    .join("\n");
 };
 
 const serializeBlock = (node: MarkdownEditorBlockNode): string => {
@@ -77,22 +132,11 @@ const serializeBlock = (node: MarkdownEditorBlockNode): string => {
   }
 
   if (node.type === "bulletList") {
-    return node.content
-      .map((item) => {
-        const text = item.content.map((paragraph) => serializeInline(paragraph.content)).join("\n");
-        return `- ${text}`;
-      })
-      .join("\n");
+    return serializeList(node);
   }
 
   if (node.type === "orderedList") {
-    const start = node.attrs?.start ?? 1;
-    return node.content
-      .map((item, index) => {
-        const text = item.content.map((paragraph) => serializeInline(paragraph.content)).join("\n");
-        return `${start + index}. ${text}`;
-      })
-      .join("\n");
+    return serializeList(node);
   }
 
   if (node.type === "blockquote") {
