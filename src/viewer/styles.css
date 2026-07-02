@@ -365,6 +365,7 @@ body {
   flex-direction: column;
   padding: 22px;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -694,6 +695,7 @@ body {
 
 .editor-frame {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: visible;
@@ -704,6 +706,7 @@ body {
 
 .editor-content-wrapper {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   background: #ffffff;
